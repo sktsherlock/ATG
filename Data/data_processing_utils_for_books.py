@@ -18,7 +18,7 @@ def parse_json_for_books(data_path):
 
 
 # 数据过滤
-def data_filter_for_books(df, category, threshold=10):
+def data_filter_for_books(df, category, category_numbers=10):
     # 过滤含有缺失数据和重复的记录
     df = df.drop_duplicates(subset=['asin'])
     df = df.dropna()
@@ -41,7 +41,7 @@ def data_filter_for_books(df, category, threshold=10):
 
     # 删除只有少数个数的 category
     category_counts = df['third_category'].value_counts()
-    categories_to_keep = category_counts[category_counts >= threshold].index
+    categories_to_keep = category_counts.nlargest(category_numbers).index
 
     df['third_category'] = df['third_category'].apply(lambda x: x if x in categories_to_keep else None)
     df.dropna(subset=['third_category'], inplace=True)
@@ -161,9 +161,8 @@ if __name__ == '__main__':
 
     data_path = args.data_path
     name = args.name
-    threshold = args.class_threshold
-    # data_path = 'meta_Electronics.json '
-    # name = 'Electronics'
+    class_numbers = args.class_numbers
+
     if not os.path.exists(f'./{name}'):
         os.makedirs(f'./{name}')
 
@@ -171,7 +170,7 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter_for_books(parse_json_for_books(data_path), args.second_category, threshold=threshold)
+    df = data_filter_for_books(parse_json_for_books(data_path), args.second_category,  category_numbers=class_numbers)
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
