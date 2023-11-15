@@ -155,7 +155,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
-    parser.add_argument('--class_threshold', type=int, help='Dataset class threshold', required=True)
+    parser.add_argument('--class_numbers', type=int, help='Dataset class threshold', required=True)
     parser.add_argument('--second_category', type=str, default='Computer')
     args = parser.parse_args()
 
