@@ -209,10 +209,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
+    parser.add_argument('--class_threshold', type=int, help='Dataset class threshold', required=True)
     args = parser.parse_args()
 
     data_path = args.data_path
     name = args.name
+    threshold = args.class_threshold
 
     if not os.path.exists(f'./{name}'):
         os.makedirs(f'./{name}')
@@ -221,7 +223,7 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter(parse_json(data_path), threshold=10)
+    df = data_filter(parse_json(data_path), threshold=threshold)
     count_data(df)
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
