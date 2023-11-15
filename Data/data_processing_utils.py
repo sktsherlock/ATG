@@ -16,7 +16,7 @@ def parse_json(data_path):
 
 
 # 数据过滤
-def data_filter(df, threshold=1000):
+def data_filter(df, category_number=10):
     # 过滤含有缺失数据和重复的记录
     df = df.drop_duplicates(subset=['asin'])
     df = df.dropna()
@@ -33,7 +33,7 @@ def data_filter(df, threshold=1000):
 
     # 删除只有少数个数的category
     category_counts = df['second_category'].value_counts()
-    categories_to_keep = category_counts[category_counts >= threshold].index
+    categories_to_keep = category_counts.nlargest(category_number).index
     print('步骤二****************************************************************')
     df['second_category'] = df['second_category'].apply(lambda x: x if x in categories_to_keep else None)
     df.dropna(subset=['second_category'], inplace=True)
@@ -209,12 +209,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
-    parser.add_argument('--class_threshold', type=int, help='Dataset class threshold', required=True)
+    parser.add_argument('--class_numbers', type=int, help='Dataset class numbers', required=True)
     args = parser.parse_args()
 
     data_path = args.data_path
     name = args.name
-    threshold = args.class_threshold
+    class_numbers = args.class_numbers
 
     if not os.path.exists(f'./{name}'):
         os.makedirs(f'./{name}')
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter(parse_json(data_path), threshold=threshold)
+    df = data_filter(parse_json(data_path), threshold=class_numbers)
     count_data(df)
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)

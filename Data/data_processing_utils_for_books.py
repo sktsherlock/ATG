@@ -25,7 +25,7 @@ def data_filter_for_books(df, category, threshold=10):
     # 删除 DataFrame 中含有空图像或不含三级类别(三级类别会作为分类的 label)的行
     mask = (df['imageURL'].str.len() >= 1) & (df['category'].str.len() >= 3)
     df = df[mask]
-
+    print('步骤一****************************************************************')
     # 将 &amp; 替换为 &
     df['category'] = df['category'].apply(lambda x: [re.sub('&amp;', '&', i) for i in x])
 
@@ -35,7 +35,7 @@ def data_filter_for_books(df, category, threshold=10):
     # 只保留二级类别为指定类别的数据
     df['second_category'] = df['second_category'].apply(lambda x: x if category in x else None)
     df.dropna(subset=['second_category'], inplace=True)
-
+    print('步骤二****************************************************************')
     # 提取出第三类别
     df['third_category'] = df['category'].apply(lambda x: x[2] if x else None)
 
@@ -45,13 +45,13 @@ def data_filter_for_books(df, category, threshold=10):
 
     df['third_category'] = df['third_category'].apply(lambda x: x if x in categories_to_keep else None)
     df.dropna(subset=['third_category'], inplace=True)
-
+    print('步骤三****************************************************************')
     # 只保留 description 列表的第一项
     df['description'] = df['description'].apply(lambda x: x[0] if x else None)
 
     # 将其中以 '<' 开头的无效标题置为空
     df['title'] = df['title'].apply(lambda x: x if x and not re.match('^<', x) else None)
-
+    print('步骤四****************************************************************')
     # 删除既未共同浏览又未共同购买的商品(即孤立商品)
     hash_set = set()
     hash_table = {}  # 存储商品的 ASIN 到索引的映射, 便于删除操作
@@ -59,7 +59,6 @@ def data_filter_for_books(df, category, threshold=10):
     for index, row in df.iterrows():
         hash_set.add(row['asin'])  # 将每个 ASIN 添加到集合, 若存在共同浏览或共同购买项则移除, 最终剩余的就是孤立商品
         hash_table[row['asin']] = index
-
     for index, row in df.iterrows():
         # 移除含有共同购买项的商品
         if row['also_buy']:
@@ -71,13 +70,12 @@ def data_filter_for_books(df, category, threshold=10):
             hash_set.discard(row['asin'])
             for asin in row['also_view']:
                 hash_set.discard(asin)
-
     # 删除孤立商品
     rows_to_drop = []
     for asin in hash_set:
         rows_to_drop.append(hash_table[asin])
     df.drop(rows_to_drop, inplace=True)
-
+    print('步骤五****************************************************************')
     # 清洗 description
     df['cleaned_description'] = df['description'].apply(
         lambda string: ''.join([c for c in string if c != '']) if string else None)
@@ -87,16 +85,16 @@ def data_filter_for_books(df, category, threshold=10):
                                                                                            text)) if text else None)
     # 若还有 '<', 则删除
     df['cleaned_description'] = df['cleaned_description'].apply(lambda x: x if x and not re.search('<', x) else None)
-
+    print('步骤六****************************************************************')
     # 合并 description 和 title
     df['text'] = df.apply(
         lambda per_row: 'Description: {}; Title: {}'.format(per_row['cleaned_description'], per_row['title']), axis=1)
     # 再次替换 HTML 标签和空白
     df['text'] = df['text'].apply(lambda text: re.sub('<[\s\S]*>', '',
                                                       re.sub('\s+', ' ', text)) if text else None)
-
-    # 将 &amp; 替换为 &
+    # 将 &amp 替换为 &
     df['text'] = df['text'].apply(lambda x: re.sub('&amp;', '&', x))
+    print('步骤七****************************************************************')
 
     # 将商品的 ASIN 映射为递增的 id 以便后续数据处理
     df = df.reset_index(drop=True)  # 重置索引
@@ -105,11 +103,11 @@ def data_filter_for_books(df, category, threshold=10):
         hash_table[row['asin']] = int(index)
     df['asin'] = df['asin'].map(hash_table)  # 将 ASIN 映射为 id
     df.rename(columns={'asin': 'id'}, inplace=True)  # 将列名 asin 更改为 id
-
+    print('步骤八****************************************************************')
     # 将 also_buy 与 also_view 中的商品 ASIN 索引替换为 id 索引, 同时剔除不存在项
     df['also_buy'] = df['also_buy'].apply(lambda x: [hash_table[i] for i in x if i in hash_table])
     df['also_view'] = df['also_view'].apply(lambda x: [hash_table[i] for i in x if i in hash_table])
-
+    print('步骤九****************************************************************')
     # 将三级类别映射为递增的 label
     hash_table = {}
     label_number = 1
