@@ -180,4 +180,4 @@ if __name__ == '__main__':
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
-    download_images(df, output_img_path)
+    download_images_for_books(df, output_img_path)
