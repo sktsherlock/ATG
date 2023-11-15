@@ -4,7 +4,7 @@ import re
 
 import pandas as pd
 import requests
-
+import argparse
 # 读取 json 文件并将其转换为 DataFrame 并返回
 def parse_json(data_path):
     # 读取 json 文件
@@ -206,8 +206,14 @@ def construct_graph(input_csv_path, output_graph_path):
 
 if __name__ == '__main__':
 
-    data_path = 'meta_Movies_and_TV.json'
-    name = 'Movies'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
+    parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
+    args = parser.parse_args()
+
+    data_path = args.data_path
+    name = args.name
+
     if not os.path.exists(f'./{name}'):
         os.makedirs(f'./{name}')
 
