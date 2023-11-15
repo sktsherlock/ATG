@@ -4,6 +4,7 @@ import re
 
 import pandas as pd
 import requests
+import argparse
 from data_processing_utils import  construct_graph, export_as_csv, parse_json, download_images
 
 # 读取 json 文件并将其转换为 DataFrame 并返回
@@ -153,8 +154,18 @@ def download_images_for_books(df, output_img_path):
 
 if __name__ == '__main__':
 
-    data_path = 'meta_Electronics.json '
-    name = 'Electronics'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
+    parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
+    parser.add_argument('--class_threshold', type=int, help='Dataset class threshold', required=True)
+    parser.add_argument('--second_category', type=str, default='Computer')
+    args = parser.parse_args()
+
+    data_path = args.data_path
+    name = args.name
+    threshold = args.class_threshold
+    # data_path = 'meta_Electronics.json '
+    # name = 'Electronics'
     if not os.path.exists(f'./{name}'):
         os.makedirs(f'./{name}')
 
@@ -162,7 +173,7 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter_for_books(parse_json_for_books(data_path), 'Computers', threshold=10)
+    df = data_filter_for_books(parse_json_for_books(data_path), args.second_category, threshold=threshold)
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
