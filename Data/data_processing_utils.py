@@ -223,7 +223,7 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter(parse_json(data_path), threshold=class_numbers)
+    df = data_filter(parse_json(data_path), category_number=class_numbers)
     count_data(df)
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
