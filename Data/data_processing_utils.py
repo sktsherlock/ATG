@@ -46,25 +46,29 @@ def data_filter(df, category_number=10):
     df['title'] = df['title'].apply(lambda x: x if x and not re.match('^<', x) else None)
     print('步骤四****************************************************************')
 
-
     # 删除既未共同浏览又未共同购买的商品(即孤立商品)
     hash_set = set()
+    existed = set()
     hash_table = {}  # 存储商品的 ASIN 到索引的映射, 便于删除操作
     # 初始化集合和字典
     for index, row in df.iterrows():
         hash_set.add(row['asin'])  # 将每个 ASIN 添加到集合, 若存在共同浏览或共同购买项则移除, 最终剩余的就是孤立商品
+        existed.add(row['asin'])
         hash_table[row['asin']] = index
+
     for index, row in df.iterrows():
         # 移除含有共同购买项的商品
         if row['also_buy']:
-            hash_set.discard(row['asin'])
             for asin in row['also_buy']:
-                hash_set.discard(asin)
+                if asin in existed:
+                    hash_set.discard(row['asin'])
+                    hash_set.discard(asin)
         # 移除含有共同浏览项的商品
         if row['also_view']:
-            hash_set.discard(row['asin'])
             for asin in row['also_view']:
-                hash_set.discard(asin)
+                if asin in existed:
+                    hash_set.discard(row['asin'])
+                    hash_set.discard(asin)
     # 删除孤立商品
     rows_to_drop = []
     for asin in hash_set:
