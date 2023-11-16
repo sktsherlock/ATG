@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 import os
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer
+from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 from torch.utils.data import DataLoader
 
@@ -27,15 +28,16 @@ model_name = args.model_name
 name = args.name
 max_length = args.max_length
 batch_size = args.batch_size
+inf_path = f"{args.path}cache/"
 
 if not os.path.exists(args.path):
     os.makedirs(args.path)
+if not os.path.exists(inf_path):
+    os.makedirs(inf_path)
 
 output_file = args.path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
 
-
-
-class BertEmbInfModel(PreTrainedModel):
+class CLSEmbInfModel(PreTrainedModel):
     def __init__(self, model):
         super().__init__(model.config)
         self.encoder = model
@@ -43,11 +45,21 @@ class BertEmbInfModel(PreTrainedModel):
     def forward(self, inputs):
         # Extract outputs from the model
         outputs = self.encoder(**inputs)
-        node_cls_emb = outputs.last_hidden_state[:, 0, :]  # Last layer
         # Use CLS Emb as sentence emb.
-        node_mean_emb = torch.mean(output.last_hidden_state, dim=1)
-        return node_cls_emb, node_mean_emb
+        node_cls_emb = outputs.last_hidden_state[:, 0, :]  # Last layer
+        return TokenClassifierOutput(logits=node_cls_emb)
 
+class MeanEmbInfModel(PreTrainedModel):
+    def __init__(self, model):
+        super().__init__(model.config)
+        self.encoder = model
+    @torch.no_grad()
+    def forward(self, inputs):
+        # Extract outputs from the model
+        outputs = self.encoder(**inputs)
+        # Use Mean Emb as sentence emb.
+        node_mean_emb = torch.mean(outputs.last_hidden_state, dim=1)
+        return TokenClassifierOutput(logits=node_mean_emb)
 # 读取CSV文件
 df = pd.read_csv(csv_file)
 
@@ -60,11 +72,21 @@ text_data = df[text_column].tolist()
 encoded_inputs = tokenizer(text_data, padding=True, truncation=True, return_tensors='pt', max_length=max_length)
 
 
+
+
+
+dataset = Dataset.from_dict(encoded_inputs)
+
+
 model = AutoModel.from_pretrained(model_name)
-Feater_Extractor = BertEmbInfModel(model)
-Feater_Extractor.eval()
+
+CLS_Feateres_Extractor = CLSEmbInfModel(model)
+Mean_Features_Extractor = MeanEmbInfModel(model)
+CLS_Feateres_Extractor.eval()
+Mean_Features_Extractor.eval()
 
 inference_args = TrainingArguments(
+    output_dir=inf_path,
     do_train=False,
     do_predict=True,
     per_device_eval_batch_size=batch_size,
@@ -73,8 +95,8 @@ inference_args = TrainingArguments(
     fp16_full_eval=False,
 )
 
-trainer = Trainer(model=Feater_Extractor, args=inference_args)
-out_cls_emb, out_mean_emb = trainer.predict(encoded_inputs)
+trainer = Trainer(model=CLS_Feateres_Extractor, args=inference_args)
+out_cls_emb, out_mean_emb = trainer.predict(dataset)
 
 with torch.no_grad():
     output = model(**encoded_inputs)
