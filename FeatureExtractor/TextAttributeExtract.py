@@ -9,7 +9,8 @@ parser = argparse.ArgumentParser(description='Process text data and save the ove
 parser.add_argument('--csv_file', type=str, help='Path to the CSV file')
 parser.add_argument('--text_column', type=str, default='text', help='Name of the column containing text data')
 parser.add_argument('--model_name', type=str, default='bert-base-uncased', help='Name or path of the Huggingface model')
-parser.add_argument('--output_file', type=str, help='Path to save the NPY file')
+parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
+parser.add_argument('--path', type=str, default='./', help='Path to the NPY File')
 parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
 
 # 解析命令行参数
@@ -17,8 +18,10 @@ args = parser.parse_args()
 csv_file = args.csv_file
 text_column = args.text_column
 model_name = args.model_name
-output_file = args.output_file
+name = args.name
 max_length = args.max_length
+
+output_file = args.path + name + model_name.replace("-", "_") + str(max_length)
 
 # 读取CSV文件
 df = pd.read_csv(csv_file)
@@ -37,6 +40,8 @@ with torch.no_grad():
 
 # 提取CLS表示
 cls_embeddings = output.last_hidden_state[:, 0, :].numpy()
-
+# 提取平均表示
+mean_embeddings = torch.mean(output.last_hidden_state, dim=1)
 # 保存整体表示为NPY文件
-np.save(output_file, cls_embeddings)
+np.save(output_file + "_cls.npy", cls_embeddings)
+np.save(output_file + "_mean.npy", mean_embeddings)
