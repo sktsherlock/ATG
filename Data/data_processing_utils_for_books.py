@@ -5,7 +5,7 @@ import re
 import pandas as pd
 import requests
 import argparse
-from data_processing_utils import  construct_graph, export_as_csv, parse_json, download_images
+from data_processing_utils import construct_graph, export_as_csv, parse_json, download_images
 
 # 读取 json 文件并将其转换为 DataFrame 并返回
 def parse_json_for_books(data_path):
@@ -13,7 +13,7 @@ def parse_json_for_books(data_path):
     df = pd.read_json(data_path, lines=True, orient='records')
     # 只取其中几列
     df = pd.DataFrame(df, columns=['asin', 'category', 'description', 'title',
-                                   'also_buy', 'also_view', 'imageURL'])
+                                   'also_buy', 'also_view', 'imageURLHighRes'])
     return df
 
 
@@ -23,7 +23,7 @@ def data_filter_for_books(df, category, category_numbers=10):
     df = df.drop_duplicates(subset=['asin'])
     df = df.dropna()
     # 删除 DataFrame 中含有空图像或不含三级类别(三级类别会作为分类的 label)的行
-    mask = (df['imageURL'].str.len() >= 1) & (df['category'].str.len() >= 3)
+    mask = (df['imageURLHighRes'].str.len() >= 1) & (df['category'].str.len() >= 3)
     df = df[mask]
     print('步骤一****************************************************************')
     # 将 &amp; 替换为 &
@@ -123,36 +123,10 @@ def data_filter_for_books(df, category, category_numbers=10):
     df['label'] = df['third_category'].map(hash_table)  # 三级类别映射为递增的 label
 
     # 只保留 DataFrame 中需要的列
-    df = df[['id', 'category', 'text', 'also_buy', 'also_view', 'imageURL', 'third_category', 'label']]
+    df = df[['id', 'category', 'text', 'also_buy', 'also_view', 'imageURLHighRes', 'third_category', 'label']]
 
     return df
 
-
-# 爬取 DataFrame 中的图片并保存
-def download_images_for_books(df, output_img_path):
-    print('Downloading images...')
-    total = len(df)
-    for index, row in df.iterrows():
-        if row['imageURL']:
-            need_deleted = True  # 是否需要删除该商品
-            for image_url in row['imageURL']:
-                image_name = '{}.jpg'.format(int(index))  # 图像命名为 '商品id.jpg'
-                image_path = os.path.join(output_img_path, image_name)
-                if not os.path.exists(output_img_path):
-                    os.makedirs(output_img_path)
-                image_data = requests.get(image_url).content  # 获取图像数据
-
-                if not image_data.lower() == 'Not Found'.encode('utf-8').lower():  # 图像存在
-                    need_deleted = False  # 不需要删除该商品
-                    with open(image_path, 'wb') as f:
-                        f.write(image_data)
-                    break
-            if need_deleted:
-                print('No.{} need to be deleted'.format(int(index)))
-        if (index + 1) % 50 == 0:
-            print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
-    print('Successfully downloaded images')
-    return df
 
 
 if __name__ == '__main__':
@@ -180,4 +154,4 @@ if __name__ == '__main__':
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
-    download_images_for_books(df, output_img_path)
+    download_images(df, output_img_path)
