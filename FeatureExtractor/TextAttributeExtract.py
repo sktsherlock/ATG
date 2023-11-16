@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import torch
+import os
 from transformers import AutoTokenizer, AutoModel
 
 # 定义命令行参数
@@ -14,7 +15,6 @@ parser.add_argument('--path', type=str, default='./', help='Path to the NPY File
 parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 # 解析命令行参数
 args = parser.parse_args()
 csv_file = args.csv_file
@@ -22,6 +22,9 @@ text_column = args.text_column
 model_name = args.model_name
 name = args.name
 max_length = args.max_length
+
+if not os.path.exists(args.path):
+    os.makedirs(args.path)
 
 output_file = args.path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
 
