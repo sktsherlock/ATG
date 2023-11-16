@@ -6,41 +6,6 @@ import os
 import logging
 import datetime
 import sys
-import time
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    # Deafault arguments
-    parser.add_argument('--path', default='Data/', help='Dataset loading path')
-    parser.add_argument('--data_name', default='cifar10', type=str, help='Dataset name')
-    parser.add_argument('--model_name', default='resnet50d', type=str, help='Model name')
-    parser.add_argument('--task', default='node', type=str, help='Task name')
-    parser.add_argument('--attribute', default='image', type=str, help='The attribute user choose to use')
-    parser.add_argument('--gpu', type=str, default='0',
-                        help='GPU index, -1 for CPU')
-    parser.add_argument('--seed',
-                        help='Seed used for splitting sets. None by default, set to an integer for reproducibility',
-                        type=int, default=42)
-    parser.add_argument('--runs', type=int, default=1, help='Number of runs to run')
-    parser.add_argument('--device', type=str, default=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
-    # Training process
-    parser.add_argument('--epochs', type=int, default=500,
-                        help='Number of training epochs')
-    parser.add_argument('--val_interval', type=int, default=10,
-                        help='Evaluate on validation set every this many epochs. Must be >= 1.')
-    parser.add_argument('--lr', type=float, default=2e-05,
-                        help='learning rate (default holds for batch size 64)')
-    parser.add_argument('--lr_step', type=str, default='1000000',
-                        help='Comma separated string of epochs when to reduce learning rate by a factor of 10.'
-                             ' The default is a large value, meaning that the learning rate will not change.')
-    parser.add_argument('--batch_size', type=int, default=64,
-                        help='Training batch size')
-    # Model
-    parser.add_argument('--model', choices={"transformer", "LINEAR"}, default="transformer",
-                        help="Model class")
-    parser.add_argument('--d_model', type=int, default=256,
-                        help='Dimension of the first linear layer')
-    return parser.parse_args()
 
 def set_random_seed(seed):
     random.seed(seed)
