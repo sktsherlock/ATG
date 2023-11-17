@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd
 import torch
 import os
-from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer
+from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding
 from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
-from torch.utils.data import DataLoader
+
 
 
 # 定义命令行参数
@@ -42,9 +42,9 @@ class CLSEmbInfModel(PreTrainedModel):
         super().__init__(model.config)
         self.encoder = model
     @torch.no_grad()
-    def forward(self, inputs):
-        # Extract outputs from the model
-        outputs = self.encoder(**inputs)
+    def forward(self, input_ids, attention_mask):
+        # Extract outputs from the model3
+        outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
         # Use CLS Emb as sentence emb.
         node_cls_emb = outputs.last_hidden_state[:, 0, :]  # Last layer
         return TokenClassifierOutput(logits=node_cls_emb)
@@ -54,27 +54,21 @@ class MeanEmbInfModel(PreTrainedModel):
         super().__init__(model.config)
         self.encoder = model
     @torch.no_grad()
-    def forward(self, inputs):
+    def forward(self, input_ids, attention_mask):
         # Extract outputs from the model
-        outputs = self.encoder(**inputs)
+        outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
         # Use Mean Emb as sentence emb.
         node_mean_emb = torch.mean(outputs.last_hidden_state, dim=1)
         return TokenClassifierOutput(logits=node_mean_emb)
 # 读取CSV文件
 df = pd.read_csv(csv_file)
-
-# 加载模型和分词器
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-# 处理文本数据并进行推理
 text_data = df[text_column].tolist()
 
-# 编码文本数据
-encoded_inputs = tokenizer(text_data, padding=True, truncation=True, return_tensors='pt', max_length=max_length)
+# 加载模型和分词器
+tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
 
-
-
-
-
+# 编码文本数据并转为数据集
+encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
 dataset = Dataset.from_dict(encoded_inputs)
 
 
@@ -92,19 +86,18 @@ inference_args = TrainingArguments(
     per_device_eval_batch_size=batch_size,
     dataloader_drop_last=False,
     dataloader_num_workers=1,
-    fp16_full_eval=False,
+    fp16_full_eval=args.fp16,
 )
 
+# CLS 特征提取
 trainer = Trainer(model=CLS_Feateres_Extractor, args=inference_args)
-out_cls_emb, out_mean_emb = trainer.predict(dataset)
+cls_emb = trainer.predict(dataset)
 
-with torch.no_grad():
-    output = model(**encoded_inputs)
+# Mean 特征提取
+trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
+mean_emb = trainer.predict(dataset)
 
-# 提取CLS表示
-cls_embeddings = output.last_hidden_state[:, 0, :].cpu().numpy()
-# 提取平均表示
-mean_embeddings = torch.mean(output.last_hidden_state, dim=1).cpu()
+
 # 保存整体表示为NPY文件
-np.save(output_file + "_cls.npy", cls_embeddings)
-np.save(output_file + "_mean.npy", mean_embeddings)
+np.save(output_file + "_cls.npy", cls_emb.predictions)
+np.save(output_file + "_mean.npy", mean_emb.predictions)
