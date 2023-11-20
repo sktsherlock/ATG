@@ -7,7 +7,6 @@ import torch as th
 import numpy as np
 import torch.nn.functional as F
 
-sys.path.append(".")
 
 from ..GraphData import load_data
 from ..NodeClassification import classification
