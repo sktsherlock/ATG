@@ -1,3 +1,4 @@
+import sys
 import torch.nn as nn
 import dgl.nn.pytorch as dglnn
 import argparse
@@ -5,8 +6,11 @@ import wandb
 import torch as th
 import numpy as np
 import torch.nn.functional as F
-from GNN.GraphData import load_data
-from GNN.NodeClassification import classification
+
+sys.path.append(".")
+
+from ..GraphData import load_data
+from ..NodeClassification import classification
 
 
 # 模型定义模块
