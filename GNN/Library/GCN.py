@@ -146,7 +146,7 @@ def main():
     print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
-    n_classes = (labels.max() + 1).item()
+    n_classes = (labels.max()).item()
     graph.create_formats_()
 
     train_idx = train_idx.to(device)

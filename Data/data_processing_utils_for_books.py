@@ -115,7 +115,7 @@ def data_filter_for_books(df, category, category_numbers=10):
     print('步骤九****************************************************************')
     # 将三级类别映射为递增的 label
     hash_table = {}
-    label_number = 1
+    label_number = 0
     for index, row in df.iterrows():
         if row['third_category'] not in hash_table:
             hash_table[row['third_category']] = label_number
