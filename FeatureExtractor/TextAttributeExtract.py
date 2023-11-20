@@ -4,10 +4,12 @@ import pandas as pd
 import torch
 import os
 from typing import Optional
-from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, AutoConfig
+from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
+    AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 from dataclasses import dataclass, field
+
 
 @dataclass
 class DataTrainingArguments:
@@ -56,6 +58,8 @@ class DataTrainingArguments:
         else:
             test_extension = self.test_file.split(".")[-1]
             assert test_extension in ["csv", "json"], "`test_file` should be a csv or a json file."
+
+
 @dataclass
 class ModelArguments:
     """
@@ -189,8 +193,8 @@ class ModelArguments:
         metadata={"help": "If true, do not load the pretained weights and initialize the model with random weights."},
     )
 
-def main():
 
+def main():
     # 定义命令行参数
     parser = argparse.ArgumentParser(
         description='Process text data and save the overall representation as an NPY file.')
@@ -205,7 +209,6 @@ def main():
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
-
 
     # 解析命令行参数
     args = parser.parse_args()
@@ -292,6 +295,7 @@ def main():
     trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
     mean_emb = trainer.predict(dataset)
     np.save(output_file + "_mean.npy", mean_emb.predictions)
+
 
 if __name__ == "__main__":
     main()

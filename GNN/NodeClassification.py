@@ -21,7 +21,7 @@ def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
 
 @th.no_grad()
 def evaluate(
-    model, graph, feat, labels, train_idx, val_idx, test_idx, metric='accuracy', label_smoothing=0.1
+    model, graph, feat, labels, train_idx, val_idx, test_idx, metric='accuracy', label_smoothing=0.1, average=None
 ):
     model.eval()
     with th.no_grad():
@@ -29,9 +29,9 @@ def evaluate(
     val_loss = cross_entropy(pred[val_idx], labels[val_idx], label_smoothing)
     test_loss = cross_entropy(pred[test_idx], labels[test_idx], label_smoothing)
 
-    train_results = get_metric(metric, pred[train_idx], labels[train_idx])
-    val_results = get_metric(metric, pred[val_idx], labels[val_idx])
-    test_results = get_metric(metric, pred[test_idx,], labels[test_idx])
+    train_results = get_metric(metric, pred[train_idx], labels[train_idx], average=average)
+    val_results = get_metric(metric, pred[val_idx], labels[val_idx], average=average)
+    test_results = get_metric(metric, pred[test_idx,], labels[test_idx], average=average)
 
     return train_results, val_results, test_results, val_loss, test_loss
 
@@ -79,6 +79,7 @@ def classification(
                 test_idx,
                 args.metric,
                 args.label_smoothing,
+                args.average
             )
             wandb.log({'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss})
             lr_scheduler.step(train_loss)

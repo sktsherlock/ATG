@@ -107,6 +107,9 @@ def args_init():
         "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
         help="The metric to be used."
     )
+    argparser.add_argument(
+        "--average", type=str, default='weighted', choices=['weighted', 'micro', 'macro', None]
+    )
     # ! Split datasets
     argparser.add_argument(
         "--train_ratio", type=float, default=0.6, help="training ratio"

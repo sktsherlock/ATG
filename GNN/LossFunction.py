@@ -1,6 +1,7 @@
 import math
 import torch as th
 import torch.nn.functional as F
+import argparse
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 epsilon = 1 - math.log(2)
@@ -26,13 +27,24 @@ def get_metric(y_true, y_pred, metric, average='weighted'):
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser(
+        "Metric debug",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    argparser.add_argument(
+        "--average", type=str, default='weighted', choices=['weighted', 'micro', 'macro', None]
+    )
+    args = argparser.parse_args()
+
     pred = [1, 0, 1, 1, 0]
     labels = [1, 0, 0, 1, 1]
 
     accuracy = get_metric(pred, labels, "accuracy")
     precision = get_metric(pred, labels, "precision")
     recall = get_metric(pred, labels, "recall")
+    f1 = get_metric(pred, labels, "f1", average=args.average)
 
     print("Accuracy:", accuracy)
     print("Precision:", precision)
     print("Recall:", recall)
+    print(f"F1 in {args.average}:", f1)
