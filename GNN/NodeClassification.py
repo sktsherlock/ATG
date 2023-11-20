@@ -29,9 +29,9 @@ def evaluate(
     val_loss = cross_entropy(pred[val_idx], labels[val_idx], label_smoothing)
     test_loss = cross_entropy(pred[test_idx], labels[test_idx], label_smoothing)
 
-    train_results = get_metric(metric, pred[train_idx], labels[train_idx], average=average)
-    val_results = get_metric(metric, pred[val_idx], labels[val_idx], average=average)
-    test_results = get_metric(metric, pred[test_idx,], labels[test_idx], average=average)
+    train_results = get_metric(pred[train_idx], labels[train_idx], metric, average=average)
+    val_results = get_metric(pred[val_idx], labels[val_idx], metric, average=average)
+    test_results = get_metric(pred[test_idx,], labels[test_idx], metric, average=average)
 
     return train_results, val_results, test_results, val_loss, test_loss
 
