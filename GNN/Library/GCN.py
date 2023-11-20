@@ -4,18 +4,21 @@ import argparse
 import wandb
 import torch as th
 import numpy as np
-global device, in_feats, n_classes
+import torch.nn.functional as F
+from ..GraphData import load_data
+from ..NodeClassification import classification
+
+
 # 模型定义模块
 class GCN(nn.Module):
     def __init__(
-        self,
-        in_feats,
-        n_hidden,
-        n_classes,
-        n_layers,
-        activation,
-        dropout,
-        input_drop=0.0,
+            self,
+            in_feats,
+            n_hidden,
+            n_classes,
+            n_layers,
+            activation,
+            dropout,
     ):
         super().__init__()
         self.n_layers = n_layers
@@ -37,13 +40,11 @@ class GCN(nn.Module):
             if i < n_layers - 1:
                 self.norms.append(nn.BatchNorm1d(out_hidden))
 
-        self.input_drop = nn.Dropout(input_drop)
         self.dropout = nn.Dropout(dropout)
         self.activation = activation
 
     def forward(self, graph, feat):
         h = feat
-        h = self.input_drop(h)
 
         for i in range(self.n_layers):
             conv = self.convs[i](graph, h)
@@ -55,6 +56,7 @@ class GCN(nn.Module):
                 h = self.dropout(h)
 
         return h
+
 
 # 参数定义模块
 def args_init():
@@ -82,9 +84,10 @@ def args_init():
         "--input-drop", type=float, default=0.1, help="input drop rate"
     )
     argparser.add_argument(
-        "--learning-eps", type=bool, default=True,
-        help="If True, learn epsilon to distinguish center nodes from neighbors;"
-             "If False, aggregate neighbors and center nodes altogether."
+        "--min-lr", type=float, default=0.0001, help="the min learning rate"
+    )
+    argparser.add_argument(
+        "--label-smoothing", type=float, default=0.1, help="the smoothing factor"
     )
     argparser.add_argument("--wd", type=float, default=0, help="weight decay")
     # ! default
@@ -95,16 +98,17 @@ def args_init():
         "--eval_steps", type=int, default=5, help="eval in every epochs"
     )
     argparser.add_argument(
-        "--use_PLM", type=str, default=None, help="Use LM embedding as feature"
+        "--feature", type=str, default=None, help="Use LM embedding as feature"
     )
     argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
     )
     argparser.add_argument(
-        "--data_name", type=str, default='ogbn-arxiv', help="The datasets to be implemented."
+        "--data_path", type=str, default=None, help="The datasets to be implemented.", required=True
     )
     argparser.add_argument(
-        "--metric", type=str, default='acc', help="The datasets to be implemented."
+        "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
+        help="The metric to be used."
     )
     # ! Split datasets
     argparser.add_argument(
@@ -115,19 +119,19 @@ def args_init():
     )
     return argparser
 
-def main():
 
+def main():
     argparser = args_init()
     args = argparser.parse_args()
-    wandb.config = args
     wandb.init(config=args, reinit=True)
+
     device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
 
     # load data
-    data = load_data(name=args.data_name, train_ratio=args.train_ratio, val_ratio=args.val_ratio)
-    graph, labels, train_idx, val_idx, test_idx = data
+    graph, labels, train_idx, val_idx, test_idx = load_data(args.data_path, train_ratio=args.train_ratio,
+                                                            val_ratio=args.val_ratio)
 
-    # add reverse edges
+    # add reverse edges, tranfer to the  undirected graph
     srcs, dsts = graph.all_edges()
     graph.add_edges(dsts, srcs)
 
@@ -136,12 +140,7 @@ def main():
     graph = graph.remove_self_loop().add_self_loop()
     print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
-    if args.use_PLM:
-        feat = th.from_numpy(np.load(args.use_PLM).astype(np.float32)).to(device)
-        in_feats = feat.shape[1]
-    else:
-        feat = graph.ndata["feat"].to(device)
-        in_feats = graph.ndata["feat"].shape[1]
+    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
     n_classes = (labels.max() + 1).item()
     graph.create_formats_()
 
@@ -151,28 +150,34 @@ def main():
     print(f'Train_idx: {len(train_idx)}')
     print(f'Valid_idx: {len(val_idx)}')
     print(f'Test_idx: {len(test_idx)}')
+
     labels = labels.to(device)
     graph = graph.to(device)
 
     # run
-    val_accs = []
-    test_accs = []
+    val_results = []
+    test_results = []
+
+    # Model implementation
+    model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout)
+    TRAIN_NUMBERS = sum(
+        [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
+    )
+    print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for i in range(args.n_runs):
-        val_acc, test_acc = run(
+        val_result, test_result = classification(
             args, graph, feat, labels, train_idx, val_idx, test_idx, i
         )
-        wandb.log({'Val_Acc': val_acc, 'Test_Acc': test_acc})
-        val_accs.append(val_acc)
-        test_accs.append(test_acc)
+        wandb.log({f'Val {args.metric}': val_results, f'Test {args.metric}': test_results})
+        val_results.append(val_result)
+        test_results.append(test_result)
 
     print(f"Runned {args.n_runs} times")
-    print("Val Accs:", val_accs)
-    print("Test Accs:", test_accs)
-    print(f"Average val accuracy: {np.mean(val_accs)} ± {np.std(val_accs)}")
-    print(f"Average test accuracy: {np.mean(test_accs)} ± {np.std(test_accs)}")
-    print(f"Number of params: {count_parameters(args)}")
-    wandb.log({f'Mean_Val_{args.metric}': np.mean(val_accs), f'Mean_Test_{args.metric}': np.mean(test_accs)})
+    print(f"Average val accuracy: {np.mean(val_results)} ± {np.std(val_results)}")
+    print(f"Average test accuracy: {np.mean(test_results)} ± {np.std(test_results)}")
+    wandb.log({f'Mean_Val_{args.metric}': np.mean(val_results), f'Mean_Test_{args.metric}': np.mean(test_results)})
+
 
 if __name__ == "__main__":
     main()
