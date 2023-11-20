@@ -14,6 +14,8 @@ def cross_entropy(x, target, label_smoothing):
 
 
 def get_metric(y_true, y_pred, metric, average=None):
+    y_true = y_true.cpu()
+    y_pred = y_pred.cpu()
     if metric == "accuracy":
         return accuracy_score(y_true, y_pred)
     elif metric == "precision":
