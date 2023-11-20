@@ -8,10 +8,9 @@ import numpy as np
 import torch.nn.functional as F
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from GraphData import load_data
-from NodeClassification import classification
+from ..GraphData import load_data
+from ..NodeClassification import classification
 
 
 # 模型定义模块
