@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import torch
 import os
+import sys
 from typing import Optional
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
     AutoConfig
@@ -10,6 +11,7 @@ from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 from dataclasses import dataclass, field
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 @dataclass
 class DataTrainingArguments:
