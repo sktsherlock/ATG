@@ -5,8 +5,8 @@ import wandb
 import torch as th
 import numpy as np
 import torch.nn.functional as F
-from ..GraphData import load_data
-from ..NodeClassification import classification
+from GNN.GraphData import load_data
+from GNN.NodeClassification import classification
 
 
 # 模型定义模块
