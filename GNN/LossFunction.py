@@ -32,7 +32,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     argparser.add_argument(
-        "--average", type=str, default='weighted', choices=['weighted', 'micro', 'macro', None]
+        "--average", type=str, default=None, choices=['weighted', 'micro', 'macro', None]
     )
     args = argparser.parse_args()
 
