@@ -81,9 +81,6 @@ def args_init():
         "--n-hidden", type=int, default=256, help="number of hidden units"
     )
     argparser.add_argument(
-        "--input-drop", type=float, default=0.1, help="input drop rate"
-    )
-    argparser.add_argument(
         "--min-lr", type=float, default=0.0001, help="the min learning rate"
     )
     argparser.add_argument(
@@ -95,16 +92,16 @@ def args_init():
         "--log-every", type=int, default=20, help="log every LOG_EVERY epochs"
     )
     argparser.add_argument(
-        "--eval_steps", type=int, default=5, help="eval in every epochs"
+        "--eval_steps", type=int, default=1, help="eval in every epochs"
     )
     argparser.add_argument(
-        "--feature", type=str, default=None, help="Use LM embedding as feature"
+        "--feature", type=str, default=None, help="Use LM embedding as feature", required=True
     )
     argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
     )
     argparser.add_argument(
-        "--data_path", type=str, default=None, help="The datasets to be implemented.", required=True
+        "--graph_path", type=str, default=None, help="The datasets to be implemented.", required=True
     )
     argparser.add_argument(
         "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
@@ -128,7 +125,7 @@ def main():
     device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
 
     # load data
-    graph, labels, train_idx, val_idx, test_idx = load_data(args.data_path, train_ratio=args.train_ratio,
+    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
                                                             val_ratio=args.val_ratio)
 
     # add reverse edges, tranfer to the  undirected graph
