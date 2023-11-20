@@ -4,12 +4,10 @@ import pandas as pd
 import torch
 import os
 from typing import Optional
-from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
-    AutoConfig
+from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 from dataclasses import dataclass, field
-
 
 @dataclass
 class DataTrainingArguments:
@@ -191,13 +189,7 @@ class ModelArguments:
         metadata={"help": "If true, do not load the pretained weights and initialize the model with random weights."},
     )
 
-
-
 def main():
-    config = AutoConfig.from_pretrained(
-        model_args.config_name if model_args.config_name else model_args.model_name_or_path,
-
-    )
 
     # 定义命令行参数
     parser = argparse.ArgumentParser(
@@ -214,6 +206,7 @@ def main():
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
 
+
     # 解析命令行参数
     args = parser.parse_args()
     csv_file = args.csv_file
@@ -223,6 +216,7 @@ def main():
     max_length = args.max_length
     batch_size = args.batch_size
     inf_path = f"{args.path}cache/"
+    tokenizer_name = args.tokenizer_name
 
     if not os.path.exists(args.path):
         os.makedirs(args.path)
@@ -262,7 +256,10 @@ def main():
     text_data = df[text_column].tolist()
 
     # 加载模型和分词器
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+    if tokenizer_name:
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
+    elif model_name:
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
 
     # 编码文本数据并转为数据集
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
@@ -286,17 +283,15 @@ def main():
     )
 
     # CLS 特征提取
-    trainer = Trainer(model=CLS_Feateres_Extractor, args=inference_args)
-    cls_emb = trainer.predict(dataset)
+    if args.cls:
+        trainer = Trainer(model=CLS_Feateres_Extractor, args=inference_args)
+        cls_emb = trainer.predict(dataset)
+        # 保存CLS(首个字符的表示)表示为NPY文件
+        np.save(output_file + "_cls.npy", cls_emb.predictions)
 
-    # Mean 特征提取
     trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
     mean_emb = trainer.predict(dataset)
-
-    # 保存整体表示为NPY文件
-    np.save(output_file + "_cls.npy", cls_emb.predictions)
     np.save(output_file + "_mean.npy", mean_emb.predictions)
-
 
 if __name__ == "__main__":
     main()
