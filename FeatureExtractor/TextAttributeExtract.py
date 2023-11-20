@@ -11,8 +11,6 @@ from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 from dataclasses import dataclass, field
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 @dataclass
 class DataTrainingArguments:
     """
