@@ -13,7 +13,7 @@ def cross_entropy(x, target, label_smoothing):
     return th.mean(y)
 
 
-def get_metric(y_true, y_pred, metric, average='weighted'):
+def get_metric(y_true, y_pred, metric, average=None):
     if metric == "accuracy":
         return accuracy_score(y_true, y_pred)
     elif metric == "precision":
