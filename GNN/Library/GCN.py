@@ -164,7 +164,7 @@ def main():
     test_results = []
 
     # Model implementation
-    model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout)
+    model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
@@ -172,7 +172,7 @@ def main():
 
     for i in range(args.n_runs):
         val_result, test_result = classification(
-            args, graph, feat, labels, train_idx, val_idx, test_idx, i
+            args, graph, model, feat, labels, train_idx, val_idx, test_idx, i
         )
         wandb.log({f'Val {args.metric}': val_results, f'Test {args.metric}': test_results})
         val_results.append(val_result)
