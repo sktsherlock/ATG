@@ -214,6 +214,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
     parser.add_argument('--class_numbers', type=int, help='Dataset class numbers', required=True)
+    parser.add_argument('--download_image', action='store_true', help='whether to download the image')
     args = parser.parse_args()
 
     data_path = args.data_path
@@ -232,4 +233,5 @@ if __name__ == '__main__':
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
-    download_images(df, output_img_path)
+    if args.download_image:
+        download_images(df, output_img_path)
