@@ -93,7 +93,7 @@ def data_filter_for_books(df, category, category_numbers=10):
     print('步骤六****************************************************************')
     # 合并 description 和 title
     df['text'] = df.apply(
-        lambda per_row: 'Description: {}; Title: {}'.format(per_row['cleaned_description'], per_row['title']), axis=1)
+        lambda per_row: 'Title: {}; Description: {}'.format(per_row['title'], per_row['cleaned_description']), axis=1)
     # 再次替换 HTML 标签和空白
     df['text'] = df['text'].apply(lambda text: re.sub('<[\s\S]*>', '',
                                                       re.sub('\s+', ' ', text)) if text else None)
