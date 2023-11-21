@@ -152,6 +152,7 @@ def main():
 
     # add reverse edges, tranfer to the  undirected graph
     if args.undirected:
+        print("The Graph change to the undirected graph")
         srcs, dsts = graph.all_edges()
         graph.add_edges(dsts, srcs)
 
