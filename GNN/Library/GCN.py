@@ -93,6 +93,9 @@ def args_init():
         "--n-hidden", type=int, default=256, help="number of hidden units"
     )
     argparser.add_argument(
+        "--dropout", type=float, default=0.5, help="dropout rate"
+    )
+    argparser.add_argument(
         "--min-lr", type=float, default=0.0001, help="the min learning rate"
     )
     argparser.add_argument(
@@ -106,14 +109,18 @@ def args_init():
     argparser.add_argument(
         "--eval_steps", type=int, default=1, help="eval in every epochs"
     )
+    # ! Data related
     argparser.add_argument(
         "--feature", type=str, default=None, help="Use LM embedding as feature", required=True
     )
     argparser.add_argument(
-        "--dropout", type=float, default=0.5, help="dropout rate"
+        "--graph_path", type=str, default=None, help="The datasets to be implemented.", required=True
     )
     argparser.add_argument(
-        "--graph_path", type=str, default=None, help="The datasets to be implemented.", required=True
+        "--undirected", type=bool, default=False, help="Whether to undirect the graph."
+    )
+    argparser.add_argument(
+        "--selfloop", type=bool, default=False, help="Whether to add self loop in the graph."
     )
     argparser.add_argument(
         "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
@@ -144,13 +151,15 @@ def main():
                                                             val_ratio=args.val_ratio)
 
     # add reverse edges, tranfer to the  undirected graph
-    srcs, dsts = graph.all_edges()
-    graph.add_edges(dsts, srcs)
+    if args.undirected:
+        srcs, dsts = graph.all_edges()
+        graph.add_edges(dsts, srcs)
 
     # add self-loop
-    print(f"Total edges before adding self-loop {graph.number_of_edges()}")
-    graph = graph.remove_self_loop().add_self_loop()
-    print(f"Total edges after adding self-loop {graph.number_of_edges()}")
+    if args.selfloop:
+        print(f"Total edges before adding self-loop {graph.number_of_edges()}")
+        graph = graph.remove_self_loop().add_self_loop()
+        print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
     n_classes = (labels.max()+1).item()
