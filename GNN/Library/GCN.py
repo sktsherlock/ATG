@@ -146,7 +146,9 @@ def main():
     print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
-    n_classes = (labels.max()).item()
+    n_classes = (labels.max()+1).item()
+    print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
+
     graph.create_formats_()
 
     train_idx = train_idx.to(device)
@@ -171,6 +173,7 @@ def main():
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for i in range(args.n_runs):
+        model.reset_parameters()
         val_result, test_result = classification(
             args, graph, model, feat, labels, train_idx, val_idx, test_idx, i
         )
