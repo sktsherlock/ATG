@@ -19,9 +19,9 @@ def get_metric(y_true, y_pred, metric, average=None):
     if metric == "accuracy":
         return accuracy_score(y_true, y_pred)
     elif metric == "precision":
-        return precision_score(y_true, y_pred)
+        return precision_score(y_true, y_pred, average=average)
     elif metric == "recall":
-        return recall_score(y_true, y_pred)
+        return recall_score(y_true, y_pred, average=average)
     elif metric == "f1":
         return f1_score(y_true, y_pred, average=average)
     else:
