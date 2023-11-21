@@ -105,6 +105,13 @@ class GAT(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.activation = activation
 
+    def reset_parameters(self):
+        for conv in self.convs:
+            conv.reset_parameters()
+
+        for norm in self.norms:
+            norm.reset_parameters()
+
     def forward(self, graph, feat):
         h = feat
 
