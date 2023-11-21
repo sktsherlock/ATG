@@ -111,6 +111,9 @@ def args_init():
     argparser.add_argument(
         "--early_stop_patience", type=int, default=None, help="when to stop the  training loop to be aviod of the overfiting"
     )
+    argparser.add_argument(
+        "--warmup_epochs", type=int, default=None, help="The warmup epochs"
+    )
     # ! Data related
     argparser.add_argument(
         "--feature", type=str, default=None, help="Use LM embedding as feature", required=True

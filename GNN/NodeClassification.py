@@ -3,7 +3,7 @@ import wandb
 import numpy as np
 import torch as th
 import torch.optim as optim
-from LossFunction import cross_entropy, get_metric, EarlyStopping
+from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
 
 
 def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
@@ -60,6 +60,9 @@ def classification(
 
     for epoch in range(1, args.n_epochs + 1):
         tic = time.time()
+
+        if args.warmup_epochs is not None:
+            adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
 
         train_loss, pred = train(
             model, graph, feat, labels, train_idx, optimizer, label_smoothing=args.label_smoothing

@@ -32,10 +32,10 @@ class EarlyStopping:
 
 
 
-def adjust_learning_rate(optimizer, lr, epoch):
-    if epoch <= 50:
+def adjust_learning_rate(optimizer, lr, epoch, warmup_epochs=50):
+    if epoch <= warmup_epochs:
         for param_group in optimizer.param_groups:
-            param_group["lr"] = lr * epoch / 50
+            param_group["lr"] = lr * epoch / warmup_epochs
 
 
 def cross_entropy(x, target, label_smoothing):
