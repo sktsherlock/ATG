@@ -13,7 +13,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from GraphData import load_data
 from NodeClassification import classification
 
-
 # 模型定义模块
 class GCN(nn.Module):
     def __init__(
@@ -109,6 +108,9 @@ def args_init():
     argparser.add_argument(
         "--eval_steps", type=int, default=1, help="eval in every epochs"
     )
+    argparser.add_argument(
+        "--early_stop_patience", type=int, default=None, help="when to stop the  training loop to be aviod of the overfiting"
+    )
     # ! Data related
     argparser.add_argument(
         "--feature", type=str, default=None, help="Use LM embedding as feature", required=True
@@ -189,10 +191,10 @@ def main():
     )
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
-    for i in range(args.n_runs):
+    for run in range(args.n_runs):
         model.reset_parameters()
         val_result, test_result = classification(
-            args, graph, model, feat, labels, train_idx, val_idx, test_idx, i
+            args, graph, model, feat, labels, train_idx, val_idx, test_idx, run
         )
         wandb.log({f'Val {args.metric}': val_results, f'Test {args.metric}': test_results})
         val_results.append(val_result)

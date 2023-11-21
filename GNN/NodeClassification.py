@@ -3,7 +3,7 @@ import wandb
 import numpy as np
 import torch as th
 import torch.optim as optim
-from LossFunction import cross_entropy, get_metric
+from LossFunction import cross_entropy, get_metric, EarlyStopping
 
 
 def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
@@ -40,6 +40,8 @@ def evaluate(
 
 def classification(
         args, graph, model, feat, labels, train_idx, val_idx, test_idx, n_running):
+    if args.early_stop_patience is not None:
+        stopper = EarlyStopping(patience=args.early_stop_patience)
     optimizer = optim.AdamW(
         model.parameters(), lr=args.lr, weight_decay=args.wd
     )
@@ -92,12 +94,16 @@ def classification(
                 best_val_result = val_result
                 final_test_result = test_result
 
+            if args.early_stop_patience is not None:
+                if stopper.step(val_loss):
+                    break
+
             if epoch % args.log_every == 0:
                 print(
                     f"Run: {n_running}/{args.n_runs}, Epoch: {epoch}/{args.n_epochs}, Average epoch time: {total_time / epoch:.2f}\n"
                     f"Loss: {train_loss.item():.4f}\n"
                     f"Train/Val/Test loss: {train_loss:.4f}/{val_loss:.4f}/{test_loss:.4f}\n"
-                    f"Train/Val/Test/Best val/Final test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
+                    f"Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
                 )
 
     print("*" * 50)

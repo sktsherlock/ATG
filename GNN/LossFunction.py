@@ -7,6 +7,37 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 epsilon = 1 - math.log(2)
 
 
+class EarlyStopping:
+    def __init__(self, patience=10):
+        self.patience = patience
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+
+    def step(self, loss):
+        score = loss
+        if self.best_score is None:
+            self.best_score = score
+        elif score > self.best_score:
+            self.counter += 1
+            print(
+                f"EarlyStopping counter: {self.counter} out of {self.patience}"
+            )
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.counter = 0
+        return self.early_stop
+
+
+
+def adjust_learning_rate(optimizer, lr, epoch):
+    if epoch <= 50:
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = lr * epoch / 50
+
+
 def cross_entropy(x, target, label_smoothing):
     y = F.cross_entropy(x, target, reduction="mean", label_smoothing=label_smoothing)
     y = th.log(epsilon + y) - math.log(epsilon)
