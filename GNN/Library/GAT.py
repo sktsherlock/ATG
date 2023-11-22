@@ -448,7 +448,7 @@ def main():
         val_result, test_result = classification(
             args, graph, model, feat, labels, train_idx, val_idx, test_idx, run
         )
-        wandb.log({f'Val {args.metric}': val_result, f'Test {args.metric}': test_result})
+        wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
         test_results.append(test_result)
 
