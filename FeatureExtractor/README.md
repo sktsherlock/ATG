@@ -20,3 +20,9 @@ python TextAttributeExtract.py --csv_file '../Data/Movies/Movies.csv' --model_na
 
 ```
 
+# Image Attribute -> Feature 
+## Movies
+```python 
+# ResNet-50 
+python ImageExtract.py --data_dir '../Data/Movies/MagazinesImages/' --model_name 'resnet50d' --name 'Movies' --path '../Data/Movies/ImageFeature/' --batch_size 200 --pretrained True 
+```

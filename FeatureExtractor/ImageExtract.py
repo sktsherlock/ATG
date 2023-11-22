@@ -21,7 +21,7 @@ def create_datasets(image_size, data_mean, data_std, inference_path):
     )
 
     inference_dataset = timm.data.dataset.ImageDataset(
-        inference_path, transform=inference_transforms
+        root=inference_path, transform=inference_transforms
     )
 
     return inference_dataset
@@ -30,13 +30,13 @@ def create_datasets(image_size, data_mean, data_std, inference_path):
 def main():
     # 定义命令行参数
     parser = argparse.ArgumentParser(description="Simple example of training script using timm.")
-    parser.add_argument("--data_dir", type=str, default='Data/Magazines/MagazinesImages/', required=True,
+    parser.add_argument("--data_dir", type=str, default='Data/Movies/MagazinesImages/', required=True,
                         help="The data folder on disk.")
     parser.add_argument("--gpu", type=int, default=1, help="GPU to use")
-    parser.add_argument('--model_name', type=str, default='resnet50d', help='Name or path of the CV model')
-    parser.add_argument('--pretrained', type=bool, default=False, help='if load the pretrained weight')
-    parser.add_argument('--name', type=str, default='Magazines', help='Prefix name for the  NPY file')
-    parser.add_argument('--path', type=str, default='Data/Magazines/ImageFeature/', help='Path to save the NPY File')
+    parser.add_argument('--model_name', type=str, default='resnet101d', help='Name or path of the CV model')
+    parser.add_argument('--pretrained', type=bool, default=True, help='if load the pretrained weight')
+    parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
+    parser.add_argument('--path', type=str, default='Data/Movies/ImageFeature/', help='Path to save the NPY File')
     parser.add_argument("--size", type=int, default=224, help="The size of the image to load")
     parser.add_argument('--batch_size', type=int, default=100, help='Number of batch size for inference')
 
@@ -49,7 +49,10 @@ def main():
     model_name = args.model_name
     name = args.name
     imagesize = args.size
-    data_dir = args.data_dir
+
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(root_dir.rstrip('/'))
+    data_dir = base_dir + '/' + args.data_dir
 
     if not os.path.exists(args.path):
         os.makedirs(args.path)
@@ -93,14 +96,10 @@ def main():
     preds = preds_gatherer.finalize()
     print(f'Shape of the image feature{preds.shape}')
 
-    output_file = args.path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(
+    output_file = base_dir + '/' + args.path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(
         imagesize) + '_' + str(preds.shape[1])
     np.save(output_file + ".npy", preds)
 
 
 if __name__ == "__main__":
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    base_dir = os.path.basename(os.path.dirname(root_dir.rstrip('/')))
-    sys.path.append(base_dir)
-
     main()
