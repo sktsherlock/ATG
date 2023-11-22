@@ -86,7 +86,7 @@ def classification(
                 args.label_smoothing,
                 args.average
             )
-            wandb.log({'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss})
+            wandb.log({'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss, 'Train_result': train_result, 'Val_result': val_result, 'Test_result': test_result})
             lr_scheduler.step(train_loss)
 
             toc = time.time()
