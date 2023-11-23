@@ -24,5 +24,11 @@ python TextAttributeExtract.py --csv_file '../Data/Movies/Movies.csv' --model_na
 ## Movies
 ```python 
 # ResNet-50 
-python ImageExtract.py --data_dir '../Data/Movies/MagazinesImages/' --model_name 'resnet50d' --name 'Movies' --path '../Data/Movies/ImageFeature/' --batch_size 200 --pretrained True 
+python ImageExtract.py --data_dir '../Data/Movies/MoviesImages/' --model_name 'resnet50d' --name 'Movies' --path '../Data/Movies/ImageFeature/' --batch_size 200 --pretrained True --size 224
+# ResNet-101 
+python ImageExtract.py --data_dir '../Data/Movies/MoviesImages/' --model_name 'resnet101d' --name 'Movies' --path '../Data/Movies/ImageFeature/' --batch_size 200 --pretrained True --size 224
+# ResNet-152 
+python ImageExtract.py --data_dir '../Data/Movies/MoviesImages/' --model_name 'resnet152d' --name 'Movies' --path '../Data/Movies/ImageFeature/' --batch_size 200 --pretrained True --size 224 
+# DenseNet-121
+
 ```
