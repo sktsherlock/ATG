@@ -10,6 +10,7 @@ from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrained
 from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 from dataclasses import dataclass, field
+import transformers
 
 @dataclass
 class DataTrainingArguments:
@@ -275,7 +276,9 @@ def main():
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(encoded_inputs)
 
-    model = AutoModel.from_pretrained(model_name)
+    model = transformers.AutoModelForCausalLM.from_pretrained(
+        model_name, trust_remote_code=True
+    )
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mean_Features_Extractor = MeanEmbInfModel(model)
