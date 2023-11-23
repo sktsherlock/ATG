@@ -218,15 +218,20 @@ def main():
     name = args.name
     max_length = args.max_length
     batch_size = args.batch_size
-    inf_path = f"{args.path}cache/"
+
     tokenizer_name = args.tokenizer_name
 
-    if not os.path.exists(args.path):
-        os.makedirs(args.path)
-    if not os.path.exists(inf_path):
-        os.makedirs(inf_path)
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(root_dir.rstrip('/'))
+    Feature_path = os.path.join(base_dir, args.path)
+    cache_path = f"{Feature_path}cache/"
 
-    output_file = args.path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
+    if not os.path.exists(Feature_path):
+        os.makedirs(Feature_path)
+    if not os.path.exists(cache_path):
+        os.makedirs(cache_path)
+
+    output_file = Feature_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
 
     class CLSEmbInfModel(PreTrainedModel):
         def __init__(self, model):
@@ -278,7 +283,7 @@ def main():
     Mean_Features_Extractor.eval()
 
     inference_args = TrainingArguments(
-        output_dir=inf_path,
+        output_dir=cache_path,
         do_train=False,
         do_predict=True,
         per_device_eval_batch_size=batch_size,

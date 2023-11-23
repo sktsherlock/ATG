@@ -18,6 +18,8 @@ python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 
 # DistilRoBERTa-related
 python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 'distilroberta-base' --name 'Movies' --path 'Data/Movies/Feature/' --max_length 128 --batch_size 1000 --cls 
 
+# OPT
+python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 'facebook/opt-1.3b' --name 'Movies' --path 'Data/Movies/Feature/' --max_length 128 --batch_size 500 
 ```
 
 # Image Attribute -> Feature 
