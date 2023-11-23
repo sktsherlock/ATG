@@ -89,7 +89,7 @@ def args_init():
         "--dropout", type=float, default=0.5, help="dropout rate"
     )
     argparser.add_argument(
-        "--aggregator", choices=["mean", "gcn", "pool", "lstm"], help="Specify the aggregator option"
+        "--aggregator", type=str, default="mean", choices=["mean", "gcn", "pool", "lstm"], help="Specify the aggregator option"
     )
     argparser.add_argument(
         "--min-lr", type=float, default=0.0001, help="the min learning rate"
