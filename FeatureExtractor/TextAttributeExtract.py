@@ -238,9 +238,9 @@ def main():
             # Extract outputs from the model3
             outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
             # Use CLS Emb as sentence emb.
-            # Use  pooler_output ?
-            node_cls_emb = outputs.pooler_output
-            # node_cls_emb = outputs.last_hidden_state[:, 0, :]  # Last layer
+            # Use  pooler_output ? Dont use pooler_output
+            #node_cls_emb = outputs.pooler_output
+            node_cls_emb = outputs.last_hidden_state[:, 0, :]  # Last layer
             return TokenClassifierOutput(logits=node_cls_emb)
 
     class MeanEmbInfModel(PreTrainedModel):
