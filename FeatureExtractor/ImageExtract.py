@@ -30,8 +30,7 @@ def create_datasets(image_size, data_mean, data_std, inference_path):
 def main():
     # 定义命令行参数
     parser = argparse.ArgumentParser(description="Simple example of training script using timm.")
-    parser.add_argument("--data_dir", type=str, default='Data/Movies/MagazinesImages/', required=True,
-                        help="The data folder on disk.")
+    parser.add_argument("--data_dir", type=str, default='Data/Movies/MoviesImages/', required=True, help="The data folder on disk.")
     parser.add_argument("--gpu", type=int, default=1, help="GPU to use")
     parser.add_argument('--model_name', type=str, default='resnet101d', help='Name or path of the CV model')
     parser.add_argument('--pretrained', type=bool, default=True, help='if load the pretrained weight')
@@ -53,6 +52,7 @@ def main():
     root_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.dirname(root_dir.rstrip('/'))
     data_dir = base_dir + '/' + args.data_dir
+
 
     if not os.path.exists(args.path):
         os.makedirs(args.path)
@@ -96,8 +96,7 @@ def main():
     preds = preds_gatherer.finalize()
     print(f'Shape of the image feature{preds.shape}')
 
-    output_file = base_dir + '/' + args.path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(
-        imagesize) + '_' + str(preds.shape[1])
+    output_file = base_dir + '/' + args.path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(imagesize) + '_' + str(preds.shape[1])
     np.save(output_file + ".npy", preds)
 
 
