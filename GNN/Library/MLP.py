@@ -1,15 +1,13 @@
-import sys
 import torch.nn as nn
-import dgl.nn.pytorch as dglnn
 import argparse
 import wandb
 import torch as th
 import numpy as np
 import torch.nn.functional as F
-import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ..LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 from GraphData import load_data
 
