@@ -2,6 +2,7 @@
 
 ## Movies 
 ```shell
+mkdir ~/ATG/Data/Movies/
 cd ~/ATG/Data/Movies/
 wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Movies_and_TV.json.gz
 gunzip meta_Movies_and_TV.json.gz
@@ -11,6 +12,7 @@ python data_processing_utils.py --data_path 'Movies/meta_Movies_and_TV.json' --n
 
 ## Magazine 
 ```shell
+mkdir ~/ATG/Data/Magazines/
 cd ~/ATG/Data/Magazines/
 wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Magazine_Subscriptions.json.gz
 gunzip meta_Magazine_Subscriptions.json.gz
@@ -21,6 +23,7 @@ python data_processing_utils.py --data_path 'Magazines/meta_Magazine_Subscriptio
 
 ## Computers
 ```shell
+mkdir ~/ATG/Data/Electronics/
 cd ~/ATG/Data/Electronics/
 wget --no-check-certificate https://jmcauley.ucsd.edu/data/amazon_v2/metaFiles2/meta_Electronics.json.gz
 gunzip meta_Electronics.json.
@@ -30,7 +33,8 @@ python data_processing_utils_for_books.py --data_path 'Electronics/meta_Electron
 
 ## Children
 ```shell
-mkdir Data/Books/
+mkdir ~/ATG/Data/Books/
+cd ~/ATG/Data/Books/
 wget --no-check-certificate https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Books.json.gz 
 gunzip meta_Books.json.gz  
 cd ~/ATG/Data/

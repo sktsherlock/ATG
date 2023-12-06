@@ -136,6 +136,7 @@ def count_data(df):
     df2 = pd.DataFrame(df)
     df2['text_length'] = df.apply(lambda x: len(x['text'].split(' ')) if x['text'] else 0, axis=1)
     print(df2['text_length'].value_counts())
+    print(df2['text_length'].describe())
 
 
 # 将 DataFrame 导出为 csv 文件
