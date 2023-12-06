@@ -207,6 +207,8 @@ def construct_graph(input_csv_path, output_graph_path):
     G = dgl.graph((adj0, adj1))
     G.ndata['label'] = torch.tensor(list(df['label']))
     dgl.save_graphs(f"{output_graph_path}", G)
+    print(G)
+
 
 
 if __name__ == '__main__':
