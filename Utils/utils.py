@@ -6,6 +6,8 @@ import os
 import logging
 import datetime
 import sys
+import pandas as pd
+
 
 def set_random_seed(seed):
     random.seed(seed)
@@ -13,6 +15,7 @@ def set_random_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
+
 
 def ensure_dir(dir_path):
     """Make sure the directory exists, if it does not exist, create it.
@@ -22,6 +25,7 @@ def ensure_dir(dir_path):
     """
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
+
 
 def get_local_time():
     """
@@ -33,6 +37,7 @@ def get_local_time():
     cur = datetime.datetime.now()
     cur = cur.strftime('%b-%d-%Y_%H-%M-%S')
     return cur
+
 
 def get_logger(config, name=None):
     """
@@ -85,3 +90,27 @@ def get_logger(config, name=None):
 
     logger.info('Log directory: %s', log_dir)
     return logger
+
+
+def init_random_state(seed=0):
+    # Libraries using GPU should be imported after specifying GPU-ID
+    import torch
+    import random
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+
+def split_dataset(nodes_num, train_ratio, val_ratio):
+    np.random.seed(42)
+    indices = np.random.permutation(nodes_num)
+
+    train_size = int(nodes_num * train_ratio)
+    val_size = int(nodes_num * val_ratio)
+
+    train_ids = indices[:train_size]
+    val_ids = indices[train_size:train_size + val_size]
+    test_ids = indices[train_size + val_size:]
+
+    return train_ids, val_ids, test_ids
