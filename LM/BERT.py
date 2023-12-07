@@ -234,13 +234,11 @@ def split_dataset(nodes_num, train_ratio, val_ratio):
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-    training_args = training_args(
-        evaluation_strategy='epoch',
-        save_strategy='epoch',
-        load_best_model_at_end=True,
-        save_total_limit=None,
-        report_to='wandb',
-    )
+    training_args.evaluation_strategy = 'epoch'
+    training_args.save_strategy = 'epoch'
+    training_args.load_best_model_at_end = True
+    training_args.save_total_limit = None
+    training_args.report_to = 'wandb'
 
     send_example_telemetry("run_classification", model_args, data_args)
 
