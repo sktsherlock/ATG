@@ -525,9 +525,9 @@ def main():
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
-        predictions = trainer.predict(predict_dataset, metric_key_prefix="predict").predictions
-        trainer.log_metrics("test", predictions)
-        trainer.save_metrics("test", predictions)
+        metrics = trainer.predict(predict_dataset, metric_key_prefix="predict").metrics
+        trainer.log_metrics("test", metrics)
+        trainer.save_metrics("test", metrics)
 
 
 
