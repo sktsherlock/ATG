@@ -195,10 +195,6 @@ class ModelArguments:
         default=0.2,
         metadata={"help": "The drop out ratio"}
     )
-    label_smoothing_factor: float = field(
-        default=0.1,
-        metadata={"help": "The drop out ratio"}
-    )
     cls_head_bias: bool = field(
         default=True,
         metadata={"help": "Whether to add bias for classifier head."}
@@ -379,7 +375,7 @@ def main():
     model = CLSClassifier(
         encoder, num_labels,
         dropout=model_args.drop_out,
-        loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing_factor, reduction='mean')
+        loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
     )
 
     # Padding strategy
