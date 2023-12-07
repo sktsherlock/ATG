@@ -298,7 +298,7 @@ def main():
         "validation": val_dataset,
         "test": test_dataset
     })
-
+    print(raw_datasets)
     if data_args.remove_columns is not None:
         for split in raw_datasets.keys():
             for column in data_args.remove_columns.split(","):
