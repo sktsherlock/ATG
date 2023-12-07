@@ -525,20 +525,14 @@ def main():
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
-        # Removing the `label` columns if exists because it might contains -1 and Trainer won't like that.
-        if "label" in predict_dataset.features:
-            predict_dataset = predict_dataset.remove_columns("label")
         predictions = trainer.predict(predict_dataset, metric_key_prefix="predict").predictions
-        predictions = np.argmax(predictions, axis=1)
-        output_predict_file = os.path.join(training_args.output_dir, "predict_results.txt")
-        if trainer.is_world_process_zero():
-            with open(output_predict_file, "w") as writer:
-                logger.info("***** Predict results *****")
-                writer.write("index\tprediction\n")
-                for index, item in enumerate(predictions):
-                    item = label_list[item]
-                    writer.write(f"{index}\t{item}\n")
-        logger.info("Predict results saved at {}".format(output_predict_file))
+        trainer.log_metrics("test", predictions)
+        trainer.save_metrics("test", predictions)
+
+
+
+
+
 
 
 if __name__ == "__main__":
