@@ -287,7 +287,7 @@ def main():
     print(raw_data)
     print(raw_data['train']['text_length'][0])
     print(raw_data['train']['id'][0])
-    nodes_num = len(raw_data)
+    nodes_num = len(raw_data['train'])
 
     train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio)
     # 根据划分的索引创建划分后的数据集
