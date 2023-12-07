@@ -68,7 +68,7 @@ class DataTrainingArguments:
             )
         },
     )
-    max_length: int = field(
+    max_seq_length: int = field(
         default=128,
         metadata={
             "help": (
