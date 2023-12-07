@@ -233,8 +233,8 @@ def split_dataset(nodes_num, train_ratio, val_ratio):
 
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
-    model_args, data_args, _ = parser.parse_args_into_dataclasses()
-    training_args = TrainingArguments(
+    model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    training_args = training_args(
         evaluation_strategy='epoch',
         save_strategy='epoch',
         load_best_model_at_end=True,
