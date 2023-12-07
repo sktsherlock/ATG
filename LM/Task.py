@@ -3,8 +3,6 @@ import torch
 from transformers import PreTrainedModel
 from transformers.modeling_outputs import TokenClassifierOutput
 
-from Utils.utils import init_random_state
-
 
 class CLSClassifier(PreTrainedModel):
     def __init__(self, model, n_labels, loss_func, dropout=0.0):
