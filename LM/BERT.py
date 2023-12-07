@@ -290,6 +290,7 @@ def main():
 
     train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio)
     # 根据划分的索引创建划分后的数据集
+    print(({key: raw_data['train'][key][train_ids] for key in raw_data['train']}))
     train_dataset = Dataset.from_dict({key: raw_data['train'][key][train_ids] for key in raw_data['train']})
     val_dataset = Dataset.from_dict({key: raw_data['train'][key][val_ids] for key in raw_data['train']})
     test_dataset = Dataset.from_dict({key: raw_data['train'][key][test_ids] for key in raw_data['train']})
