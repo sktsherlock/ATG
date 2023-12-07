@@ -285,13 +285,14 @@ def main():
         cache_dir=model_args.cache_dir,
     )
     print(raw_data)
+    print(raw_data['train'])
     nodes_num = len(raw_data)
 
     train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio)
     # 根据划分的索引创建划分后的数据集
-    train_dataset = Dataset.from_dict({key: raw_data['train'][key][train_ids] for key in raw_data})
-    val_dataset = Dataset.from_dict({key: raw_data['train'][key][val_ids] for key in raw_data})
-    test_dataset = Dataset.from_dict({key: raw_data['train'][key][test_ids] for key in raw_data})
+    train_dataset = Dataset.from_dict({key: raw_data['train'][key][train_ids] for key in raw_data['train']})
+    val_dataset = Dataset.from_dict({key: raw_data['train'][key][val_ids] for key in raw_data['train']})
+    test_dataset = Dataset.from_dict({key: raw_data['train'][key][test_ids] for key in raw_data['train']})
 
     # 创建包含划分后数据集的DatasetDict对象
     raw_datasets = DatasetDict({
