@@ -1,0 +1,18 @@
+```bash
+dataset="Movies"
+
+python BERT.py \
+    --model_name_or_path prajjwal1/bert-tiny \
+    --shuffle_train_dataset \
+    --remove_splits "unused" \
+    --metric_name f1 \
+    --text_column_name text \
+    --label_column_name label \
+    --do_train \
+    --do_eval \
+    --max_seq_length 128 \
+    --per_device_train_batch_size 32 \
+    --learning_rate 2e-5 \
+    --num_train_epochs 5 \
+    --output_dir /tmp/${dataset}/
+```

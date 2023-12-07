@@ -56,7 +56,7 @@ class DataTrainingArguments:
     csv_file: Optional[str] = field(
         default=None, metadata={"help": "Path to the CSV File."}
     )
-    text_column: Optional[str] = field(
+    text_column_names: Optional[str] = field(
         default='text', metadata={"help": "Name of the column containing the text attribute."}
     )
     label_column_name: Optional[str] = field(
