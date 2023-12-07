@@ -284,6 +284,7 @@ def main():
         data_files=data_files,
         cache_dir=model_args.cache_dir,
     )
+    print(raw_data)
     nodes_num = len(raw_data)
 
     train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio)
