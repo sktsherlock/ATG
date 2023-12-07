@@ -29,7 +29,6 @@ from transformers import (
     set_seed,
 )
 
-from Utils.utils import split_dataset
 from Task import CLSClassifier, MEANClassifier
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
@@ -222,6 +221,19 @@ def get_label_list(raw_dataset, split="train") -> List[str]:
     label_list = [str(label) for label in label_list]
     return label_list
 
+
+def split_dataset(nodes_num, train_ratio, val_ratio):
+    np.random.seed(42)
+    indices = np.random.permutation(nodes_num)
+
+    train_size = int(nodes_num * train_ratio)
+    val_size = int(nodes_num * val_ratio)
+
+    train_ids = indices[:train_size]
+    val_ids = indices[train_size:train_size + val_size]
+    test_ids = indices[train_size + val_size:]
+
+    return train_ids, val_ids, test_ids
 
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
