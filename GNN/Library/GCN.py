@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from GraphData import load_data
 from NodeClassification import classification
 
+
 # 模型定义模块
 class GCN(nn.Module):
     def __init__(
@@ -23,6 +24,8 @@ class GCN(nn.Module):
             n_layers,
             activation,
             dropout,
+            weight=True,
+            last_layer_bias=True,
     ):
         super().__init__()
         self.n_layers = n_layers
@@ -35,10 +38,13 @@ class GCN(nn.Module):
         for i in range(n_layers):
             in_hidden = n_hidden if i > 0 else in_feats
             out_hidden = n_hidden if i < n_layers - 1 else n_classes
-            bias = i == n_layers - 1
+            if i == n_layers - 1 and not last_layer_bias:
+                bias = False
+            else:
+                bias = True
 
             self.convs.append(
-                dglnn.GraphConv(in_hidden, out_hidden, "both", bias=bias)
+                dglnn.GraphConv(in_hidden, out_hidden, "both", weight=weight, bias=bias)
             )
 
             if i < n_layers - 1:
@@ -93,6 +99,12 @@ def args_init():
     )
     argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
+    )
+    argparser.add_argument(
+        "--weight", type=bool, default=True, help="if False, no W."
+    )
+    argparser.add_argument(
+        "--bias", type=bool, default=True, help="if False, no last layer bias."
     )
     argparser.add_argument(
         "--min-lr", type=float, default=0.0001, help="the min learning rate"
@@ -188,7 +200,7 @@ def main():
     test_results = []
 
     # Model implementation
-    model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
+    model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout, weight=args.weight, last_layer_bias=args.bias).to(device)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )

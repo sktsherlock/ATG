@@ -22,7 +22,8 @@ class GraphSAGE(nn.Module):
                  n_layers,
                  activation,
                  dropout,
-                 aggregator_type):
+                 aggregator_type,
+                 ):
         super(GraphSAGE, self).__init__()
         self.n_layers = n_layers
         self.n_hidden = n_hidden
