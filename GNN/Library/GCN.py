@@ -201,6 +201,7 @@ def main():
 
     # Model implementation
     model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout, weight=args.weight, last_layer_bias=args.bias).to(device)
+    print(model)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
