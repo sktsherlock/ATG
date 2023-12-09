@@ -268,14 +268,16 @@ def main():
     # 加载模型和分词器
     if tokenizer_name:
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
-    elif model_name:
+    else:
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
 
     # 编码文本数据并转为数据集
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(encoded_inputs)
 
-    model = AutoModel.from_pretrained(model_name)
+    model = AutoModel.from_pretrained(model_name,  trust_remote_code=True)
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mean_Features_Extractor = MeanEmbInfModel(model)

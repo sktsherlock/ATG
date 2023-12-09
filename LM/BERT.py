@@ -203,6 +203,52 @@ class ModelArguments:
         default=False,
         metadata={"help": "Whether to use LoRA or not."},
     )
+    save_lora_with_prefix: bool = field(
+        default=False,
+        metadata={"help": "Whether to keep the prefix ('transformer') when saving lora weights."},
+    )
+    lora_rank: int = field(
+        default=8,
+        metadata={"help": "The rank of LoRA."},
+    )
+    lora_train_bias: str = field(
+        default="none",
+        metadata={"help": "Whether to train bias, choices: none, lora_only and all."},
+    )
+    lora_alpha: float = field(
+        default=1.0,
+        metadata={"help": "The alpha of LoRA when adding the LoRA parameters to the origin ones."},
+    )
+    lora_param: str = field(
+        default="Q.V",
+        metadata={
+            "help": "The parameter groups to apply LoRA, including E (embeddings), Q (attn query), K (attn key), "
+                    "V (attn value), O (attn output) and F (feedforward), splitted by dot, e.g. Q.V means applying "
+                    "LoRA to Q and V."
+        }
+    )
+    lora_ckpt: str = field(
+        default=None,
+        metadata={"help": "The checkpoint path of LoRA checkpoint."},
+    )
+    lora_ckpt_old_format: bool = field(
+        default=False,
+        metadata={"help": "Whether the LoRA checkpoint is in old format."},
+    )
+    lora_layers: int = field(
+        default=-1,
+        metadata={"help": "The number of top layers to apply LoRA. Set to -1 to apply LoRA to all layers."},
+    )
+
+
+def set_lora_args(config, modeling_args):
+    config.use_lora = modeling_args.use_lora
+    config.lora_rank = modeling_args.lora_rank
+    config.lora_train_bias = modeling_args.lora_train_bias
+    config.lora_alpha = modeling_args.lora_alpha
+    config.lora_param = modeling_args.lora_param
+    config.lora_layers = modeling_args.lora_layers
+    return config
 
 
 def get_label_list(raw_dataset, split="train") -> List[str]:
@@ -230,6 +276,23 @@ def split_dataset(nodes_num, train_ratio, val_ratio):
     test_ids = indices[train_size + val_size:]
 
     return train_ids, val_ids, test_ids
+
+
+def print_trainable_parameters(model):
+    """
+    Prints the number of trainable parameters in the model.
+    """
+    trainable_params = 0
+    all_param = 0
+    for _, param in model.named_parameters():
+        all_param += param.numel()
+        if param.requires_grad:
+            trainable_params += param.numel()
+    print(
+        f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}"
+    )
+
+
 
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
@@ -345,9 +408,11 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
-
+    config = set_lora_args(config, model_args)
+    config.cls_head_bias = model_args.cls_head_bias
     config.problem_type = "single_label_classification"
     logger.info("setting problem type to single label classification")
+
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,

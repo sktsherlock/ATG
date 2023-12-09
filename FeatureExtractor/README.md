@@ -20,6 +20,10 @@ python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 
 
 # OPT
 python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 'facebook/opt-1.3b' --name 'Movies' --path 'Data/Movies/Feature/' --max_length 128 --batch_size 500 
+
+# MPT
+python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 'mosaicml/mpt-7b' --name 'Movies' --path 'Data/Movies/Feature/' --max_length 128 --batch_size 500
+
 ```
 
 # Image Attribute -> Feature 
