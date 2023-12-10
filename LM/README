@@ -3,5 +3,8 @@
 ## dataset="Movies"
 ### Model is prajjwal1/bert-tiny
 ```python
-CUDA_VISIBLE_DEVICES=1 python BERT.py --model_name_or_path prajjwal1/bert-tiny --csv_file /dataintent/local/user/v-haoyan1/Data/Movies/Movies.csv --shuffle_train_dataset --metric_name accuracy --text_column_name text --label_column_name label --do_train --do_eval --do_predict --max_seq_length 128 --per_device_train_batch_size 32 --learning_rate 2e-5 --num_train_epochs 5 --output_dir /dataintent/local/user/v-haoyan1/Data/Movies/Exp/ 
+CUDA_VISIBLE_DEVICES=1 python BERT.py --model_name_or_path prajjwal1/bert-tiny --csv_file=/dataintent/local/user/v-haoyan1/Data/Movies/Movies.csv --shuffle_train_dataset True --metric_name accuracy --do_train --do_eval --do_predict --max_seq_length 128 --per_device_train_batch_size 32 --learning_rate 2e-5 --num_train_epochs 5 --output_dir /dataintent/local/user/v-haoyan1/Data/Movies/Exp/ 
 ```
+
+ --text_column_name text --label_column_name label --num_train_epochs 5 
+--label_column_name=label --text_column_name=text --warmup_ratio=0.1
