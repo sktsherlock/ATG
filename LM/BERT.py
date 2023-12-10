@@ -361,7 +361,7 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
-    config = set_lora_args(config, model_args)
+
     config.cls_head_bias = model_args.cls_head_bias
     config.problem_type = "single_label_classification"
     logger.info("setting problem type to single label classification")
