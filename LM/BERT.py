@@ -553,7 +553,7 @@ def main():
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
-        metrics = trainer.predict(predict_dataset, metric_key_prefix="predict").metrics
+        metrics = trainer.evaluate(eval_dataset=predict_dataset, metric_key_prefix="test")
         trainer.log_metrics("test", metrics)
         trainer.save_metrics("test", metrics)
 
