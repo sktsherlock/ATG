@@ -50,9 +50,6 @@ class DataTrainingArguments:
     into argparse arguments to be able to specify them on
     the command line.
     """
-    data_name: Optional[str] = field(
-        default=None, metadata={"help": "The name of the dataset to be used."}
-    )
     csv_file: Optional[str] = field(
         default=None, metadata={"help": "Path to the CSV File."}
     )
@@ -160,6 +157,10 @@ class ModelArguments:
         default=None,
         metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
     )
+    out_dir: Optional[str] = field(
+        default=None,
+        metadata={"help": "Where do you want to store the training processes"},
+    )
     use_fast_tokenizer: bool = field(
         default=True,
         metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
@@ -250,6 +251,7 @@ def print_trainable_parameters(model):
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    training_args.output_dir = model_args.out_dir + model_args.model_name.split('/')[-1].replace("-", "_") + '/' + f't_{data_args.train_ratio}_v_{data_args.val_ratio}_d_{model_args.drop_out}_w_{training_args.warmup_ratio}_lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}'
     training_args.evaluation_strategy = 'epoch'
     training_args.save_strategy = 'epoch'
     training_args.load_best_model_at_end = True

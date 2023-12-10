@@ -1,0 +1,6 @@
+# Command to Run
+
+## For the GCN in the Movies Dataset
+```python
+python GNN/Library/GCN.py --dropout=0.2 --early_stop_patience=40 --feature=/dataintent/local/user/v-haoyan1/Data/Movies/Feature/Movies_bert_base_uncased_128_mean.npy --graph_path=/dataintent/local/user/v-haoyan1/Data/Movies/MoviesGraph.pt
+```
