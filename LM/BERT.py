@@ -196,6 +196,10 @@ class ModelArguments:
         default=0.2,
         metadata={"help": "The drop out ratio"}
     )
+    label_smoothing: float = field(
+        default=0.1,
+        metadata={"help": "The label smoothing factor to use"}
+    )
     cls_head_bias: bool = field(
         default=True,
         metadata={"help": "Whether to add bias for classifier head."}
@@ -397,13 +401,13 @@ def main():
         model = CLSClassifier(
             encoder, num_labels,
             dropout=model_args.drop_out,
-            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
         )
     elif model_args.training_objective == 'Mean':
         model = MEANClassifier(
             encoder, num_labels,
             dropout=model_args.drop_out,
-            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
         )
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
