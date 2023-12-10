@@ -12,7 +12,7 @@ import numpy as np
 from datasets import Value, load_dataset
 import torch
 from datasets import DatasetDict, Dataset
-
+from peft import inject_adapter_in_model, LoraConfig
 
 import transformers
 from transformers import (
@@ -199,9 +199,56 @@ class ModelArguments:
         default=True,
         metadata={"help": "Whether to add bias for classifier head."}
     )
+    use_lora: bool = field(
+        default=False,
+        metadata={"help": "Whether to use LoRA or not."},
+    )
+    save_lora_with_prefix: bool = field(
+        default=False,
+        metadata={"help": "Whether to keep the prefix ('transformer') when saving lora weights."},
+    )
+    lora_rank: int = field(
+        default=8,
+        metadata={"help": "The rank of LoRA."},
+    )
+    lora_train_bias: str = field(
+        default="none",
+        metadata={"help": "Whether to train bias, choices: none, lora_only and all."},
+    )
+    lora_alpha: float = field(
+        default=1.0,
+        metadata={"help": "The alpha of LoRA when adding the LoRA parameters to the origin ones."},
+    )
+    lora_param: str = field(
+        default="Q.V",
+        metadata={
+            "help": "The parameter groups to apply LoRA, including E (embeddings), Q (attn query), K (attn key), "
+                    "V (attn value), O (attn output) and F (feedforward), splitted by dot, e.g. Q.V means applying "
+                    "LoRA to Q and V."
+        }
+    )
+    lora_ckpt: str = field(
+        default=None,
+        metadata={"help": "The checkpoint path of LoRA checkpoint."},
+    )
+    lora_ckpt_old_format: bool = field(
+        default=False,
+        metadata={"help": "Whether the LoRA checkpoint is in old format."},
+    )
+    lora_layers: int = field(
+        default=-1,
+        metadata={"help": "The number of top layers to apply LoRA. Set to -1 to apply LoRA to all layers."},
+    )
 
 
-
+def set_lora_args(config, modeling_args):
+    config.use_lora = modeling_args.use_lora
+    config.lora_rank = modeling_args.lora_rank
+    config.lora_train_bias = modeling_args.lora_train_bias
+    config.lora_alpha = modeling_args.lora_alpha
+    config.lora_param = modeling_args.lora_param
+    config.lora_layers = modeling_args.lora_layers
+    return config
 
 
 def get_label_list(raw_dataset, split="train") -> List[str]:
