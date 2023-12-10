@@ -435,12 +435,20 @@ def main():
         trust_remote_code=model_args.trust_remote_code,
     )
 
-    model = CLSClassifier(
-        encoder, num_labels,
-        dropout=model_args.drop_out,
-        loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
-    )
-
+    if model_args.training_objective == "CLS":
+        model = CLSClassifier(
+            encoder, num_labels,
+            dropout=model_args.drop_out,
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
+        )
+    elif model_args.training_objective == 'Mean':
+        model = MEANClassifier(
+            encoder, num_labels,
+            dropout=model_args.drop_out,
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
+        )
+    else:
+        raise ValueError("Training objective should be either CLS or Mean.")
     # Padding strategy
     if data_args.pad_to_max_length:
         padding = "max_length"
