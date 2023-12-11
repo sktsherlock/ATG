@@ -271,10 +271,7 @@ def set_peft_config(modeling_args):
     config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
               'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
               'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
-    print(config)
-    print('***********************************************')
     peft_config = get_peft_config(config)
-    print(peft_config)
     return peft_config
 
 
@@ -427,15 +424,7 @@ def main():
     # if do_train is not set, we will use the label infos in the config
     if training_args.do_train:  # classification, training
         label_to_id = {v: i for i, v in enumerate(label_list)}
-        print(label_to_id)
-        # update config with label infos
-        if model.config.label2id != label_to_id:
-            logger.warning(
-                "The label2id key in the model config.json is not equal to the label2id key of this "
-                "run. You can ignore this if you are doing finetuning."
-            )
-        model.config.label2id = label_to_id
-        model.config.id2label = {id: label for label, id in config.label2id.items()}
+
 
 
     if data_args.max_seq_length > tokenizer.model_max_length:
