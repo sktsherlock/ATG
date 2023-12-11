@@ -1,4 +1,4 @@
-from transformers import AutoModelForSeq2SeqLM
+from transformers import AutoModelForSeq2SeqLM, AutoModel
 from peft import LoraModel, LoraConfig
 
 
@@ -20,11 +20,12 @@ def print_trainable_parameters(model):
 config = LoraConfig(
     r=8,
     lora_alpha=32,
-    target_modules=["q", "v"],
+    target_modules=["q", "v", "k"],
     lora_dropout=0.01,
 )
 
-model = AutoModelForSeq2SeqLM.from_pretrained("t5-base")
+model = AutoModel.from_pretrained('roberta-large')
+# model = AutoModelForSeq2SeqLM.from_pretrained("t5-base")
 print_trainable_parameters(model)
 # print([(n, type(m)) for n, m in model().named_modules()])
 lora_model = LoraModel(model, config, "default")
