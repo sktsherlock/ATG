@@ -331,7 +331,7 @@ def main():
         "validation": val_dataset,
         "test": test_dataset
     })
-    print(raw_datasets)
+
     if data_args.remove_columns is not None:
         for split in raw_datasets.keys():
             for column in data_args.remove_columns.split(","):
@@ -424,6 +424,7 @@ def main():
     # if do_train is not set, we will use the label infos in the config
     if training_args.do_train:  # classification, training
         label_to_id = {v: i for i, v in enumerate(label_list)}
+        print(label_to_id)
         # update config with label infos
         if model.config.label2id != label_to_id:
             logger.warning(
