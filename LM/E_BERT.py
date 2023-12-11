@@ -200,7 +200,7 @@ class ModelArguments:
         metadata={"help": "Whether to add bias for classifier head."}
     )
     peft_type: str = field(
-        default=None,
+        default="LORA",
         metadata={"help": "Which PEFT model to be used."},
     )
     lora_rank: int = field(
