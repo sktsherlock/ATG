@@ -20,7 +20,7 @@ def print_trainable_parameters(model):
 config = LoraConfig(
     r=8,
     lora_alpha=32,
-    target_modules=["q", "v", "k"],
+    target_modules=["encoder"],
     lora_dropout=0.01,
 )
 
