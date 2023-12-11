@@ -6,7 +6,7 @@ config = {
     "task_type": "FEATURE_EXTRACTION",
     "inference_mode": False,
     "r": 16,
-    "target_modules": [],
+    "target_modules": ["query", "key"],
     "lora_alpha": 32,
     "lora_dropout": 0.05,
     "fan_in_fan_out": False,
