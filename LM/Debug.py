@@ -1,6 +1,5 @@
-from transformers import AutoModelForSeq2SeqLM, AutoModel
-from peft import LoraModel, LoraConfig
-
+from transformers import AutoModel
+from peft import PeftModelForFeatureExtraction, get_peft_config
 
 def print_trainable_parameters(model):
     """
@@ -17,17 +16,21 @@ def print_trainable_parameters(model):
     )
 
 
-config = LoraConfig(
-    r=8,
-    lora_alpha=32,
-    target_modules=["encoder"],
-    lora_dropout=0.01,
-)
+config = {
+    "peft_type": "LORA",
+    "task_type": "FEATURE_EXTRACTION",
+    "inference_mode": False,
+    "r": 16,
+    "target_modules": ["query", "value"],
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "fan_in_fan_out": False,
+    "bias": "none",
+}
+peft_config = get_peft_config(config)
+model = AutoModel.from_pretrained("bert-base-cased")
+peft_model = PeftModelForFeatureExtraction(model, peft_config)
+peft_model.print_trainable_parameters()
 
-model = AutoModel.from_pretrained('roberta-large')
-# model = AutoModelForSeq2SeqLM.from_pretrained("t5-base")
-print_trainable_parameters(model)
-print([(n, type(m)) for n, m in model.named_modules()])
-lora_model = LoraModel(model, config, "default")
-print_trainable_parameters(lora_model)
-print(lora_model)
+
+
