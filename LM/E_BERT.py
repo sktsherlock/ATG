@@ -271,6 +271,7 @@ def set_peft_config(modeling_args):
     config = {'peft_type': modeling_args.peft_type, 'target_modules': modeling_args.lora_target_modules,
               'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
               'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+    print(config)
     peft_config = get_peft_config(config)
     print(peft_config)
     return peft_config
