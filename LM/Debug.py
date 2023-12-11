@@ -17,7 +17,6 @@ def print_trainable_parameters(model):
 
 config = {
     "peft_type": "LORA",
-    "task_type": "FEATURE_EXTRACTION",
     "inference_mode": False,
     "r": 16,
     "target_modules": ["query", "key"],
