@@ -214,7 +214,7 @@ class ModelArguments:
     lora_dropout: float = field(default=0.0, metadata={"help": "Lora dropout"})
     lora_alpha: int = field(default=8, metadata={"help": "Lora alpha"})
     lora_target_modules: Optional[Union[List[str], str]] = field(
-        default=["query", "key"],
+        default=None,
         metadata={
             "help": "List of module names or regex expression of the module names to replace with Lora."
             "For example, ['q', 'v'] or '.*decoder.*(SelfAttention|EncDecAttention).*(q|v)$' "
@@ -268,7 +268,7 @@ def print_trainable_parameters(model):
 
 
 def set_peft_config(modeling_args):
-    config = {'peft_type': modeling_args.peft_type, 'target_modules': modeling_args.lora_target_modules,
+    config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
               'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
               'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
     print(config)
