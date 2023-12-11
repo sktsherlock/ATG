@@ -57,23 +57,21 @@ def set_peft_config(config):
 
 
 
-cf = AutoConfig.from_pretrained(
-        "bert-base-cased",
-        num_labels=10,
-)
-
-cf = set_peft_config(cf)
 
 
-# config = {
-#     "peft_type": "LORA",
-#     "r": 16,
-#     "target_modules": ["query", "key"],
-#     "lora_alpha": 32,
-#     "lora_dropout": 0.05,
-#     "bias": "none",
-# }
-peft_config = get_peft_config(cf)
+
+
+config = {
+    "peft_type": "LORA",
+    "r": 16,
+    "target_modules": ["query", "key"],
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "bias": "none",
+}
+
+peft_config = get_peft_config(config)
+
 encoder = AutoModel.from_pretrained("bert-base-cased")
 print_trainable_parameters(encoder)
 peft_model = PeftModelForFeatureExtraction(encoder, peft_config)
