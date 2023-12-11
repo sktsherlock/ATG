@@ -274,20 +274,13 @@ def print_trainable_parameters(model):
 
 
 
-def set_peft_config(config, modeling_args):
-    config.peft_type = modeling_args.peft_type
-    config.target_modules =  modeling_args.lora_target_modules
-    config.r = modeling_args.lora_rank
-    config.bias = modeling_args.lora_train_bias
-    config.lora_alpha = modeling_args.lora_alpha
-    config.lora_dropout = modeling_args.lora_dropout
-    config.layers_to_transform = modeling_args.lora_layers_to_transform
-    # config = {'peft_type': modeling_args.peft_type, 'target_modules': modeling_args.lora_target_modules,
-    #           'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-    #           'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout,
-    #           'layers_to_transform': modeling_args.lora_layers_to_transform}
-    # peft_config = get_peft_config(config)
-    return config
+def set_peft_config(modeling_args):
+    config = {'peft_type': modeling_args.peft_type, 'target_modules': modeling_args.lora_target_modules,
+              'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+              'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout,
+              'layers_to_transform': modeling_args.lora_layers_to_transform}
+    peft_config = get_peft_config(config)
+    return peft_config
 
 
 def main():
@@ -396,15 +389,7 @@ def main():
     # Load pretrained model and tokenizer
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
-    config = AutoConfig.from_pretrained(
-        model_args.config_name if model_args.config_name else model_args.model_name_or_path,
-        num_labels=num_labels,
-        cache_dir=model_args.cache_dir,
-        revision=model_args.model_revision,
-        token=model_args.token,
-        trust_remote_code=model_args.trust_remote_code,
-    )
-    config = set_peft_config(config, model_args)
+    config = set_peft_config(model_args)
     config.cls_head_bias = model_args.cls_head_bias
     config.problem_type = "single_label_classification"
     logger.info("setting problem type to single label classification")
@@ -430,16 +415,18 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
+    peft_encoder = PeftModelForFeatureExtraction(encoder, config)
+    peft_encoder.print_trainable_parameters()
 
     if model_args.training_objective == "CLS":
         model = CLSClassifier(
-            encoder, num_labels,
+            peft_encoder, num_labels,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
         )
     elif model_args.training_objective == 'Mean':
         model = MEANClassifier(
-            encoder, num_labels,
+            peft_encoder, num_labels,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
         )
