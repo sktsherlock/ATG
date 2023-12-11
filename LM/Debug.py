@@ -71,6 +71,7 @@ config = {
 }
 
 peft_config = get_peft_config(config)
+print(peft_config)
 
 encoder = AutoModel.from_pretrained("bert-base-cased")
 print_trainable_parameters(encoder)
