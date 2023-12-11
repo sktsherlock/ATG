@@ -73,11 +73,10 @@ cf = set_peft_config(cf)
 #     "lora_dropout": 0.05,
 #     "bias": "none",
 # }
-# peft_config = get_peft_config(config)
-print(cf)
+peft_config = get_peft_config(cf)
 encoder = AutoModel.from_pretrained("bert-base-cased")
 print_trainable_parameters(encoder)
-peft_model = PeftModelForFeatureExtraction(encoder, cf)
+peft_model = PeftModelForFeatureExtraction(encoder, peft_config)
 peft_model.print_trainable_parameters()
 print(peft_model)
 
