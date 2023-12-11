@@ -16,8 +16,8 @@ def print_trainable_parameters(model):
         f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}"
     )
 
+
 config = LoraConfig(
-    task_type="SEQ_2_SEQ_LM",
     r=8,
     lora_alpha=32,
     target_modules=["q", "v"],
@@ -29,3 +29,4 @@ print_trainable_parameters(model)
 print([(n, type(m)) for n, m in model().named_modules()])
 lora_model = LoraModel(model, config, "default")
 print_trainable_parameters(lora_model)
+print(lora_model)
