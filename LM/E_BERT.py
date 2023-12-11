@@ -214,7 +214,7 @@ class ModelArguments:
     lora_dropout: float = field(default=0.0, metadata={"help": "Lora dropout"})
     lora_alpha: int = field(default=8, metadata={"help": "Lora alpha"})
     lora_target_modules: Optional[Union[List[str], str]] = field(
-        default=None,
+        default=["query", "key"],
         metadata={
             "help": "List of module names or regex expression of the module names to replace with Lora."
             "For example, ['q', 'v'] or '.*decoder.*(SelfAttention|EncDecAttention).*(q|v)$' "
