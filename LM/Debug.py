@@ -26,7 +26,7 @@ config = LoraConfig(
 
 model = AutoModelForSeq2SeqLM.from_pretrained("t5-base")
 print_trainable_parameters(model)
-print([(n, type(m)) for n, m in model().named_modules()])
+# print([(n, type(m)) for n, m in model().named_modules()])
 lora_model = LoraModel(model, config, "default")
 print_trainable_parameters(lora_model)
 print(lora_model)
