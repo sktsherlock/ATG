@@ -390,7 +390,6 @@ def main():
     # 加载PLM 作为Encoder
     encoder = AutoModel.from_pretrained(
         model_args.model_name_or_path,
-        config=config,
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         token=model_args.token,
