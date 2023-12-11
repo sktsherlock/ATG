@@ -12,7 +12,7 @@ import numpy as np
 from datasets import Value, load_dataset
 import torch
 from datasets import DatasetDict, Dataset
-from peft import LoraConfig, PeftModel, get_peft_model
+from peft import PeftModelForFeatureExtraction, get_peft_config
 
 import transformers
 from transformers import (
@@ -199,9 +199,9 @@ class ModelArguments:
         default=True,
         metadata={"help": "Whether to add bias for classifier head."}
     )
-    use_lora: bool = field(
-        default=False,
-        metadata={"help": "Whether to use LoRA or not."},
+    peft_type: str = field(
+        default=None,
+        metadata={"help": "Which PEFT model to be used."},
     )
     lora_rank: int = field(
         default=8,
@@ -272,6 +272,22 @@ def print_trainable_parameters(model):
         f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}"
     )
 
+
+
+def set_peft_config(config, modeling_args):
+    config.peft_type = modeling_args.peft_type
+    config.target_modules =  modeling_args.lora_target_modules
+    config.r = modeling_args.lora_rank
+    config.bias = modeling_args.lora_train_bias
+    config.lora_alpha = modeling_args.lora_alpha
+    config.lora_dropout = modeling_args.lora_dropout
+    config.layers_to_transform = modeling_args.lora_layers_to_transform
+    # config = {'peft_type': modeling_args.peft_type, 'target_modules': modeling_args.lora_target_modules,
+    #           'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+    #           'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout,
+    #           'layers_to_transform': modeling_args.lora_layers_to_transform}
+    # peft_config = get_peft_config(config)
+    return config
 
 
 def main():
@@ -388,7 +404,7 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
-    config = set_lora_args(config, model_args)
+    config = set_peft_config(config, model_args)
     config.cls_head_bias = model_args.cls_head_bias
     config.problem_type = "single_label_classification"
     logger.info("setting problem type to single label classification")
