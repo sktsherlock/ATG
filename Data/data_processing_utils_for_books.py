@@ -31,7 +31,7 @@ def data_filter_for_books(df, category, category_numbers=10):
 
     # 提取出第二类别
     df['second_category'] = df['category'].apply(lambda x: x[1] if x else None)
-
+    print(df['second_category'])
     # 只保留二级类别为指定类别的数据
     df['second_category'] = df['second_category'].apply(lambda x: x if category in x else None)
     df.dropna(subset=['second_category'], inplace=True)
