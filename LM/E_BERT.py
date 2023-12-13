@@ -50,9 +50,6 @@ class DataTrainingArguments:
     into argparse arguments to be able to specify them on
     the command line.
     """
-    data_name: Optional[str] = field(
-        default=None, metadata={"help": "The name of the dataset to be used."}
-    )
     csv_file: Optional[str] = field(
         default=None, metadata={"help": "Path to the CSV File."}
     )
@@ -194,6 +191,10 @@ class ModelArguments:
     drop_out: float = field(
         default=0.2,
         metadata={"help": "The drop out ratio"}
+    )
+    label_smoothing: float = field(
+        default=0.1,
+        metadata={"help": "The label smoothing factor to use"}
     )
     cls_head_bias: bool = field(
         default=True,
