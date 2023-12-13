@@ -403,13 +403,13 @@ def main():
         model = CLSClassifier(
             peft_encoder, num_labels,
             dropout=model_args.drop_out,
-            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing, reduction='mean')
         )
     elif model_args.training_objective == 'Mean':
         model = MEANClassifier(
             peft_encoder, num_labels,
             dropout=model_args.drop_out,
-            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing_factor, reduction='mean')
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=training_args.label_smoothing, reduction='mean')
         )
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
