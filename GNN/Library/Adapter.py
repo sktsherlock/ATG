@@ -287,6 +287,17 @@ def main():
     graph, _, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
                                                             val_ratio=args.val_ratio, name=args.data_name)
 
+    if args.undirected:
+        print("The Graph change to the undirected graph")
+        srcs, dsts = graph.all_edges()
+        graph.add_edges(dsts, srcs)
+
+    # add self-loop
+    if args.selfloop:
+        print(f"Total edges before adding self-loop {graph.number_of_edges()}")
+        graph = graph.remove_self_loop().add_self_loop()
+        print(f"Total edges after adding self-loop {graph.number_of_edges()}")
+
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
     label_embedding = th.from_numpy(np.load(args.label_embedding).astype(np.float32)).to(device)
 
