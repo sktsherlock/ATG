@@ -135,8 +135,13 @@ class MLP(nn.Module):
         h = feat
 
         for i in range(self.n_layers):
-            h = F.relu(self.norms[i](self.linears[i](h)))
-            h = self.dropout(h)
+            conv = self.linears[i](h)
+            h = conv
+
+            if i < self.n_layers - 1:
+                h = self.norms[i](h)
+                h = self.activation(h)
+                h = self.dropout(h)
 
         return h
 
