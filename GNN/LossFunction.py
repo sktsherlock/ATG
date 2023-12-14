@@ -7,9 +7,9 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 epsilon = 1 - math.log(2)
 
 
-def _contrastive_loss(z1, z2, loss_type='simsce'):
+def _contrastive_loss(z1, z2, device, loss_type='simsce'):
     if loss_type == 'simsce':
-        return _contrastive_loss_simsce(z1, z2)
+        return _contrastive_loss_simsce(z1, z2, device=device)
     else:
         raise ValueError('Error contrastive loss type {}!'.format(loss_type))
 
