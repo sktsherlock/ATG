@@ -41,7 +41,7 @@ def process_raw_text_df(meta_data, node_ids, categories):
     data['text'] = data.apply(
         lambda per_row: '{} {}'.format(per_row['title'], per_row['abstract']), axis=1)
     data['TC'] = data.apply(
-        lambda per_row: '{} {}'.format(per_row['title'], per_row['abstract']), axis=1)
+        lambda per_row: '{} {}'.format(per_row['title'], per_row['category']), axis=1)
     return data
 
 
