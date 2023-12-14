@@ -21,7 +21,7 @@ def remove_html_tags(text):
 
 def remove_whitespace(text):
     # 去除多余空白字符并使用空格分隔单词
-    cleaned_text = ' '.join(text.split())
+    cleaned_text = text.split().join(' ')
     return cleaned_text
 
 
