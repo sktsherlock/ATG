@@ -129,7 +129,7 @@ class GraphAdapter(nn.Module):
     def forward(self, feat):
         h = feat
 
-        for i in range(self.n_layers - 1):
+        for i in range(self.n_layers):
             h = F.relu(self.norms[i](self.linears[i](h)))
             h = self.dropout(h)
 
