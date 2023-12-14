@@ -30,7 +30,7 @@ def training(
         verbose=True,
         min_lr=args.min_lr,
     )
-
+    softloss = nn.KLDivLoss(reduction="batchmean")
     # training loop
     total_time = 0
     best_val_loss = float("inf")
@@ -51,7 +51,7 @@ def training(
         student_preds = student_model(feat)
         student_graph_preds = student_model.graph_forward(feat)
         print(student_preds[train_idx], label_embedding[train_idx])
-        student_loss = cross_entropy(student_preds[train_idx], label_embedding[train_idx])
+        student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
 
         ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds)
 
