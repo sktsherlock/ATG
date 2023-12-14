@@ -50,6 +50,7 @@ def training(
         # student model forward
         student_preds = student_model(feat)
         student_graph_preds = student_model.graph_forward(feat)
+        print(student_model)
         print(student_preds[train_idx].shape, label_embedding[train_idx].shape)
         student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
 
