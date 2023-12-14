@@ -189,7 +189,7 @@ class GCNTeacher(nn.Module):
             print(f'The {i} layers')
             conv = self.convs[i](graph, h)
             h = conv
-
+            print(h, h.shape)
             if i < self.n_layers - 1:
                 h = self.norms[i](h)
                 h = self.activation(h)
