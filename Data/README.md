@@ -47,5 +47,5 @@ cd ~/ATG/Data/Office/
 wget --no-check-certificate https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Office_Products.json.gz 
 gunzip meta_Office_Products.json.gz 
 cd ~/ATG/Data/
-python data_processing_utils_for_books.py --data_path 'Office/meta_Office_Products.json' --name 'Office' --class_numbers 10  --second_category "0ffice & School Supplies"
+python data_processing_utils_for_books.py --data_path 'Office/meta_Office_Products.json' --name 'Office' --class_numbers 10  --second_category "Office & School Supplies"
 ```

@@ -5,7 +5,7 @@ import re
 import pandas as pd
 import requests
 import argparse
-from data_processing_utils import construct_graph, export_as_csv, parse_json, download_images
+from data_processing_utils import construct_graph, export_as_csv, parse_json, download_images, count_data
 
 
 # 数据过滤
@@ -22,7 +22,7 @@ def data_filter_for_books(df, category, category_numbers=10):
 
     # 提取出第二类别
     df['second_category'] = df['category'].apply(lambda x: x[1] if x else None)
-    print(df['second_category'])
+
     # 只保留二级类别为指定类别的数据
     df['second_category'] = df['second_category'].apply(lambda x: x if category in x else None)
     df.dropna(subset=['second_category'], inplace=True)
@@ -127,6 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
     parser.add_argument('--class_numbers', type=int, help='Dataset class threshold', required=True)
     parser.add_argument('--second_category', type=str, default='Computer')
+    parser.add_argument('--download_image', action='store_true', help='whether to download the image')
     args = parser.parse_args()
 
     data_path = args.data_path
@@ -142,6 +143,7 @@ if __name__ == '__main__':
     output_graph_path = f'./{name}/{name}Graph.pt'
 
     df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers)
+    count_data(df)
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
