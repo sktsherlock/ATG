@@ -120,6 +120,15 @@ class MLP(nn.Module):
         for norm in self.norms:
             norm.reset_parameters()
 
+    def graph_forward(self, feat):
+        h = feat
+
+        for i in range(self.n_layers - 2):
+            h = F.relu(self.norms[i](self.linears[i](h)))
+            h = self.dropout(h)
+
+        return h
+
     def forward(self, feat):
         h = feat
 
