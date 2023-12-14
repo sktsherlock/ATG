@@ -76,18 +76,18 @@ def data_filter(df, category_number=10):
     df.drop(rows_to_drop, inplace=True)
     print('步骤五****************************************************************')
     # 清洗 description
-    df['cleaned_description'] = df['description'].apply(
+    df['description'] = df['description'].apply(
         lambda string: ''.join([c for c in string if c != '']) if string else None)
     # 替换 HTML 标签和空白
-    df['cleaned_description'] = df['cleaned_description'].apply(lambda text: re.sub('<[\s\S]*>', '',
+    df['description'] = df['description'].apply(lambda text: re.sub('<[\s\S]*>', '',
                                                                                     re.sub('\s+', ' ',
                                                                                            text)) if text else None)
     # 若还有 '<', 则删除
-    df['cleaned_description'] = df['cleaned_description'].apply(lambda x: x if x and not re.search('<', x) else None)
+    df['description'] = df['description'].apply(lambda x: x if x and not re.search('<', x) else None)
     print('步骤六****************************************************************')
     # 合并 description 和 title
     df['text'] = df.apply(
-        lambda per_row: 'Title: {}; Description: {}'.format(per_row['title'], per_row['cleaned_description']), axis=1)
+        lambda per_row: 'Title: {}; Description: {}'.format(per_row['title'], per_row['description']), axis=1)
     # 再次替换 HTML 标签和空白
     df['text'] = df['text'].apply(lambda text: re.sub('<[\s\S]*>', '',
                                                       re.sub('\s+', ' ', text)) if text else None)
@@ -120,7 +120,7 @@ def data_filter(df, category_number=10):
     # df.rename(columns={'second_category': 'label'}, inplace=True)  # 将列名 second_category 更改为 label
 
     # 只保留 DataFrame 中需要的列
-    df = df[['id', 'category', 'text', 'also_buy', 'also_view', 'imageURLHighRes', 'second_category', 'label']]
+    df = df[['id', 'category', 'text', 'description', 'title', 'also_buy', 'also_view', 'imageURLHighRes', 'second_category', 'label']]
 
     return df
 
