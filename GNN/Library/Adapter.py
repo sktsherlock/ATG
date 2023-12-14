@@ -18,7 +18,7 @@ from GraphData import load_data
 
 
 def training(
-        args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename):
+        args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename, device):
     optimizer = optim.AdamW(
         student_model.parameters(), lr=args.lr, weight_decay=args.wd
     )
@@ -56,7 +56,7 @@ def training(
 
         student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
 
-        ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds)
+        ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds, device)
 
         loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
 
@@ -337,7 +337,7 @@ def main():
     teacher_model.reset_parameters()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pt")
-    training(args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename)
+    training(args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename, device)
     # Distil the Graph Knowledge to the Adapter
 
 
