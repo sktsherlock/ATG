@@ -184,10 +184,11 @@ class GCNTeacher(nn.Module):
 
     def forward(self, graph, feat):
         h = feat
-
+        print(h, h.shape)
         for i in range(self.n_layers):
             print(f'The {i} layers')
             conv = self.convs[i](graph, h)
+            print(self.convs)
             h = conv
             print(h, h.shape)
             if i < self.n_layers - 1:
