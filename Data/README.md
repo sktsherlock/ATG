@@ -57,4 +57,6 @@ python data_processing_utils_for_books.py --data_path 'Office/meta_Office_Produc
 mkdir ~/OGB
 cd ~/ATG/Data/
 python data_processing_for_ogb.py --data_root '/home/aiscuser/OGB/'
+
+python TextStatisitic.py --csv_file '/home/aiscuser/ATG/Data/ogb/arxiv.csv' --column_name 'text'
 ```
