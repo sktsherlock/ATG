@@ -152,7 +152,7 @@ class GCNTeacher(nn.Module):
             n_layers,
             activation,
             dropout,
-            weight=False,
+            weight=True,
     ):
         super().__init__()
         self.n_layers = n_layers
