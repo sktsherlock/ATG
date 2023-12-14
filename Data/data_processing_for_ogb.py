@@ -62,7 +62,7 @@ def read_ids_and_labels(data_root):
     return categories, paper_ids  # 返回类别和论文ID
 
 
-def process_raw_text_df(meta_data, node_ids, categories, process_mode='TA'):
+def process_raw_text_df(meta_data, node_ids, categories):
     data = merge_by_ids(meta_data.dropna(), node_ids, categories)
     data = clean_df(data)
 
@@ -73,7 +73,9 @@ def process_raw_text_df(meta_data, node_ids, categories, process_mode='TA'):
 def main(raw_url, data_path):
     raw_text_path = download_url(raw_url, data_path)
     categories, node_ids = read_ids_and_labels(data_path)
+    print(categories, node_ids)
     text = pd.read_table(raw_text_path, header=None, skiprows=[0])
+    print(text)
     arxiv_csv = process_raw_text_df(text, node_ids, categories)
     # 保存ogb-arxiv文件
     arxiv_csv.to_csv(output_csv_path, sep=',', index=False, header=True)
