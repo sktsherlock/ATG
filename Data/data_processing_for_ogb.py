@@ -97,6 +97,7 @@ if __name__ == '__main__':
 
     dataset = DglNodePropPredDataset('ogbn-arxiv', root=data_root)
     _, label = dataset[0]
-    label_df = pd.DataFrame({'label_id': label.numpy()})
+    label_array = label.numpy().flatten()
+    label_df = pd.DataFrame({'label_id': label_array})
 
     main(raw_url=raw_text_url, data_path=os.path.join(data_root, 'ogbn_arxiv'))
