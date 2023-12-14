@@ -20,7 +20,7 @@ def remove_html_tags(text):
 
 
 def remove_whitespace(text):
-    # 去除多余空白字符
+    # 去除多余空白字符并使用空格分隔单词
     cleaned_text = ' '.join(text.split())
     return cleaned_text
 
@@ -35,6 +35,8 @@ def clean_df(data, title='title', abstract='abstract'):
     data[abstract] = data[abstract].apply(remove_special_characters)
     data[abstract] = data[abstract].apply(remove_html_tags)
     data[abstract] = data[abstract].apply(remove_whitespace)
+
+    print(data[['title', 'abstract']])
     return data
 
 
