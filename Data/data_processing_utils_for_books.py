@@ -7,15 +7,6 @@ import requests
 import argparse
 from data_processing_utils import construct_graph, export_as_csv, parse_json, download_images
 
-# 读取 json 文件并将其转换为 DataFrame 并返回
-def parse_json_for_books(data_path):
-    # 读取 json 文件
-    df = pd.read_json(data_path, lines=True, orient='records')
-    # 只取其中几列
-    df = pd.DataFrame(df, columns=['asin', 'category', 'description', 'title',
-                                   'also_buy', 'also_view', 'imageURLHighRes'])
-    return df
-
 
 # 数据过滤
 def data_filter_for_books(df, category, category_numbers=10):
@@ -150,7 +141,7 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter_for_books(parse_json_for_books(data_path), args.second_category,  category_numbers=class_numbers)
+    df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers)
     export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
