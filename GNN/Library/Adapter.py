@@ -50,7 +50,7 @@ def training(
         # student model forward
         student_preds = student_model(feat)
         student_graph_preds = student_model.graph_forward(feat)
-        print(student_preds[train_idx], label_embedding[train_idx])
+        print(student_preds[train_idx].shape, label_embedding[train_idx].shape)
         student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
 
         ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds)
@@ -314,8 +314,7 @@ def main():
     student_model = GraphAdapter(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu, dropout=args.dropout).to(device)
 
     teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers, F.relu, dropout=args.dropout).to(device)
-    print(student_model)
-    print(teacher_model)
+
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in student_model.parameters() if p.requires_grad]
@@ -327,7 +326,6 @@ def main():
     teacher_model.reset_parameters()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pt")
-    print(graph, feat.shape, label_embedding.shape)
     training(args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename)
     # Distil the Graph Knowledge to the Adapter
 
