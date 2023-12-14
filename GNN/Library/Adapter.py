@@ -186,6 +186,7 @@ class GCNTeacher(nn.Module):
         h = feat
 
         for i in range(self.n_layers):
+            print(f'The {i} layers')
             conv = self.convs[i](graph, h)
             h = conv
 
