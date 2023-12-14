@@ -7,6 +7,30 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 epsilon = 1 - math.log(2)
 
 
+def _contrastive_loss(z1, z2, loss_type='simsce'):
+    if loss_type == 'simsce':
+        return _contrastive_loss_simsce(z1, z2)
+    else:
+        raise ValueError('Error contrastive loss type {}!'.format(loss_type))
+
+
+def _contrastive_loss_simsce(z1, z2, device, similarity='inner', temperature=0.1):
+    assert z1.shape == z2.shape
+    z1 = F.normalize(z1, dim=-1)
+    z2 = F.normalize(z2, dim=-1)
+    if similarity == 'inner':
+        similarity_matrix = th.matmul(z1, z2.T)
+    elif similarity == 'cosine':
+        similarity_matrix = F.cosine_similarity(z1.unsqueeze(1), z2.unsqueeze(0), dim=-1)
+    else:
+        similarity_matrix = th.matmul(z1, z2.T)
+    similarity_matrix /= temperature
+
+    labels = th.arange(similarity_matrix.shape[0]).long().to(device)
+    loss_res = F.cross_entropy(similarity_matrix, labels, reduction="mean")
+    return loss_res
+
+
 class EarlyStopping:
     def __init__(self, patience=10):
         self.patience = patience

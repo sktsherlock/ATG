@@ -10,7 +10,7 @@ import torch.optim as optim
 import time
 import dgl.nn.pytorch as dglnn
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
+from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate, _contrastive_loss
 
 
 
@@ -45,10 +45,8 @@ def evaluate(
     return train_results, val_results, test_results, val_loss, test_loss
 
 
-def learningfromgraph(
-        args, student_model, teacher_model, feat, label_embedding, train_idx, val_idx, test_idx):
-    if args.early_stop_patience is not None:
-        stopper = EarlyStopping(patience=args.early_stop_patience)
+def training(
+        args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx):
     optimizer = optim.AdamW(
         student_model.parameters(), lr=args.lr, weight_decay=args.wd
     )
@@ -63,58 +61,37 @@ def learningfromgraph(
 
     # training loop
     total_time = 0
-    best_val_result, final_test_result, best_val_loss = 0, 0, float("inf")
 
     for epoch in range(1, args.n_epochs + 1):
         tic = time.time()
 
+        # Training Loop
+        student_model.train()
+
         if args.warmup_epochs is not None:
             adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
 
-        train_loss, pred = train(
-            model, feat, labels, train_idx, optimizer, label_smoothing=args.label_smoothing
-        )
-        if epoch % args.eval_steps == 0:
-            (
-                train_result,
-                val_result,
-                test_result,
-                val_loss,
-                test_loss,
-            ) = evaluate(
-                model,
-                feat,
-                labels,
-                train_idx,
-                val_idx,
-                test_idx,
-                args.metric,
-                args.label_smoothing,
-                args.average
-            )
-            wandb.log({'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss, 'Train_result': train_result, 'Val_result': val_result, 'Test_result': test_result})
-            lr_scheduler.step(train_loss)
+        # teacher model
+        with th.no_grad():  # 教师网络不用反向传播
+            techer_preds = teacher_model(graph, feat)
 
-            toc = time.time()
-            total_time += toc - tic
+        # student model forward
+        student_preds = student_model(feat)
+        student_loss = cross_entropy((student_preds, label_embedding))
 
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                best_val_result = val_result
-                final_test_result = test_result
+        ditillation_loss = _contrastive_loss(student_preds, techer_preds)
 
-            if args.early_stop_patience is not None:
-                if stopper.step(val_loss):
-                    break
+        loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
 
-            if epoch % args.log_every == 0:
-                print(
-                    f"Run: {n_running}/{args.n_runs}, Epoch: {epoch}/{args.n_epochs}, Average epoch time: {total_time / epoch:.2f}\n"
-                    f"Loss: {train_loss.item():.4f}\n"
-                    f"Train/Val/Test loss: {train_loss:.4f}/{val_loss:.4f}/{test_loss:.4f}\n"
-                    f"Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
-                )
+        optimizer.zero_grad()
+        loss.backward()				#反向传播
+        optimizer.step()			#参数优化
 
+        student_model.eval()
+
+
+
+=
     print("*" * 50)
     print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
     print("*" * 50)
