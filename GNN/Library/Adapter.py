@@ -83,10 +83,11 @@ def training(
     return best_val_loss, best_test_loss
 
 
-class GraphAdapter(nn.Module):
+class MLP(nn.Module):
     def __init__(
             self,
             in_feats,
+            n_classes,
             n_layers,
             n_hidden,
             activation,
@@ -95,15 +96,17 @@ class GraphAdapter(nn.Module):
         super().__init__()
         self.n_layers = n_layers
         self.n_hidden = n_hidden
+        self.n_classes = n_classes
 
         self.linears = nn.ModuleList()
         self.norms = nn.ModuleList()
 
         for i in range(n_layers):
             in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden if i < n_layers - 1 else in_feats
+            out_hidden = n_hidden if i < n_layers - 1 else n_classes
 
             self.linears.append(nn.Linear(in_hidden, out_hidden))
+
             if i < n_layers - 1:
                 self.norms.append(nn.BatchNorm1d(out_hidden))
 
@@ -117,19 +120,10 @@ class GraphAdapter(nn.Module):
         for norm in self.norms:
             norm.reset_parameters()
 
-    def graph_forward(self, feat):
-        h = feat
-
-        for i in range(self.n_layers - 2):
-            h = F.relu(self.norms[i](self.linears[i](h)))
-            h = self.dropout(h)
-
-        return h
-
     def forward(self, feat):
         h = feat
 
-        for i in range(self.n_layers):
+        for i in range(self.n_layers - 1):
             h = F.relu(self.norms[i](self.linears[i](h)))
             h = self.dropout(h)
 
@@ -312,7 +306,7 @@ def main():
 
 
     # Model implementation
-    student_model = GraphAdapter(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu, dropout=args.dropout).to(device)
+    student_model = MLP(in_features, in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu, dropout=args.dropout).to(device)
 
     teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers, F.relu, dropout=args.dropout).to(device)
 
