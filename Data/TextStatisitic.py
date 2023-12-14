@@ -7,6 +7,10 @@ def count_words(csv_file, column_name):
     data = pd.read_csv(csv_file)
     column_names = data.columns.tolist()
     print(column_names)
+    # 输出前几行
+    num_rows = 5  # 指定要输出的行数
+    head_data = data.head(num_rows)
+    print(head_data)
 
     # 统计每行的单词数
     data['word_count'] = data[column_name].str.split().str.len()
