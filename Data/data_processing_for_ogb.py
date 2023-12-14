@@ -7,38 +7,6 @@ import os
 import re
 
 
-def remove_special_characters(text):
-    # 使用正则表达式或其他方法去除特殊字符
-    cleaned_text = re.sub('[^a-zA-Z0-9]', '', text)
-    return cleaned_text
-
-
-def remove_html_tags(text):
-    # 去除 HTML 标签
-    cleaned_text = re.sub('<[^>]+>', '', text)
-    return cleaned_text
-
-
-def remove_whitespace(text):
-    # 去除多余空白字符并使用空格分隔单词
-    cleaned_text = text.split().join(' ')
-    return cleaned_text
-
-
-def clean_df(data, title='title', abstract='abstract'):
-    # 清洗 'title' 列
-    data[title] = data[title].apply(remove_special_characters)
-    data[title] = data[title].apply(remove_html_tags)
-    data[title] = data[title].apply(remove_whitespace)
-
-    # 清洗 'abstract' 列
-    data[abstract] = data[abstract].apply(remove_special_characters)
-    data[abstract] = data[abstract].apply(remove_html_tags)
-    data[abstract] = data[abstract].apply(remove_whitespace)
-
-    print(data[['title', 'abstract']])
-    return data
-
 
 
 
@@ -67,7 +35,6 @@ def read_ids_and_labels(data_root):
 
 def process_raw_text_df(meta_data, node_ids, categories):
     data = merge_by_ids(meta_data.dropna(), node_ids, categories)
-    data = clean_df(data)
 
     return data
 
