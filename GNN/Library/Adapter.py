@@ -48,10 +48,12 @@ def training(
             teacher_graph_preds = teacher_model(graph, feat)
 
         # student model forward
-        student_preds = student_model(feat)
+        student_preds = student_model.forward(feat)
         student_graph_preds = student_model.graph_forward(feat)
-        print(student_model)
-        print(student_preds[train_idx].shape, label_embedding[train_idx].shape)
+
+        print(student_preds[train_idx].shape, student_graph_preds[train_idx].shape)
+        print(student_preds[train_idx], student_graph_preds[train_idx])
+
         student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
 
         ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds)
