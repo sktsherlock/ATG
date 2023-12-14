@@ -5,6 +5,8 @@ import argparse
 def count_words(csv_file, column_name):
     # 读取 CSV 文件为 DataFrame
     data = pd.read_csv(csv_file)
+    column_names = data.columns.tolist()
+    print(column_names)
 
     # 统计每行的单词数
     data['word_count'] = data[column_name].str.split().str.len()
