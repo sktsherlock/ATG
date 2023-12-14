@@ -50,6 +50,7 @@ def training(
         # student model forward
         student_preds = student_model(feat)
         student_graph_preds = student_model.graph_forward(feat)
+        print(student_preds[train_idx], label_embedding[train_idx])
         student_loss = cross_entropy(student_preds[train_idx], label_embedding[train_idx])
 
         ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds)
@@ -174,13 +175,9 @@ class GCNTeacher(nn.Module):
 
     def forward(self, graph, feat):
         h = feat
-        print(h, h.shape)
         for i in range(self.n_layers):
-            print(f'The {i} layers')
             conv = self.convs[i](graph, h)
-            print(self.convs)
             h = conv
-            print(h, h.shape)
             if i < self.n_layers - 1:
                 h = self.norms[i](h)
                 h = self.activation(h)
