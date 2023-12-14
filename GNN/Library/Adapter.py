@@ -339,7 +339,7 @@ def main():
     teacher_model.reset_parameters()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pt")
-    print(graph, feat.shape(), label_embedding.shape())
+    print(graph, feat.shape, label_embedding.shape)
     training(args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename)
     # Distil the Graph Knowledge to the Adapter
 
