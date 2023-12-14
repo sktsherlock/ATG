@@ -310,6 +310,7 @@ def main():
 
     in_features = feat.shape[1]
 
+    graph.create_formats_()
     train_idx = train_idx.to(device)
     val_idx = val_idx.to(device)
     test_idx = test_idx.to(device)
@@ -317,10 +318,8 @@ def main():
     print(f'Valid_idx: {len(val_idx)}')
     print(f'Test_idx: {len(test_idx)}')
 
+    graph = graph.to(device)
 
-    # run
-    val_results = []
-    test_results = []
 
     # Model implementation
     student_model = GraphAdapter(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu, dropout=args.dropout).to(device)
