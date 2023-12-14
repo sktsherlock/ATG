@@ -46,7 +46,9 @@ def merge_by_ids(meta_data, node_ids, categories):
     meta_data["ID"] = meta_data["ID"].astype(np.int64)
     meta_data.columns = ["mag_id", "title", "abstract"]
     data = pd.merge(node_ids, meta_data, how="left", on="mag_id")
+    data = pd.concat([data, label_df], axis=1)
     data = pd.merge(data, categories, how="left", on="label_id")
+    print(data)
     return data
 
 
@@ -55,7 +57,6 @@ def read_ids_and_labels(data_root):
     paper_id_path_csv = f"{data_root}/mapping/nodeidx2paperid.csv.gz"  #
     paper_ids = pd.read_csv(paper_id_path_csv)
     categories = pd.read_csv(category_path_csv)
-    categories.columns = ["ID", "category"]  # 指定ID 和 category列写进去
     paper_ids.columns = ["ID", "mag_id"]
     categories.columns = ["label_id", "category"]
 
@@ -75,7 +76,6 @@ def main(raw_url, data_path):
     categories, node_ids = read_ids_and_labels(data_path)
     print(categories, node_ids)
     text = pd.read_table(raw_text_path, header=None, skiprows=[0])
-    print(text)
     arxiv_csv = process_raw_text_df(text, node_ids, categories)
     # 保存ogb-arxiv文件
     arxiv_csv.to_csv(output_csv_path, sep=',', index=False, header=True)
@@ -96,5 +96,7 @@ if __name__ == '__main__':
     raw_text_url = "https://snap.stanford.edu/ogb/data/misc/ogbn_arxiv/titleabs.tsv.gz"
 
     dataset = DglNodePropPredDataset('ogbn-arxiv', root=data_root)
+    _, label = dataset[0]
+    label_df = pd.DataFrame({'label_id': label})
 
     main(raw_url=raw_text_url, data_path=os.path.join(data_root, 'ogbn_arxiv'))
