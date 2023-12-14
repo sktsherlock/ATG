@@ -26,6 +26,14 @@ python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 
 
 ```
 
+## Arxiv
+```python
+
+
+```
+
+
+
 # Image Attribute -> Feature 
 ## Movies
 ```python 
