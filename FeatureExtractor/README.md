@@ -33,6 +33,7 @@ python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'ber
 
 # OPT 32GB V100
 python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'facebook/opt-1.3b' --name 'Arxiv' --path 'Data/ogb/Arxiv/Feature/' --max_length 256 --batch_size 200 
+python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'facebook/opt-1.3b' --name 'Arxiv' --path 'Data/ogb/Arxiv/Feature/' --max_length 256 --batch_size 200 
 
 
 ```

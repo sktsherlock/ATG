@@ -9,11 +9,9 @@ import os
 import torch.optim as optim
 import time
 import dgl.nn.pytorch as dglnn
+from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate, _contrastive_loss
-
-
-
 from GraphData import load_data
 
 
@@ -28,25 +26,9 @@ def train(model, feat, labels, train_idx, optimizer, label_smoothing):
 
     return loss, pred
 
-@th.no_grad()
-def evaluate(
-    model, feat, labels, train_idx, val_idx, test_idx, metric='accuracy', label_smoothing=0.1, average=None
-):
-    model.eval()
-    with th.no_grad():
-        pred = model(feat)
-    val_loss = cross_entropy(pred[val_idx], labels[val_idx], label_smoothing)
-    test_loss = cross_entropy(pred[test_idx], labels[test_idx], label_smoothing)
-
-    train_results = get_metric(th.argmax(pred[train_idx], dim=1), labels[train_idx], metric, average=average)
-    val_results = get_metric(th.argmax(pred[val_idx], dim=1), labels[val_idx], metric, average=average)
-    test_results = get_metric(th.argmax(pred[test_idx], dim=1), labels[test_idx], metric, average=average)
-
-    return train_results, val_results, test_results, val_loss, test_loss
-
 
 def training(
-        args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx):
+        args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename):
     optimizer = optim.AdamW(
         student_model.parameters(), lr=args.lr, weight_decay=args.wd
     )
@@ -61,7 +43,7 @@ def training(
 
     # training loop
     total_time = 0
-
+    best_val_loss = float("inf")
     for epoch in range(1, args.n_epochs + 1):
         tic = time.time()
 
@@ -73,13 +55,14 @@ def training(
 
         # teacher model
         with th.no_grad():  # 教师网络不用反向传播
-            techer_preds = teacher_model(graph, feat)
+            teacher_graph_preds = teacher_model(graph, feat)
 
         # student model forward
         student_preds = student_model(feat)
-        student_loss = cross_entropy((student_preds, label_embedding))
+        student_graph_preds = student_model.graph_forward(feat)
+        student_loss = cross_entropy((student_preds[train_idx], label_embedding[train_idx]))
 
-        ditillation_loss = _contrastive_loss(student_preds, techer_preds)
+        ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds)
 
         loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
 
@@ -88,15 +71,24 @@ def training(
         optimizer.step()			#参数优化
 
         student_model.eval()
+        with th.no_grad():
+            pred = student_model(feat)
+        val_loss = cross_entropy(pred[val_idx], label_embedding[val_idx])
+        test_loss = cross_entropy(pred[test_idx], label_embedding[test_idx])
+
+        wandb.log({'Train_loss': loss, 'Test_loss': test_loss, 'Val_loss': val_loss, 'Distillation_loss': ditillation_loss})
+        lr_scheduler.step(loss)
+        toc = time.time()
+        total_time += toc - tic
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_test_loss = test_loss
+
+            th.save(student_model.state_dict(), filename)
 
 
-
-=
-    print("*" * 50)
-    print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
-    print("*" * 50)
-
-    return best_val_result, final_test_result
+    return best_val_loss, best_test_loss
 
 
 class GraphAdapter(nn.Module):
@@ -117,7 +109,7 @@ class GraphAdapter(nn.Module):
 
         for i in range(n_layers):
             in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden
+            out_hidden = n_hidden if i < n_layers - 1 else in_feats
 
             self.linears.append(nn.Linear(in_hidden, out_hidden))
             if i < n_layers - 1:
@@ -132,6 +124,15 @@ class GraphAdapter(nn.Module):
 
         for norm in self.norms:
             norm.reset_parameters()
+
+    def graph_forward(self, feat):
+        h = feat
+
+        for i in range(self.n_layers - 2):
+            h = F.relu(self.norms[i](self.linears[i](h)))
+            h = self.dropout(h)
+
+        return h
 
     def forward(self, feat):
         h = feat
@@ -199,7 +200,7 @@ class GCNTeacher(nn.Module):
 
 def args_init():
     argparser = argparse.ArgumentParser(
-        "MLP Config",
+        "Adapter Config",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     argparser.add_argument("--gpu", type=int, default=0, help="GPU device ID.")
@@ -247,6 +248,9 @@ def args_init():
         "--feature", type=str, default=None, help="Use LM embedding as feature", required=True
     )
     argparser.add_argument(
+        "--label_embedding", type=str, default=None, help="Use label  embedding as label", required=True
+    )
+    argparser.add_argument(
         "--graph_path", type=str, default=None, help="The datasets to be implemented.", required=True
     )
     argparser.add_argument(
@@ -255,6 +259,9 @@ def args_init():
     )
     argparser.add_argument(
         "--average", type=str, default='weighted', choices=['weighted', 'micro', 'macro', None]
+    )
+    argparser.add_argument(
+        "--save_path", type=str, default=None, help="Path to save the Student Model", required=True
     )
     # ! Split dataset
     argparser.add_argument(
@@ -298,7 +305,7 @@ def main():
     # Model implementation
     student_model = GraphAdapter(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu, dropout=args.dropout).to(device)
 
-    teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers, F.relu, dropout=args.dropout)
+    teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers-1, F.relu, dropout=args.dropout)
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in student_model.parameters() if p.requires_grad]
@@ -307,10 +314,12 @@ def main():
 
 
     student_model.reset_parameters()
+    teacher_model.reset_parameters()
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pt")
+    training(args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename)
     # Distil the Graph Knowledge to the Adapter
-    val_result, test_result = classification(
-        args, student_model, feat, labels, train_idx, val_idx, test_idx,
-    )
+
 
 
 
