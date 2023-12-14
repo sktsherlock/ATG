@@ -11,8 +11,9 @@ def count_words(csv_file, column_name):
     data['text_length'] = data.apply(lambda x: len(x[f'{column_name}'].split(' ')) if x[f'{column_name}'] else 0, axis=1)
 
     # 输出结果
-    data['word_count'].describe()
-    data['text_length'].describe()
+    print(data['word_count'].describe())
+    print('***************************')
+    print(data['text_length'].describe())
 
 
 
