@@ -324,7 +324,7 @@ def main():
     # Model implementation
     student_model = GraphAdapter(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu, dropout=args.dropout).to(device)
 
-    teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers-1, F.relu, dropout=args.dropout).to(device)
+    teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers, F.relu, dropout=args.dropout).to(device)
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in student_model.parameters() if p.requires_grad]
