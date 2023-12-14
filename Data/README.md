@@ -41,6 +41,7 @@ cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Pet/meta_Pet_Supplies.json' --name 'Pet' --class_numbers 15  
 ```
 
+## Office 
 ```shell
 mkdir ~/ATG/Data/Office/
 cd ~/ATG/Data/Office/
@@ -48,4 +49,12 @@ wget --no-check-certificate https://datarepo.eng.ucsd.edu/mcauley_group/data/ama
 gunzip meta_Office_Products.json.gz 
 cd ~/ATG/Data/
 python data_processing_utils_for_books.py --data_path 'Office/meta_Office_Products.json' --name 'Office' --class_numbers 10  --second_category "Office & School Supplies"
+```
+
+# 文本图
+## OGB-Arxiv
+```shell
+mkdir ~/OGB
+cd ~/ATG/Data/
+python data_processing_for_ogb.py --data_root '/home/aiscuser/OGB/'
 ```

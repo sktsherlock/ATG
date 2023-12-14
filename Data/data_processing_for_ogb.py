@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
 import argparse
-from transformers import AutoTokenizer
 from ogb.utils.url import download_url
+from ogb.nodeproppred import DglNodePropPredDataset
 import os
-import os.path as osp
 import re
 
 
@@ -94,4 +93,6 @@ if __name__ == '__main__':
     output_csv_path = f'./ogb/arxiv.csv'
     raw_text_url = "https://snap.stanford.edu/ogb/data/misc/ogbn_arxiv/titleabs.tsv.gz"
 
-    main(raw_url=raw_text_url, data_path=data_root)
+    dataset = DglNodePropPredDataset('ogbn-arxiv', root=data_root)
+
+    main(raw_url=raw_text_url, data_path=os.path.join(data_root, 'ogbn_arxiv'))
