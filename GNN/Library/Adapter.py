@@ -166,7 +166,7 @@ class GCNTeacher(nn.Module):
             out_hidden = n_hidden
 
             self.convs.append(
-                dglnn.GraphConv(in_hidden, out_hidden, "both", weight=weight, bias=True)
+                dglnn.GraphConv(in_hidden, out_hidden, "both", weight=weight, bias=False)
             )
 
             if i < n_layers - 1:
