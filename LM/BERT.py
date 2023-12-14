@@ -93,6 +93,9 @@ class DataTrainingArguments:
         default=None,
         metadata={"help": "The columns to remove from the dataset. Multiple columns should be separated by commas."},
     )
+    text_column_delimiter: Optional[str] = field(
+        default=" ", metadata={"help": "THe delimiter to use to join text columns into a single sentence."}
+    )
     pad_to_max_length: bool = field(
         default=True,
         metadata={

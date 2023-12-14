@@ -18,7 +18,6 @@ def merge_by_ids(meta_data, node_ids, categories):
     data = pd.merge(node_ids, meta_data, how="left", on="mag_id")
     data = pd.concat([data, label_df], axis=1)
     data = pd.merge(data, categories, how="left", on="label_id")
-    print(data)
     return data
 
 
@@ -35,7 +34,11 @@ def read_ids_and_labels(data_root):
 
 def process_raw_text_df(meta_data, node_ids, categories):
     data = merge_by_ids(meta_data.dropna(), node_ids, categories)
-
+    data['title'] = data.apply(lambda per_row: 'Title: {}'.format(per_row['title']), axis=1)
+    data['abstract'] = data.apply(lambda per_row: 'Abstract: {}'.format(per_row['abstract']), axis=1)
+    # Merge title and abstract
+    data['text'] = data.apply(
+        lambda per_row: '{} {}'.format(per_row['title'], per_row['cleaned_description']), axis=1)
     return data
 
 
