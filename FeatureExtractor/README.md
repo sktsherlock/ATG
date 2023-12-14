@@ -28,6 +28,11 @@ python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 
 
 ## Arxiv
 ```python
+python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'bert-base-uncased' --name 'Arxiv' --path 'Data/ogb/Arxiv/Feature/' --max_length 256 --batch_size 1000 --cls 
+python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'bert-large-uncased' --name 'Arxiv' --path 'Data/ogb/Arxiv/Feature/' --max_length 256 --batch_size 1000 --cls 
+
+# OPT 32GB V100
+python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'facebook/opt-1.3b' --name 'Arxiv' --path 'Data/ogb/Arxiv/Feature/' --max_length 256 --batch_size 200 
 
 
 ```
