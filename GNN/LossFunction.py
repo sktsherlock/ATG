@@ -59,7 +59,7 @@ def adjust_learning_rate(optimizer, lr, epoch, warmup_epochs=50):
             param_group["lr"] = lr * epoch / warmup_epochs
 
 
-def cross_entropy(x, target, label_smoothing):
+def cross_entropy(x, target, label_smoothing=0.0):
     y = F.cross_entropy(x, target, reduction="mean", label_smoothing=label_smoothing)
     y = th.log(epsilon + y) - math.log(epsilon)
     return th.mean(y)

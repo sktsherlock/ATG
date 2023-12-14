@@ -15,16 +15,6 @@ from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learni
 from GraphData import load_data
 
 
-def train(model, feat, labels, train_idx, optimizer, label_smoothing):
-    model.train()
-
-    optimizer.zero_grad()
-    pred = model(feat)
-    loss = cross_entropy(pred[train_idx], labels[train_idx], label_smoothing=label_smoothing)
-    loss.backward()
-    optimizer.step()
-
-    return loss, pred
 
 
 def training(
@@ -60,7 +50,7 @@ def training(
         # student model forward
         student_preds = student_model(feat)
         student_graph_preds = student_model.graph_forward(feat)
-        student_loss = cross_entropy((student_preds[train_idx], label_embedding[train_idx]))
+        student_loss = cross_entropy(student_preds[train_idx], label_embedding[train_idx])
 
         ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds)
 
