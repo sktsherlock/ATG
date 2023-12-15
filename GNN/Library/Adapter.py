@@ -51,7 +51,7 @@ def training(
         student_preds = student_model.forward(feat)
         student_graph_preds = student_model.graph_forward(feat)
 
-        student_loss = softloss(th.log(F.softmax(student_preds[train_idx], dim=1)), F.softmax(label_embedding[train_idx], dim=1))
+        student_loss = cross_entropy(F.softmax(student_preds[train_idx], dim=1), F.softmax(label_embedding[train_idx], dim=1))
         print("Student loss: ", student_loss)
 
         ditillation_loss = softloss(th.log(F.softmax(student_graph_preds[~train_idx], dim=1)), F.softmax(teacher_graph_preds[~train_idx], dim=1))
@@ -65,8 +65,8 @@ def training(
         student_model.eval()
         with th.no_grad():
             pred = student_model(feat)
-        val_loss = cross_entropy(pred[val_idx], label_embedding[val_idx])
-        test_loss = cross_entropy(pred[test_idx], label_embedding[test_idx])
+        val_loss = cross_entropy(F.softmax(pred[val_idx], dim=1), F.softmax(label_embedding[val_idx], dim=1))
+        test_loss = cross_entropy(F.softmax(pred[test_idx], dim=1), F.softmax(label_embedding[test_idx], dim=1))
 
         wandb.log(
             {'Train_loss': loss, 'Test_loss': test_loss, 'Val_loss': val_loss, 'Distillation_loss': ditillation_loss})
