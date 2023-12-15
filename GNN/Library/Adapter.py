@@ -53,6 +53,7 @@ def training(
 
 
         student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
+        print("Student loss: ", student_loss)
 
         ditillation_loss = softloss(student_graph_preds[~train_idx], teacher_graph_preds[~train_idx])
 
