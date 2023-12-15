@@ -228,6 +228,9 @@ def args_init():
     argparser.add_argument(
         "--label-smoothing", type=float, default=0.1, help="the smoothing factor"
     )
+    argparser.add_argument(
+        "--alpha", type=float, default=0.5, help="learning rate"
+    )
     argparser.add_argument("--wd", type=float, default=0, help="weight decay")
     # ! default
     argparser.add_argument(
