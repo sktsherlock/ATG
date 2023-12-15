@@ -30,7 +30,7 @@ def training(
         verbose=True,
         min_lr=args.min_lr,
     )
-    softloss = nn.KLDivLoss(reduction="batchmean")
+    softloss = nn.KLDivLoss()
     # training loop
     total_time = 0
     best_val_loss = float("inf")
