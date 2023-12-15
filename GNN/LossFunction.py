@@ -4,6 +4,7 @@ import torch.cuda
 import torch.nn.functional as F
 import argparse
 import gc
+from tqdm import tqdm
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 epsilon = 1 - math.log(2)
@@ -37,7 +38,7 @@ def _contrastive_loss_simsce(z1, z2, device, similarity='inner', temperature=0.1
         indices = th.arange(0, num_nodes).to(device)
         losses = []
 
-        for i in range(num_batches):
+        for i in tqdm(range(num_batches), desc='Processing'):
             mask = indices[i * batch_size:(i + 1) * batch_size]
             if similarity == 'cosine':
                 refl_sim = f(F.cosine_similarity(z1[mask], z1))  #[B, N]
