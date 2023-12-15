@@ -54,7 +54,7 @@ def training(
 
         student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
 
-        ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds, device)
+        ditillation_loss = _contrastive_loss(student_graph_preds, teacher_graph_preds, device, batch_size=args.batch)
 
         loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
 
@@ -218,6 +218,9 @@ def args_init():
     )
     argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
+    )
+    argparser.add_argument(
+        "--batch", type=int, default=64, help="number of hidden units"
     )
     argparser.add_argument(
         "--min-lr", type=float, default=0.0001, help="the min learning rate"
