@@ -51,8 +51,8 @@ def _contrastive_loss_simsce(z1, z2, device, similarity='inner', temperature=0.1
                 losses.append(-th.log(between_sim[:, i * batch_size:(i + 1) * batch_size].diag()
                                          / (refl_sim.sum(1) + between_sim.sum(1)
                                             - refl_sim[:, i * batch_size:(i + 1) * batch_size].diag())))
-        gc.collect()
-        torch.cuda.empty_cache()
+            gc.collect()
+            torch.cuda.empty_cache()
         loss_res = torch.cat(losses).mean()
 
     return loss_res
