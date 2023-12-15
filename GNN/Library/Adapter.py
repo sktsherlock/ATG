@@ -53,7 +53,7 @@ def training(
 
         student_loss = cross_entropy(F.softmax(student_preds[train_idx], dim=1), F.softmax(label_embedding[train_idx], dim=1))
 
-        ditillation_loss = cross_entropy(F.softmax(student_graph_preds[~train_idx], dim=1), F.softmax(teacher_graph_preds[~train_idx], dim=1))
+        ditillation_loss = cross_entropy(F.softmax(student_graph_preds, dim=1), F.softmax(teacher_graph_preds, dim=1))
 
         loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
 
