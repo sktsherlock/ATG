@@ -54,7 +54,7 @@ def training(
 
         student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
 
-        ditillation_loss = _contrastive_loss(student_graph_preds[~train_idx], teacher_graph_preds[~train_idx], device, batch_size=args.batch)
+        ditillation_loss = softloss(student_graph_preds[~train_idx], teacher_graph_preds[~train_idx], device, batch_size=args.batch)
 
         loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
 
