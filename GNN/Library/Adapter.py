@@ -10,15 +10,15 @@ import torch.optim as optim
 import time
 import dgl.nn.pytorch as dglnn
 from datetime import datetime
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate, _contrastive_loss
 from GraphData import load_data
 
 
-
-
 def training(
-        args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename, device):
+        args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename,
+        device):
     optimizer = optim.AdamW(
         student_model.parameters(), lr=args.lr, weight_decay=args.wd
     )
@@ -51,8 +51,6 @@ def training(
         student_preds = student_model.forward(feat)
         student_graph_preds = student_model.graph_forward(feat)
 
-        print(student_preds[train_idx].shape, student_graph_preds[train_idx].shape)
-        print(student_preds[train_idx], student_graph_preds[train_idx])
 
         student_loss = softloss(student_preds[train_idx], label_embedding[train_idx])
 
@@ -61,8 +59,8 @@ def training(
         loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
 
         optimizer.zero_grad()
-        loss.backward()				#反向传播
-        optimizer.step()			#参数优化
+        loss.backward()  # 反向传播
+        optimizer.step()  # 参数优化
 
         student_model.eval()
         with th.no_grad():
@@ -70,7 +68,8 @@ def training(
         val_loss = cross_entropy(pred[val_idx], label_embedding[val_idx])
         test_loss = cross_entropy(pred[test_idx], label_embedding[test_idx])
 
-        wandb.log({'Train_loss': loss, 'Test_loss': test_loss, 'Val_loss': val_loss, 'Distillation_loss': ditillation_loss})
+        wandb.log(
+            {'Train_loss': loss, 'Test_loss': test_loss, 'Val_loss': val_loss, 'Distillation_loss': ditillation_loss})
         lr_scheduler.step(loss)
         toc = time.time()
         total_time += toc - tic
@@ -80,7 +79,6 @@ def training(
             best_test_loss = test_loss
 
             th.save(student_model.state_dict(), filename)
-
 
     return best_val_loss, best_test_loss
 
@@ -197,7 +195,6 @@ class GCNTeacher(nn.Module):
         return h
 
 
-
 def args_init():
     argparser = argparse.ArgumentParser(
         "Adapter Config",
@@ -291,7 +288,7 @@ def main():
 
     # load data
     graph, _, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                            val_ratio=args.val_ratio, name=args.data_name)
+                                                       val_ratio=args.val_ratio, name=args.data_name)
 
     if args.undirected:
         print("The Graph change to the undirected graph")
@@ -307,7 +304,6 @@ def main():
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
     label_embedding = th.from_numpy(np.load(args.label_embedding).astype(np.float32)).to(device)
 
-
     in_features = feat.shape[1]
 
     graph.create_formats_()
@@ -320,29 +316,24 @@ def main():
 
     graph = graph.to(device)
 
-
     # Model implementation
-    student_model = MLP(in_features, in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu, dropout=args.dropout).to(device)
+    student_model = MLP(in_features, in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu,
+                        dropout=args.dropout).to(device)
 
     teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers, F.relu, dropout=args.dropout).to(device)
-
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in student_model.parameters() if p.requires_grad]
     )
     print(f"Number of the student model params: {TRAIN_NUMBERS}")
 
-
     student_model.reset_parameters()
     teacher_model.reset_parameters()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pt")
-    training(args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename, device)
+    training(args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename,
+             device)
     # Distil the Graph Knowledge to the Adapter
-
-
-
-
 
 
 if __name__ == "__main__":
