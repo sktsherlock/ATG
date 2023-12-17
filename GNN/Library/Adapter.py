@@ -11,6 +11,7 @@ import time
 import dgl.nn.pytorch as dglnn
 from datetime import datetime
 
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate, _contrastive_loss
 from GraphData import load_data
@@ -180,7 +181,7 @@ def student_training(
             best_val_result = val_results
             final_test_result = test_results
 
-            th.save(student_model.state_dict(), filename)
+            th.save(student_model, filename)
 
     print('Saving the best student model')
     print('***********************')

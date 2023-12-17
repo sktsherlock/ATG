@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Union
 
 import datasets
+import torch.nn as nn
 import evaluate
 import numpy as np
 from datasets import Value, load_dataset
@@ -29,7 +30,7 @@ from transformers import (
     set_seed,
 )
 
-from Task import CLSClassifier, MEANClassifier
+from Task import CLSClassifier, MEANClassifier, AdapterClassifier
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
 
@@ -162,6 +163,10 @@ class ModelArguments:
     cache_dir: Optional[str] = field(
         default=None,
         metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+    )
+    filename: Optional[str] = field(
+        default=None,
+        metadata={"help": "Where you save the adapter model"},
     )
     use_fast_tokenizer: bool = field(
         default=True,
@@ -430,8 +435,17 @@ def main():
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
         )
+    elif model_args.training_objective == 'Adapter':
+
+        adapter = torch.load(model_args.filename)
+        model = AdapterClassifier(
+            peft_encoder, adapter=adapter,
+            dropout=model_args.drop_out,
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
+        )
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
+    model.print_trainable_parameters()
     # Padding strategy
     if data_args.pad_to_max_length:
         padding = "max_length"

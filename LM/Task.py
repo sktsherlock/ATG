@@ -62,3 +62,21 @@ class MEANClassifier(PreTrainedModel):
         loss = self.loss_func(logits, labels)
         return TokenClassifierOutput(loss=loss, logits=logits)
 
+
+class AdapterClassifier(PreTrainedModel):
+    def __init__(self, model, adapter, loss_func, dropout=0.0):
+        super().__init__(model.config)
+        self.encoder, self.loss_func = model, loss_func
+        self.adapter = adapter
+        self.dropout = nn.Dropout(dropout)
+
+
+    def forward(self, input_ids, attention_mask, labels):
+        # Extract outputs from the model
+        outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
+        mean_emb = self.dropout(torch.mean(outputs.last_hidden_state, dim=1))
+        logits = self.adapter(mean_emb)
+        if labels.shape[-1] == 1:
+            labels = labels.squeeze()
+        loss = self.loss_func(logits, labels)
+        return TokenClassifierOutput(loss=loss, logits=logits)
