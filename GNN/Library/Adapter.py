@@ -16,11 +16,40 @@ from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learni
 from GraphData import load_data
 
 
-def training(
-        args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename,
-        device):
+def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
+    model.train()
+
+    optimizer.zero_grad()
+    pred = model(graph, feat)
+    loss = cross_entropy(pred[train_idx], labels[train_idx], label_smoothing=label_smoothing)
+    loss.backward()
+    optimizer.step()
+
+    return loss, pred
+
+
+@th.no_grad()
+def evaluate(
+        model, graph, feat, labels, train_idx, val_idx, test_idx, metric='accuracy', label_smoothing=0.1, average=None
+):
+    model.eval()
+    with th.no_grad():
+        pred = model(graph, feat)
+    val_loss = cross_entropy(pred[val_idx], labels[val_idx], label_smoothing)
+    test_loss = cross_entropy(pred[test_idx], labels[test_idx], label_smoothing)
+
+    train_results = get_metric(th.argmax(pred[train_idx], dim=1), labels[train_idx], metric, average=average)
+    val_results = get_metric(th.argmax(pred[val_idx], dim=1), labels[val_idx], metric, average=average)
+    test_results = get_metric(th.argmax(pred[test_idx], dim=1), labels[test_idx], metric, average=average)
+
+    return train_results, val_results, test_results, val_loss, test_loss
+
+
+def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx, test_idx):
+    if args.early_stop_patience is not None:
+        stopper = EarlyStopping(patience=args.early_stop_patience)
     optimizer = optim.AdamW(
-        student_model.parameters(), lr=args.lr, weight_decay=args.wd
+        teacher_model.parameters(), lr=args.lr, weight_decay=args.wd
     )
     lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
@@ -30,10 +59,74 @@ def training(
         verbose=True,
         min_lr=args.min_lr,
     )
-    softloss = nn.KLDivLoss()
+
     # training loop
     total_time = 0
-    best_val_loss = float("inf")
+    best_val_result, final_test_result, best_val_loss = 0, 0, float("inf")
+
+    for epoch in range(1, args.n_epochs + 1):
+        tic = time.time()
+
+        if args.warmup_epochs is not None:
+            adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
+
+        train_loss, pred = train(
+            teacher_model, graph, feat, label, train_idx, optimizer, label_smoothing=args.label_smoothing
+        )
+        train_result, val_result, test_result, val_loss, test_loss = evaluate(teacher_model, graph, feat, label,
+                                                                              train_idx, val_idx, test_idx,
+                                                                              metric=args.metric,
+                                                                              label_smoothing=args.label_smoothing,
+                                                                              average=args.average)
+        wandb.log({'Teacher_Train_loss': train_loss, 'Teacher_Val_loss': val_loss, 'Teacher_Test_loss': test_loss,
+                   'Teacher_Train_result': train_result,
+                   'Teacher_Val_result': val_result, 'Teacher_Test_result': test_result})
+        lr_scheduler.step(train_loss)
+
+        toc = time.time()
+        total_time += toc - tic
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_val_result = val_result
+            final_test_result = test_result
+
+        if args.early_stop_patience is not None:
+            if stopper.step(val_loss):
+                break
+
+        if epoch % args.log_every == 0:
+            print(
+                f"Loss: {train_loss.item():.4f}\n"
+                f"Teacher Train/Val/Test loss: {train_loss:.4f}/{val_loss:.4f}/{test_loss:.4f}\n"
+                f"Teacher Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
+            )
+
+    print("*" * 50)
+    print('Teacher model training over.')
+    print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
+    print("*" * 50)
+
+    return
+
+
+def student_training(
+        args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename):
+    student_optimizer = optim.AdamW(
+        student_model.parameters(), lr=args.lr, weight_decay=args.wd
+    )
+    lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        student_optimizer,
+        mode="min",
+        factor=0.5,
+        patience=100,
+        verbose=True,
+        min_lr=args.min_lr,
+    )
+
+    # training loop
+    total_time = 0
+    best_val_result, final_test_result, best_val_loss = 0, 0, float("inf")
     for epoch in range(1, args.n_epochs + 1):
         tic = time.time()
 
@@ -41,52 +134,78 @@ def training(
         student_model.train()
 
         if args.warmup_epochs is not None:
-            adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
+            adjust_learning_rate(student_optimizer, args.lr, epoch, args.warmup_epochs)
 
+        kl_loss_fn = nn.KLDivLoss(reduction='batchmean')
         # teacher model
         with th.no_grad():  # 教师网络不用反向传播
             teacher_graph_preds = teacher_model(graph, feat)
 
         # student model forward
         student_preds = student_model.forward(feat)
-        student_graph_preds = student_model.graph_forward(feat)
 
-        student_loss = cross_entropy(F.softmax(student_preds[train_idx], dim=1), F.softmax(label_embedding[train_idx], dim=1))
+        student_loss = cross_entropy(F.softmax(student_preds[train_idx], dim=1), F.softmax(labels[train_idx], dim=1))
 
-        ditillation_loss = cross_entropy(F.softmax(student_graph_preds, dim=1), F.softmax(teacher_graph_preds, dim=1))
+        ditillation_loss = kl_loss_fn(F.log_softmax(student_preds, dim=1), F.softmax(teacher_graph_preds, dim=1))
 
         loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
 
-        optimizer.zero_grad()
+        student_optimizer.zero_grad()
         loss.backward()  # 反向传播
-        optimizer.step()  # 参数优化
+        student_optimizer.step()  # 参数优化
 
         student_model.eval()
         with th.no_grad():
             pred = student_model(feat)
-        val_loss = cross_entropy(F.softmax(pred[val_idx], dim=1), F.softmax(label_embedding[val_idx], dim=1))
-        test_loss = cross_entropy(F.softmax(pred[test_idx], dim=1), F.softmax(label_embedding[test_idx], dim=1))
+        val_loss = cross_entropy(F.softmax(pred[val_idx], dim=1), F.softmax(labels[val_idx], dim=1))
+        test_loss = cross_entropy(F.softmax(pred[test_idx], dim=1), F.softmax(labels[test_idx], dim=1))
+
+        train_results = get_metric(th.argmax(pred[train_idx], dim=1), labels[train_idx], args.metric,
+                                   average=args.average)
+        val_results = get_metric(th.argmax(pred[val_idx], dim=1), labels[val_idx], args.metric, average=args.average)
+        test_results = get_metric(th.argmax(pred[test_idx], dim=1), labels[test_idx], args.metric, average=args.average)
 
         wandb.log(
-            {'Train_loss': loss, 'Test_loss': test_loss, 'Val_loss': val_loss, 'Distillation_loss': ditillation_loss})
+            {'Student_Train_loss': loss, 'Student_Test_loss': test_loss, 'Student_Val_loss': val_loss,
+             'Distillation_loss': ditillation_loss, 'Student_Train_Result': train_results,
+             'Student_Val_Result': val_results, 'Student_Test_Result': test_results})
+
         lr_scheduler.step(loss)
         toc = time.time()
         total_time += toc - tic
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            best_test_loss = test_loss
+            best_val_result = val_results
+            final_test_result = test_results
 
             th.save(student_model.state_dict(), filename)
 
-    return best_val_loss, best_test_loss
+    print('Saving the best student model')
+    print('***********************')
+    print(f"Best Student Mdeol val acc: {best_val_result}, Final test acc: {final_test_result}")
+    return
+
+
+class Classifier(nn.Module):
+    def __init__(self, model, in_feats, n_labels):
+        super().__init__()
+        self.Adapter = model
+        hidden_dim = in_feats
+        self.classifier = nn.Linear(hidden_dim, n_labels)
+
+    def forward(self, feat):
+        # Extract outputs from the model
+        outputs, feat = self.Adapter(feat)
+        outputs = outputs + feat
+        logits = self.classifier(outputs)
+        return logits
 
 
 class MLP(nn.Module):
     def __init__(
             self,
             in_feats,
-            n_classes,
             n_layers,
             n_hidden,
             activation,
@@ -95,14 +214,13 @@ class MLP(nn.Module):
         super().__init__()
         self.n_layers = n_layers
         self.n_hidden = n_hidden
-        self.n_classes = n_classes
 
         self.linears = nn.ModuleList()
         self.norms = nn.ModuleList()
 
         for i in range(n_layers):
             in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden if i < n_layers - 1 else n_classes
+            out_hidden = n_hidden if i < n_layers - 1 else in_feats
 
             self.linears.append(nn.Linear(in_hidden, out_hidden))
 
@@ -119,28 +237,14 @@ class MLP(nn.Module):
         for norm in self.norms:
             norm.reset_parameters()
 
-    def graph_forward(self, feat):
-        h = feat
-
-        for i in range(self.n_layers - 2):
-            h = F.relu(self.norms[i](self.linears[i](h)))
-            h = self.dropout(h)
-
-        return h
-
     def forward(self, feat):
         h = feat
 
-        for i in range(self.n_layers):
-            conv = self.linears[i](h)
-            h = conv
+        for i in range(self.n_layers - 1):
+            h = F.relu(self.norms[i](self.linears[i](h)))
+            h = self.dropout(h)
 
-            if i < self.n_layers - 1:
-                h = self.norms[i](h)
-                h = self.activation(h)
-                h = self.dropout(h)
-
-        return h
+        return self.linears[-1](h), feat
 
 
 class GCNTeacher(nn.Module):
@@ -253,7 +357,7 @@ def args_init():
         "--feature", type=str, default=None, help="Use LM embedding as feature", required=True
     )
     argparser.add_argument(
-        "--label_embedding", type=str, default=None, help="Use label  embedding as label", required=True
+        "--label_embedding", type=str, default=None, help="Use label  embedding as label"
     )
     argparser.add_argument(
         "--graph_path", type=str, default=None, help="The datasets to be implemented."
@@ -292,8 +396,8 @@ def main():
     device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
 
     # load data
-    graph, _, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                       val_ratio=args.val_ratio, name=args.data_name)
+    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
+                                                            val_ratio=args.val_ratio, name=args.data_name)
 
     if args.undirected:
         print("The Graph change to the undirected graph")
@@ -307,7 +411,9 @@ def main():
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
-    label_embedding = th.from_numpy(np.load(args.label_embedding).astype(np.float32)).to(device)
+
+    n_classes = (labels.max() + 1).item()
+    print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
 
     in_features = feat.shape[1]
 
@@ -322,22 +428,30 @@ def main():
     graph = graph.to(device)
 
     # Model implementation
-    student_model = MLP(in_features, in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu,
-                        dropout=args.dropout).to(device)
+    GraphAdapter = MLP(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu,
+                       dropout=args.dropout).to(device)
+    student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
 
     teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers, F.relu, dropout=args.dropout).to(device)
+
+    TRAIN_NUMBERS = sum(
+        [np.prod(p.size()) for p in teacher_model.parameters() if p.requires_grad]
+    )
+    print(f"Number of the teacher model params: {TRAIN_NUMBERS}")
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in student_model.parameters() if p.requires_grad]
     )
     print(f"Number of the student model params: {TRAIN_NUMBERS}")
 
-    student_model.reset_parameters()
     teacher_model.reset_parameters()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pt")
-    training(args, student_model, teacher_model, graph, feat, label_embedding, train_idx, val_idx, test_idx, filename,
-             device)
+    # First stage, Teacher model pretraining
+    teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx)
+
+    student_model.reset_parameters()
+    student_training(args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename)
     # Distil the Graph Knowledge to the Adapter
 
 

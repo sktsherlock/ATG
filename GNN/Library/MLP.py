@@ -164,7 +164,7 @@ class MLP(nn.Module):
             h = F.relu(self.norms[i](self.linears[i](h)))
             h = self.dropout(h)
 
-        return h
+        return self.linears[-1](h)
 
 
 def args_init():

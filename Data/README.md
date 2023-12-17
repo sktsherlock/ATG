@@ -54,6 +54,7 @@ python data_processing_utils_for_books.py --data_path 'Office/meta_Office_Produc
 # 文本图
 ## OGB-Arxiv
 ```shell
+cd ~
 mkdir ~/OGB
 cd ~/ATG/Data/
 python data_processing_for_ogb.py --data_root '/home/aiscuser/OGB/'
