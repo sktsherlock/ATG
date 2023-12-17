@@ -22,6 +22,8 @@ def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
     optimizer.zero_grad()
     pred = model(graph, feat)
     loss = cross_entropy(pred[train_idx], labels[train_idx], label_smoothing=label_smoothing)
+    print(pred[train_idx].shape)
+    print(labels[train_idx].shape)
     loss.backward()
     optimizer.step()
 
