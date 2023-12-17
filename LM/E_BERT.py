@@ -444,7 +444,7 @@ def main():
         )
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
-    model.print_trainable_parameters()
+    print_trainable_parameters(model)
     # Padding strategy
     if data_args.pad_to_max_length:
         padding = "max_length"
