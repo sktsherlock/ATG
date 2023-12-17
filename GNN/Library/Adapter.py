@@ -456,7 +456,7 @@ def main():
     # First stage, Teacher model pretraining
     teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx)
 
-    student_model.reset_parameters()
+    GraphAdapter.reset_parameters()
     student_training(args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename)
     # Distil the Graph Knowledge to the Adapter
 
