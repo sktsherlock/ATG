@@ -54,6 +54,9 @@ class DataTrainingArguments:
     csv_file: Optional[str] = field(
         default=None, metadata={"help": "Path to the CSV File."}
     )
+    data_name: Optional[str] = field(
+        default=None, metadata={"help": "The dataname to be used for splitting dataaset. like ogbn-arxiv"}
+    )
     text_column_names: Optional[str] = field(
         default='text', metadata={"help": "Name of the column containing the text attribute."}
     )
@@ -327,7 +330,7 @@ def main():
     train_data = raw_data['train']
     nodes_num = len(raw_data['train'])
 
-    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio)
+    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
     # 根据划分的索引创建划分后的数据集
     train_dataset = train_data.select(train_ids)
     val_dataset = train_data.select(val_ids)
