@@ -461,7 +461,7 @@ def main():
         # 创建路径
         os.makedirs(os.path.dirname(args.save_path))
 
-    filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pt")
+    filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pkl")
     # First stage, Teacher model pretraining
     teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx)
 
