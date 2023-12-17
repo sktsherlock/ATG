@@ -6,8 +6,7 @@ import warnings
 from dataclasses import dataclass, field
 from typing import List, Optional, Union
 
-import datasets
-import torch.nn as nn
+from ogb.nodeproppred import DglNodePropPredDataset
 import evaluate
 import numpy as np
 from datasets import Value, load_dataset
