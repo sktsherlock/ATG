@@ -257,24 +257,31 @@ class GCNTeacher(nn.Module):
             self,
             in_feats,
             n_hidden,
+            n_classes,
             n_layers,
             activation,
             dropout,
             weight=True,
+            last_layer_bias=True,
     ):
         super().__init__()
         self.n_layers = n_layers
         self.n_hidden = n_hidden
+        self.n_classes = n_classes
 
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
 
         for i in range(n_layers):
             in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden
+            out_hidden = n_hidden if i < n_layers - 1 else n_classes
+            if i == n_layers - 1 and not last_layer_bias:
+                bias = False
+            else:
+                bias = True
 
             self.convs.append(
-                dglnn.GraphConv(in_hidden, out_hidden, "both", weight=weight, bias=False)
+                dglnn.GraphConv(in_hidden, out_hidden, "both", weight=weight, bias=bias)
             )
 
             if i < n_layers - 1:
@@ -439,7 +446,7 @@ def main():
                        dropout=args.dropout).to(device)
     student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
 
-    teacher_model = GCNTeacher(in_features, args.n_hidden, args.n_layers, F.relu, dropout=args.dropout).to(device)
+    teacher_model = GCNTeacher(in_features, args.n_hidden, n_classes, args.n_layers, F.relu, dropout=args.dropout).to(device)
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in teacher_model.parameters() if p.requires_grad]
