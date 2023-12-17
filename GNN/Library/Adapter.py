@@ -22,8 +22,6 @@ def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
     optimizer.zero_grad()
     pred = model(graph, feat)
     loss = cross_entropy(pred[train_idx], labels[train_idx], label_smoothing=label_smoothing)
-    print(pred[train_idx].shape)
-    print(labels[train_idx].shape)
     loss.backward()
     optimizer.step()
 
@@ -160,8 +158,8 @@ def student_training(
         student_model.eval()
         with th.no_grad():
             pred = student_model(feat)
-        val_loss = cross_entropy(F.softmax(pred[val_idx], dim=1), F.softmax(labels[val_idx], dim=1))
-        test_loss = cross_entropy(F.softmax(pred[test_idx], dim=1), F.softmax(labels[test_idx], dim=1))
+        val_loss = cross_entropy(pred[val_idx], labels[val_idx])
+        test_loss = cross_entropy(pred[test_idx], labels[test_idx])
 
         train_results = get_metric(th.argmax(pred[train_idx], dim=1), labels[train_idx], args.metric,
                                    average=args.average)
