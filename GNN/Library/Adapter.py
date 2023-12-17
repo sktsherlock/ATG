@@ -140,11 +140,12 @@ def student_training(
         # teacher model
         with th.no_grad():  # 教师网络不用反向传播
             teacher_graph_preds = teacher_model(graph, feat)
-            print(teacher_graph_preds)
+            print(teacher_graph_preds.shape)
 
         # student model forward
         student_preds = student_model.forward(feat)
-        print(student_preds)
+        print(student_preds.shape)
+        print(labels.shape)
 
         student_loss = cross_entropy(F.softmax(student_preds[train_idx], dim=1), F.softmax(labels[train_idx], dim=1))
 
