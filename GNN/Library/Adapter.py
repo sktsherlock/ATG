@@ -425,6 +425,8 @@ def main():
     print(f'Valid_idx: {len(val_idx)}')
     print(f'Test_idx: {len(test_idx)}')
 
+    labels = labels.to(device)
+
     graph = graph.to(device)
 
     # Model implementation
