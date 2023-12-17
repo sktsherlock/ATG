@@ -53,6 +53,9 @@ class DataTrainingArguments:
     csv_file: Optional[str] = field(
         default=None, metadata={"help": "Path to the CSV File."}
     )
+    data_name: Optional[str] = field(
+        default=None, metadata={"help": "The dataname to be used for splitting dataaset. like ogbn-arxiv"}
+    )
     text_column_names: Optional[str] = field(
         default='text', metadata={"help": "Name of the column containing the text attribute."}
     )
@@ -92,6 +95,9 @@ class DataTrainingArguments:
     remove_columns: Optional[str] = field(
         default=None,
         metadata={"help": "The columns to remove from the dataset. Multiple columns should be separated by commas."},
+    )
+    text_column_delimiter: Optional[str] = field(
+        default=" ", metadata={"help": "THe delimiter to use to join text columns into a single sentence."}
     )
     pad_to_max_length: bool = field(
         default=True,
@@ -238,18 +244,30 @@ def get_label_list(raw_dataset, split="train") -> List[str]:
     return label_list
 
 
-def split_dataset(nodes_num, train_ratio, val_ratio):
-    np.random.seed(42)
-    indices = np.random.permutation(nodes_num)
+def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
+    if data_name == 'ogbn-arxiv':
+        data = DglNodePropPredDataset(name=data_name)
+        splitted_idx = data.get_idx_split()
+        train_idx, val_idx, test_idx = (
+            splitted_idx["train"],
+            splitted_idx["valid"],
+            splitted_idx["test"],
+        )
+    else:
+        np.random.seed(42)
+        indices = np.random.permutation(nodes_num)
 
-    train_size = int(nodes_num * train_ratio)
-    val_size = int(nodes_num * val_ratio)
+        train_size = int(nodes_num * train_ratio)
+        val_size = int(nodes_num * val_ratio)
 
-    train_ids = indices[:train_size]
-    val_ids = indices[train_size:train_size + val_size]
-    test_ids = indices[train_size + val_size:]
+        train_idx = indices[:train_size]
+        val_idx = indices[train_size:train_size + val_size]
+        test_idx = indices[train_size + val_size:]
+        train_idx = torch.tensor(train_idx)
+        val_idx = torch.tensor(val_idx)
+        test_idx = torch.tensor(test_idx)
 
-    return train_ids, val_ids, test_ids
+    return train_idx, val_idx, test_idx
 
 
 def print_trainable_parameters(model):
@@ -321,7 +339,7 @@ def main():
     train_data = raw_data['train']
     nodes_num = len(raw_data['train'])
 
-    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio)
+    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
     # 根据划分的索引创建划分后的数据集
     train_dataset = train_data.select(train_ids)
     val_dataset = train_data.select(val_ids)
@@ -333,7 +351,7 @@ def main():
         "validation": val_dataset,
         "test": test_dataset
     })
-
+    print(raw_datasets)
     if data_args.remove_columns is not None:
         for split in raw_datasets.keys():
             for column in data_args.remove_columns.split(","):
