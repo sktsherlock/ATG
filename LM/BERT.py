@@ -12,6 +12,7 @@ import numpy as np
 from datasets import Value, load_dataset
 import torch
 from datasets import DatasetDict, Dataset
+from ogb.nodeproppred import DglNodePropPredDataset
 
 
 import transformers
@@ -225,18 +226,30 @@ def get_label_list(raw_dataset, split="train") -> List[str]:
     return label_list
 
 
-def split_dataset(nodes_num, train_ratio, val_ratio):
-    np.random.seed(42)
-    indices = np.random.permutation(nodes_num)
+def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
+    if data_name == 'ogbn-arxiv':
+        data = DglNodePropPredDataset(name=data_name)
+        splitted_idx = data.get_idx_split()
+        train_idx, val_idx, test_idx = (
+            splitted_idx["train"],
+            splitted_idx["valid"],
+            splitted_idx["test"],
+        )
+    else:
+        np.random.seed(42)
+        indices = np.random.permutation(nodes_num)
 
-    train_size = int(nodes_num * train_ratio)
-    val_size = int(nodes_num * val_ratio)
+        train_size = int(nodes_num * train_ratio)
+        val_size = int(nodes_num * val_ratio)
 
-    train_ids = indices[:train_size]
-    val_ids = indices[train_size:train_size + val_size]
-    test_ids = indices[train_size + val_size:]
+        train_idx = indices[:train_size]
+        val_idx = indices[train_size:train_size + val_size]
+        test_idx = indices[train_size + val_size:]
+        train_idx = torch.tensor(train_idx)
+        val_idx = torch.tensor(val_idx)
+        test_idx = torch.tensor(test_idx)
 
-    return train_ids, val_ids, test_ids
+    return train_idx, val_idx, test_idx
 
 
 def print_trainable_parameters(model):
