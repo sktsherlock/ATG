@@ -330,6 +330,15 @@ class RevGAT(nn.Module):
         self.dp_last = nn.Dropout(dropout)
         self.activation = activation
 
+    def reset_parameters(self):
+        for conv in self.convs:
+            conv.reset_parameters()
+
+        for norm in self.norms:
+            norm.reset_parameters()
+
+        self.bias_last.reset_parameters()
+
     def forward(self, graph, feat):
         h = feat
 
