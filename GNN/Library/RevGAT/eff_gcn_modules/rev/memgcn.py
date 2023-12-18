@@ -15,6 +15,9 @@ class GroupAdditiveCoupling(torch.nn.Module):
         self.split_dim = split_dim
         self.group = group
 
+    def reset_parameters(self):
+        pass
+
     def forward(self, x, edge_index, *args):
         xs = torch.chunk(x, self.group, dim=self.split_dim)
         chunked_args = list(map(lambda arg: torch.chunk(arg, self.group, dim=self.split_dim), args))
