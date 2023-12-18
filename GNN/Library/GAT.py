@@ -105,12 +105,7 @@ class GAT(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.activation = activation
 
-    def reset_parameters(self):
-        for conv in self.convs:
-            conv.reset_parameters()
 
-        for norm in self.norms:
-            norm.reset_parameters()
 
     def forward(self, graph, feat):
         h = feat
@@ -444,7 +439,6 @@ def main():
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
-        model.reset_parameters()
         val_result, test_result = classification(
             args, graph, model, feat, labels, train_idx, val_idx, test_idx, run
         )
