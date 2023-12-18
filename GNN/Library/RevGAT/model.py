@@ -334,8 +334,7 @@ class RevGAT(nn.Module):
         for conv in self.convs:
             conv.reset_parameters()
 
-        for norm in self.norms:
-            norm.reset_parameters()
+        self.norm.reset_parameters()
 
         self.bias_last.reset_parameters()
 
