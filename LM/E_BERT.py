@@ -2,7 +2,7 @@ import logging
 import os
 import random
 import sys
-import warnings
+import shutil
 from dataclasses import dataclass, field
 from typing import List, Optional, Union
 
@@ -590,6 +590,8 @@ def main():
         metrics = trainer.predict(predict_dataset, metric_key_prefix="predict").metrics
         trainer.log_metrics("test", metrics)
         trainer.save_metrics("test", metrics)
+
+    shutil.rmtree(training_args.output_dir)
 
 
 
