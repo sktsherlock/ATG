@@ -215,6 +215,16 @@ class InvertibleModuleWrapper(nn.Module):
         self.preserve_rng_state = preserve_rng_state
         self._fn = fn
 
+    def reset_parameters(self):
+        r"""
+
+        Description
+        -----------
+        Reinitialize learnable parameters.
+        """
+        self._fn.reset_parameters()
+
+
     def forward(self, *xin):
         """Forward operation :math:`R(x) = y`
 

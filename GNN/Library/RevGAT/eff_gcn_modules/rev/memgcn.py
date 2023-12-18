@@ -6,6 +6,7 @@ try:
 except:
     from gcn_revop import InvertibleModuleWrapper
 
+
 class GroupAdditiveCoupling(torch.nn.Module):
     def __init__(self, Fms, split_dim=-1, group=2):
         super(GroupAdditiveCoupling, self).__init__()
