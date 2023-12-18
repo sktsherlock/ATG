@@ -365,10 +365,10 @@ def args_init():
         "--graph_path", type=str, default=None, help="The datasets to be implemented.",
     )
     argparser.add_argument(
-        "--undirected", type=bool, default=False, help="Whether to undirect the graph."
+        "--undirected", type=bool, default=True, help="Whether to undirect the graph."
     )
     argparser.add_argument(
-        "--selfloop", type=bool, default=False, help="Whether to add self loop in the graph."
+        "--selfloop", type=bool, default=True, help="Whether to add self loop in the graph."
     )
     argparser.add_argument(
         "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
