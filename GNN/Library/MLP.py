@@ -220,7 +220,7 @@ def args_init():
         "--feature", type=str, default=None, help="Use LM embedding as feature", required=True
     )
     argparser.add_argument(
-        "--graph_path", type=str, default=None, help="The datasets to be implemented.", required=True
+        "--graph_path", type=str, default=None, help="The datasets to be implemented."
     )
     argparser.add_argument(
         "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
