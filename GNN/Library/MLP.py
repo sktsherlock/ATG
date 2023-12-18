@@ -214,6 +214,9 @@ def args_init():
     )
     # ! Data related
     argparser.add_argument(
+        "--data_name", type=str, default=None, help="The dataset name.",
+    )
+    argparser.add_argument(
         "--feature", type=str, default=None, help="Use LM embedding as feature", required=True
     )
     argparser.add_argument(
@@ -245,7 +248,7 @@ def main():
 
     # load data
     _, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                            val_ratio=args.val_ratio)
+                                                            val_ratio=args.val_ratio, data_name=args.data_name)
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
     n_classes = (labels.max() + 1).item()
