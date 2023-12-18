@@ -395,7 +395,7 @@ def main():
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                            val_ratio=args.val_ratio, data_name=args.data_name)
+                                                            val_ratio=args.val_ratio, name=args.data_name)
 
     # add reverse edges, tranfer to the  undirected graph
     if args.undirected:
