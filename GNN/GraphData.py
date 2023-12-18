@@ -3,6 +3,7 @@ import torch as th
 import dgl
 from ogb.nodeproppred import DglNodePropPredDataset
 
+
 def split_graph(nodes_num, train_ratio, val_ratio):
     np.random.seed(42)
     indices = np.random.permutation(nodes_num)

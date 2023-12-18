@@ -14,67 +14,6 @@ from GraphData import load_data
 from NodeClassification import classification
 
 
-# 模型定义模块
-class GCN(nn.Module):
-    def __init__(
-            self,
-            in_feats,
-            n_hidden,
-            n_classes,
-            n_layers,
-            activation,
-            dropout,
-            weight=True,
-            last_layer_bias=True,
-    ):
-        super().__init__()
-        self.n_layers = n_layers
-        self.n_hidden = n_hidden
-        self.n_classes = n_classes
-
-        self.convs = nn.ModuleList()
-        self.norms = nn.ModuleList()
-
-        for i in range(n_layers):
-            in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden if i < n_layers - 1 else n_classes
-            if i == n_layers - 1 and not last_layer_bias:
-                bias = False
-            else:
-                bias = True
-
-            self.convs.append(
-                dglnn.GraphConv(in_hidden, out_hidden, "both", weight=weight, bias=bias)
-            )
-
-            if i < n_layers - 1:
-                self.norms.append(nn.BatchNorm1d(out_hidden))
-
-        self.dropout = nn.Dropout(dropout)
-        self.activation = activation
-
-    def reset_parameters(self):
-        for conv in self.convs:
-            conv.reset_parameters()
-
-        for norm in self.norms:
-            norm.reset_parameters()
-
-    def forward(self, graph, feat):
-        h = feat
-
-        for i in range(self.n_layers):
-            conv = self.convs[i](graph, h)
-            h = conv
-
-            if i < self.n_layers - 1:
-                h = self.norms[i](h)
-                h = self.activation(h)
-                h = self.dropout(h)
-
-        return h
-
-
 # 参数定义模块
 def args_init():
     argparser = argparse.ArgumentParser(
@@ -151,9 +90,6 @@ def args_init():
     )
     # ! Split datasets
     argparser.add_argument(
-        "--inductive", type=bool, default=False, help="Whether to do inductive learning experiments."
-    )
-    argparser.add_argument(
         "--train_ratio", type=float, default=0.6, help="training ratio"
     )
     argparser.add_argument(
@@ -173,7 +109,6 @@ def main():
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
                                                             val_ratio=args.val_ratio, name=args.data_name)
 
-
     if args.inductive:
         # 构造Inductive Learning 实验条件
         isolated_nodes = th.cat((val_idx, test_idx))
@@ -183,6 +118,7 @@ def main():
 
         # 添加相同数量的孤立节点
         graph.add_nodes(len(sort_isolated_nodes))
+
 
     # add reverse edges, tranfer to the  undirected graph
     if args.undirected:

@@ -8,10 +8,9 @@ import sys
 import os
 import torch.optim as optim
 import time
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
-
-
 
 from GraphData import load_data
 
@@ -27,9 +26,10 @@ def train(model, feat, labels, train_idx, optimizer, label_smoothing):
 
     return loss, pred
 
+
 @th.no_grad()
 def evaluate(
-    model, feat, labels, train_idx, val_idx, test_idx, metric='accuracy', label_smoothing=0.1, average=None
+        model, feat, labels, train_idx, val_idx, test_idx, metric='accuracy', label_smoothing=0.1, average=None
 ):
     model.eval()
     with th.no_grad():
@@ -91,7 +91,9 @@ def classification(
                 args.label_smoothing,
                 args.average
             )
-            wandb.log({'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss, 'Train_result': train_result, 'Val_result': val_result, 'Test_result': test_result})
+            wandb.log(
+                {'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss, 'Train_result': train_result,
+                 'Val_result': val_result, 'Test_result': test_result})
             lr_scheduler.step(train_loss)
 
             toc = time.time()
@@ -119,6 +121,7 @@ def classification(
     print("*" * 50)
 
     return best_val_result, final_test_result
+
 
 class MLP(nn.Module):
     def __init__(
@@ -231,6 +234,9 @@ def args_init():
     )
     # ! Split dataset
     argparser.add_argument(
+        "--inductive", type=bool, default=False, help="Whether to do inductive learning experiments."
+    )
+    argparser.add_argument(
         "--train_ratio", type=float, default=0.6, help="training ratio"
     )
     argparser.add_argument(
@@ -248,7 +254,7 @@ def main():
 
     # load data
     _, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                            val_ratio=args.val_ratio, name=args.data_name)
+                                                        val_ratio=args.val_ratio, name=args.data_name)
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
     n_classes = (labels.max() + 1).item()
@@ -270,7 +276,7 @@ def main():
     test_results = []
 
     # Model implementation
-    model = MLP(in_features, n_classes,  args.n_layers, args.n_hidden, F.relu, args.dropout).to(device)
+    model = MLP(in_features, n_classes, args.n_layers, args.n_hidden, F.relu, args.dropout).to(device)
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]

@@ -379,6 +379,9 @@ def args_init():
     )
     # ! Split datasets
     argparser.add_argument(
+        "--inductive", type=bool, default=False, help="Whether to do inductive learning experiments."
+    )
+    argparser.add_argument(
         "--train_ratio", type=float, default=0.6, help="training ratio"
     )
     argparser.add_argument(
@@ -396,6 +399,17 @@ def main():
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
                                                             val_ratio=args.val_ratio, name=args.data_name)
+
+
+    if args.inductive:
+        # 构造Inductive Learning 实验条件
+        isolated_nodes = th.cat((val_idx, test_idx))
+        sort_isolated_nodes, _ = th.sort(isolated_nodes)
+        # 从图中删除指定节点
+        graph.remove_nodes(sort_isolated_nodes)
+
+        # 添加相同数量的孤立节点
+        graph.add_nodes(len(sort_isolated_nodes))
 
     # add reverse edges, tranfer to the  undirected graph
     if args.undirected:
