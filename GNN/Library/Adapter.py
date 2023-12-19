@@ -10,7 +10,7 @@ import torch.optim as optim
 import time
 import dgl.nn.pytorch as dglnn
 from datetime import datetime
-
+from RevGAT.model import RevGAT
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate, _contrastive_loss
@@ -249,63 +249,6 @@ class MLP(nn.Module):
         return self.linears[-1](h), feat
 
 
-class GCNTeacher(nn.Module):
-    def __init__(
-            self,
-            in_feats,
-            n_hidden,
-            n_classes,
-            n_layers,
-            activation,
-            dropout,
-            weight=True,
-            last_layer_bias=True,
-    ):
-        super().__init__()
-        self.n_layers = n_layers
-        self.n_hidden = n_hidden
-        self.n_classes = n_classes
-
-        self.convs = nn.ModuleList()
-        self.norms = nn.ModuleList()
-
-        for i in range(n_layers):
-            in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden if i < n_layers - 1 else n_classes
-            if i == n_layers - 1 and not last_layer_bias:
-                bias = False
-            else:
-                bias = True
-
-            self.convs.append(
-                dglnn.GraphConv(in_hidden, out_hidden, "both", weight=weight, bias=bias)
-            )
-
-            if i < n_layers - 1:
-                self.norms.append(nn.BatchNorm1d(out_hidden))
-
-        self.dropout = nn.Dropout(dropout)
-        self.activation = activation
-
-    def reset_parameters(self):
-        for conv in self.convs:
-            conv.reset_parameters()
-
-        for norm in self.norms:
-            norm.reset_parameters()
-
-    def forward(self, graph, feat):
-        h = feat
-        for i in range(self.n_layers):
-            conv = self.convs[i](graph, h)
-            h = conv
-            if i < self.n_layers - 1:
-                h = self.norms[i](h)
-                h = self.activation(h)
-                h = self.dropout(h)
-
-        return h
-
 
 def args_init():
     argparser = argparse.ArgumentParser(
@@ -443,7 +386,8 @@ def main():
                        dropout=args.dropout).to(device)
     student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
 
-    teacher_model = GCNTeacher(in_features, args.n_hidden, n_classes, args.n_layers, F.relu, dropout=args.dropout).to(device)
+    teacher_model = RevGAT(feat.shape[1], n_classes, args.n_hidden,  5, 3, F.relu, dropout=0.5, attn_drop=0,
+                           edge_drop=0, use_attn_dst=False, use_symmetric_norm=True).to(device)
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in teacher_model.parameters() if p.requires_grad]
