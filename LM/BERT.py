@@ -2,6 +2,7 @@ import logging
 import os
 import random
 import sys
+import shutil
 import warnings
 from dataclasses import dataclass, field
 from typing import List, Optional
@@ -583,7 +584,7 @@ def main():
         trainer.log_metrics("test", metrics)
         trainer.save_metrics("test", metrics)
 
-
+    shutil.rmtree(training_args.output_dir)
 
 
 
