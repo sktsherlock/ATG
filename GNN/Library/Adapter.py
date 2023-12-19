@@ -331,7 +331,7 @@ def args_init():
         "--average", type=str, default='weighted', choices=['weighted', 'micro', 'macro', None]
     )
     argparser.add_argument(
-        "--save_path", type=str, default=None, help="Path to save the Student Model", required=True
+        "--save_path", type=str, default=None, help="Path to save the Student Model"
     )
     argparser.add_argument(
         "--save", type=bool, default=False, help="Whether to save the student model."
