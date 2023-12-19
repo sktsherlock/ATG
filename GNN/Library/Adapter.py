@@ -180,13 +180,13 @@ def student_training(
             best_val_loss = val_loss
             best_val_result = val_results
             final_test_result = test_results
-
-            th.save(student_model, filename)
+            if args.save:
+                th.save(student_model, filename)
 
     print('Saving the best student model')
     print('***********************')
     print(f"Best Student Mdeol val acc: {best_val_result}, Final test acc: {final_test_result}")
-    return
+    return best_val_result, final_test_result
 
 
 class Classifier(nn.Module):
@@ -272,6 +272,9 @@ def args_init():
         "--n-hidden", type=int, default=256, help="number of hidden units"
     )
     argparser.add_argument(
+        "--teacher-n-hidden", type=int, default=256, help="number of teacher models hidden units"
+    )
+    argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
     )
     argparser.add_argument(
@@ -329,6 +332,9 @@ def args_init():
     )
     argparser.add_argument(
         "--save_path", type=str, default=None, help="Path to save the Student Model", required=True
+    )
+    argparser.add_argument(
+        "--save", type=bool, default=False, help="Whether to save the student model."
     )
     # ! Split dataset
     argparser.add_argument(
@@ -409,9 +415,22 @@ def main():
     # First stage, Teacher model pretraining
     teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx)
 
-    GraphAdapter.reset_parameters()
-    student_training(args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename)
-    # Distil the Graph Knowledge to the Adapter
+
+    # run
+    val_results = []
+    test_results = []
+
+    for run in range(args.n_runs):
+        GraphAdapter.reset_parameters()
+        val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename)
+        wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
+        val_results.append(val_result)
+        test_results.append(test_result)
+
+    print(f"Runned {args.n_runs} times")
+    print(f"Average val accuracy: {np.mean(val_results)} ± {np.std(val_results)}")
+    print(f"Average test accuracy: {np.mean(test_results)} ± {np.std(test_results)}")
+    wandb.log({f'Mean_Val_{args.metric}': np.mean(val_results), f'Mean_Test_{args.metric}': np.mean(test_results)})
 
 
 if __name__ == "__main__":
