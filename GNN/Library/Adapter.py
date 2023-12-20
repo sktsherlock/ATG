@@ -196,6 +196,11 @@ class Classifier(nn.Module):
         hidden_dim = in_feats
         self.classifier = nn.Linear(hidden_dim, n_labels)
 
+    def reset_parameters(self):
+        self.Adapter.reset_parameters()
+
+        self.classifier.reset_parameters()
+
     def forward(self, feat):
         # Extract outputs from the model
         outputs, feat = self.Adapter(feat)
@@ -423,7 +428,7 @@ def main():
     test_results = []
 
     for run in range(args.n_runs):
-        GraphAdapter.reset_parameters()
+        student_model.reset_parameters()
         val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename)
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
