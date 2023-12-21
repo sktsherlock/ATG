@@ -46,70 +46,76 @@ def evaluate(
     return train_results, val_results, test_results, val_loss, test_loss
 
 
-def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx, test_idx):
-    if args.early_stop_patience is not None:
-        stopper = EarlyStopping(patience=args.early_stop_patience)
-    optimizer = optim.AdamW(
-        teacher_model.parameters(), lr=args.lr, weight_decay=args.wd
-    )
-    lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode="min",
-        factor=0.5,
-        patience=100,
-        verbose=True,
-        min_lr=args.min_lr,
-    )
-
-    # training loop
-    total_time = 0
-    best_val_result, final_test_result, best_val_loss = 0, 0, float("inf")
-
-    for epoch in range(1, args.n_epochs + 1):
-        tic = time.time()
-
-        if args.warmup_epochs is not None:
-            adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
-
-        train_loss, pred = train(
-            teacher_model, graph, feat, label, train_idx, optimizer, label_smoothing=args.label_smoothing
-        )
-        train_result, val_result, test_result, val_loss, test_loss = evaluate(teacher_model, graph, feat, label,
-                                                                              train_idx, val_idx, test_idx,
-                                                                              metric=args.metric,
-                                                                              label_smoothing=args.label_smoothing,
-                                                                              average=args.average)
-        wandb.log({'Teacher_Train_loss': train_loss, 'Teacher_Val_loss': val_loss, 'Teacher_Test_loss': test_loss,
-                   'Teacher_Train_result': train_result,
-                   'Teacher_Val_result': val_result, 'Teacher_Test_result': test_result})
-        lr_scheduler.step(train_loss)
-
-        toc = time.time()
-        total_time += toc - tic
-
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            best_val_result = val_result
-            final_test_result = test_result
-
+def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx, test_idx, model_path):
+    if os.path.exists(model_path):
+        teacher_model.load_state_dict(th.load(model_path))
+    else:
+        # Start Training and save the trained model
         if args.early_stop_patience is not None:
-            if stopper.step(val_loss):
-                break
+            stopper = EarlyStopping(patience=50)
+        optimizer = optim.AdamW(
+            teacher_model.parameters(), lr=args.lr, weight_decay=0
+        )
+        lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="min",
+            factor=0.5,
+            patience=100,
+            verbose=True,
+            min_lr=0.0001,
+        )
 
-        if epoch % args.log_every == 0:
-            print(
-                f"Teacher Runing Epoch: {epoch}/{args.n_epochs}, Average epoch time: {total_time / epoch:.2f}\n"
-                f"Loss: {train_loss.item():.4f}\n"
-                f"Teacher Train/Val/Test loss: {train_loss:.4f}/{val_loss:.4f}/{test_loss:.4f}\n"
-                f"Teacher Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
+        # training loop
+        total_time = 0
+        best_val_result, final_test_result, best_val_loss = 0, 0, float("inf")
+
+        for epoch in range(1, args.n_epochs + 1):
+            tic = time.time()
+
+            if args.warmup_epochs is not None:
+                adjust_learning_rate(optimizer, args.lr, epoch, 50)
+
+            train_loss, pred = train(
+                teacher_model, graph, feat, label, train_idx, optimizer, label_smoothing=0.1
             )
+            train_result, val_result, test_result, val_loss, test_loss = evaluate(teacher_model, graph, feat, label,
+                                                                                  train_idx, val_idx, test_idx,
+                                                                                  metric=args.metric,
+                                                                                  label_smoothing=0.1,
+                                                                                  average=args.average)
+            wandb.log({'Teacher_Train_loss': train_loss, 'Teacher_Val_loss': val_loss, 'Teacher_Test_loss': test_loss,
+                       'Teacher_Train_result': train_result,
+                       'Teacher_Val_result': val_result, 'Teacher_Test_result': test_result})
+            lr_scheduler.step(train_loss)
 
-    print("*" * 50)
-    print('Teacher model training over.')
-    print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
-    print("*" * 50)
+            toc = time.time()
+            total_time += toc - tic
 
-    return
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                best_val_result = val_result
+                final_test_result = test_result
+
+            if args.early_stop_patience is not None:
+                if stopper.step(val_loss):
+                    break
+
+            if epoch % args.log_every == 0:
+                print(
+                    f"Teacher Runing Epoch: {epoch}/{args.n_epochs}, Average epoch time: {total_time / epoch:.2f}\n"
+                    f"Loss: {train_loss.item():.4f}\n"
+                    f"Teacher Train/Val/Test loss: {train_loss:.4f}/{val_loss:.4f}/{test_loss:.4f}\n"
+                    f"Teacher Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
+                )
+
+        print("*" * 50)
+        print('Teacher model training over.')
+        print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
+        print("*" * 50)
+
+        th.save(teacher_model.state_dict(), model_path)
+
+    return teacher_model
 
 
 def student_training(
@@ -281,6 +287,12 @@ def args_init():
         "--teacher-n-hidden", type=int, default=256, help="number of teacher models hidden units"
     )
     argparser.add_argument(
+        "--teacher-n-layers", type=int, default=256, help="number of teacher models hidden units"
+    )
+    argparser.add_argument(
+        "--teacher-n-heads", type=int, default=256, help="number of teacher models hidden units"
+    )
+    argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
     )
     argparser.add_argument(
@@ -345,6 +357,9 @@ def args_init():
     argparser.add_argument(
         "--save", type=bool, default=False, help="Whether to save the student model."
     )
+    argparser.add_argument(
+        "--teacher_path", type=str, default='/dataintent/local/user/v-haoyan1/Model/', help="Path to save the Teacher Model"
+    )
     # ! Split dataset
     argparser.add_argument(
         "--train_ratio", type=float, default=0.6, help="training ratio"
@@ -398,11 +413,11 @@ def main():
 
     # Model implementation
     # set_seed(args.seed)
-    GraphAdapter = MLP(in_features, n_layers=args.n_layers, n_hidden=args.teacher_n_hidden, activation=F.relu,
+    GraphAdapter = MLP(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu,
                        dropout=args.dropout).to(device)
     student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
 
-    teacher_model = RevGAT(feat.shape[1], n_classes, args.n_hidden,  5, 3, F.relu, dropout=0.5, attn_drop=0,
+    teacher_model = RevGAT(feat.shape[1], n_classes, args.teacher_n_hidden,  args.teacher_layers, args.teacher_n_heads, F.relu, dropout=0.5, attn_drop=0,
                            edge_drop=0, use_attn_dst=False, use_symmetric_norm=True).to(device)
 
     TRAIN_NUMBERS = sum(
@@ -425,7 +440,15 @@ def main():
 
         filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pkl")
     # First stage, Teacher model pretraining
-    teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx)
+    # 处理teacher_model 相关的路径文件名
+    feature_prefix = os.path.splitext(os.path.basename(args.feature))[0]
+    # 创建保存路径
+    save_path = os.path.join(args.teacher_path, args.data_name, feature_prefix)
+    os.makedirs(save_path, exist_ok=True)
+    teacher_file_prefix = f"lr_{args.lr}_h_{args.teacher_n_hidden}_l_{args.teacher_layers}_h_{args.teacher_n_heads}"
+    # 保存 teacher model
+    model_path = os.path.join(save_path, f"{teacher_file_prefix}.pth")
+    teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
 
 
     # run
