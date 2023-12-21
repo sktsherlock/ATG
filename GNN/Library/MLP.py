@@ -288,7 +288,7 @@ def main():
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
-        # set_seed(args.seed)
+        set_seed(args.seed)
         model.reset_parameters()
         val_result, test_result = classification(
             args, model, feat, labels, train_idx, val_idx, test_idx, run
