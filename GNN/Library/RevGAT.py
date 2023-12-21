@@ -172,7 +172,6 @@ def main():
     test_results = []
 
     # Model implementation
-    set_seed(args.seed)
     model = RevGAT(feat.shape[1], n_classes, args.n_hidden,  args.n_layers, args.n_heads, F.relu, dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False, use_symmetric_norm=True).to(device)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]

@@ -279,7 +279,7 @@ def main():
     test_results = []
 
     # Model implementation
-    set_seed(args.seed)
+
     model = MLP(in_features, n_classes, args.n_layers, args.n_hidden, F.relu, args.dropout).to(device)
 
     TRAIN_NUMBERS = sum(
