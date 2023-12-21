@@ -287,10 +287,10 @@ def args_init():
         "--teacher-n-hidden", type=int, default=256, help="number of teacher models hidden units"
     )
     argparser.add_argument(
-        "--teacher-n-layers", type=int, default=256, help="number of teacher models hidden units"
+        "--teacher-n-layers", type=int, default=5, help="number of teacher models hidden units"
     )
     argparser.add_argument(
-        "--teacher-n-heads", type=int, default=256, help="number of teacher models hidden units"
+        "--teacher-n-heads", type=int, default=3, help="number of teacher models hidden units"
     )
     argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
@@ -358,7 +358,7 @@ def args_init():
         "--save", type=bool, default=False, help="Whether to save the student model."
     )
     argparser.add_argument(
-        "--teacher_path", type=str, default='/dataintent/local/user/v-haoyan1/Model/', help="Path to save the Teacher Model"
+        "--teacher_path", type=str, default='/dataintent/local/user/v-haoyan1/Model/', help="Path to save the Teacher Model", required=True
     )
     # ! Split dataset
     argparser.add_argument(
