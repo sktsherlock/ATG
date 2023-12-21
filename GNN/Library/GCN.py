@@ -11,7 +11,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from GraphData import load_data
-from NodeClassification import classification
+from NodeClassification import classification, set_seed
 
 
 # 模型定义模块
@@ -228,6 +228,7 @@ def main():
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
+        set_seed(args.seed)
         model.reset_parameters()
         val_result, test_result = classification(
             args, graph, model, feat, labels, train_idx, val_idx, test_idx, run
