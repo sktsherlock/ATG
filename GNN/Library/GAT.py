@@ -354,6 +354,9 @@ def args_init():
     argparser.add_argument(
         "--warmup_epochs", type=int, default=None, help="The warmup epochs"
     )
+    argparser.add_argument(
+        "--seed", type=int, default=42, help="The seed for the teacher models"
+    )
     # ! Data related
     argparser.add_argument(
         "--data_name", type=str, default=None, help="The dataset name.",
