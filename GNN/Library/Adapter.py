@@ -170,9 +170,9 @@ def student_training(
 
         student_loss = cross_entropy(student_preds[train_idx], labels[train_idx])
 
-        ditillation_loss = kl_loss_fn(F.log_softmax(student_preds, dim=-1), F.softmax(teacher_graph_preds, dim=-1))
+        distillation_loss = kl_loss_fn(F.log_softmax(student_preds, dim=-1), F.softmax(teacher_graph_preds, dim=-1))
 
-        loss = args.alpha * student_loss + (1 - args.alpha) * ditillation_loss
+        loss = args.alpha * student_loss + (1 - args.alpha) * distillation_loss
 
         student_optimizer.zero_grad()
         loss.backward()  # 反向传播
@@ -191,7 +191,7 @@ def student_training(
 
         wandb.log(
             {'Student_loss': loss, 'Student_Train_loss': student_loss, 'Student_Test_loss': test_loss, 'Student_Val_loss': val_loss,
-             'Distillation_loss': ditillation_loss, 'Student_Train_Result': train_results,
+             'Distillation_loss': distillation_loss, 'Student_Train_Result': train_results,
              'Student_Val_Result': val_results, 'Student_Test_Result': test_results})
 
         lr_scheduler.step(loss)
