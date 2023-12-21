@@ -85,7 +85,7 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
             tic = time.time()
 
             if args.warmup_epochs is not None:
-                adjust_learning_rate(optimizer, args.lr, epoch, 50)
+                adjust_learning_rate(optimizer, args.teacher_lr, epoch, 50)
 
             train_loss, pred = train(
                 teacher_model, graph, feat, label, train_idx, optimizer, label_smoothing=0.1
