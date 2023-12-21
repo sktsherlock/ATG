@@ -169,14 +169,15 @@ def main():
     test_results = []
 
     # Model implementation
+    set_seed(args.seed)
     model = RevGAT(feat.shape[1], n_classes, args.n_hidden,  args.n_layers, args.n_heads, F.relu, dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False, use_symmetric_norm=True).to(device)
-    print(model)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
-    print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
+    print(f"Number of the all RevGAT model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
+        set_seed(args.seed)
         model.reset_parameters()
         val_result, test_result = classification(
             args, graph, model, feat, labels, train_idx, val_idx, test_idx, run
