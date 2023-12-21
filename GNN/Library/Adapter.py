@@ -385,6 +385,9 @@ def args_init():
         "--save", type=bool, default=False, help="Whether to save the student model."
     )
     argparser.add_argument(
+        "--train_student", type=bool, default=False, help="Whether to train the student models."
+    )
+    argparser.add_argument(
         "--teacher_path", type=str, default='/dataintent/local/user/v-haoyan1/Model/',
         help="Path to save the Teacher Model", required=True
     )
@@ -481,28 +484,34 @@ def main():
     # 保存 teacher model
     model_path = os.path.join(save_path, f"{teacher_file_prefix}.pth")
     teacher_model = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
+    if args.train_student:
+        # run
+        val_results = []
+        test_results = []
 
-    # run
-    val_results = []
-    test_results = []
+        for run in range(args.n_runs):
+            student_model.reset_parameters()
+            val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx,
+                                                       val_idx, test_idx, filename, run+1)
+            wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
+            val_results.append(val_result)
+            test_results.append(test_result)
 
-    for run in range(args.n_runs):
-        student_model.reset_parameters()
-        val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx,
-                                                   val_idx, test_idx, filename, run+1)
-        wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
-        val_results.append(val_result)
-        test_results.append(test_result)
-
-    print(f"Runned {args.n_runs} times")
-    print(f"Average val accuracy: {np.mean(val_results)} ± {np.std(val_results)}")
-    print(f"Average test accuracy: {np.mean(test_results)} ± {np.std(test_results)}")
-    wandb.log({f'Mean_Val_{args.metric}': np.mean(val_results), f'Mean_Test_{args.metric}': np.mean(test_results)})
+        print(f"Runned {args.n_runs} times")
+        print(f"Average val accuracy: {np.mean(val_results)} ± {np.std(val_results)}")
+        print(f"Average test accuracy: {np.mean(test_results)} ± {np.std(test_results)}")
+        wandb.log({f'Mean_Val_{args.metric}': np.mean(val_results), f'Mean_Test_{args.metric}': np.mean(test_results)})
 
 
 if __name__ == "__main__":
     main()
 
 """
-python Adapter.py --feature /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/Arxiv_bert_base_uncased_256_mean.npy --data_name ogbn-arxiv --early_stop_patience 40 --teacher_path /dataintent/local/user/v-haoyan1/Model/ --teacher_name RevGAT
+python Adapter.py --feature /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/Arxiv_bert_base_uncased_256_mean.npy --data_name ogbn-arxiv --early_stop_patience 40 --teacher_path /dataintent/local/user/v-haoyan1/Model/ --teacher_name RevGAT --teacher-lr 0.0005 --teacher-n-hidden 64 
+python Adapter.py --feature /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/Arxiv_bert_base_uncased_256_mean.npy --data_name ogbn-arxiv --early_stop_patience 40 --teacher_path /dataintent/local/user/v-haoyan1/Model/ --teacher_name RevGAT --teacher-lr 0.0005 --teacher-n-hidden 128
+python Adapter.py --feature /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/Arxiv_bert_base_uncased_256_mean.npy --data_name ogbn-arxiv --early_stop_patience 40 --teacher_path /dataintent/local/user/v-haoyan1/Model/ --teacher_name RevGAT --teacher-lr 0.0005 --teacher-n-hidden 256
+python Adapter.py --feature /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/Arxiv_bert_base_uncased_256_mean.npy --data_name ogbn-arxiv --early_stop_patience 40 --teacher_path /dataintent/local/user/v-haoyan1/Model/ --teacher_name RevGAT --teacher-lr 0.0005 --teacher-n-hidden 512
+
+
+
 """
