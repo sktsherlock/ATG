@@ -190,7 +190,7 @@ def student_training(
         test_results = get_metric(th.argmax(pred[test_idx], dim=1), labels[test_idx], args.metric, average=args.average)
 
         wandb.log(
-            {'Student_Train_loss': loss, 'Student_Test_loss': test_loss, 'Student_Val_loss': val_loss,
+            {'Student_loss': loss, 'Student_Train_loss': student_loss, 'Student_Test_loss': test_loss, 'Student_Val_loss': val_loss,
              'Distillation_loss': ditillation_loss, 'Student_Train_Result': train_results,
              'Student_Val_Result': val_results, 'Student_Test_Result': test_results})
 
