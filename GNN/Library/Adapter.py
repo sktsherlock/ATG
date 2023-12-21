@@ -379,7 +379,7 @@ def args_init():
         "--average", type=str, default='weighted', choices=['weighted', 'micro', 'macro', None]
     )
     argparser.add_argument(
-        "--save_path", type=str, default=None, help="Path to save the Student Model"
+        "--save_path", type=str, default='/dataintent/local/user/v-haoyan1/Model/Student/', help="Path to save the Student Model"
     )
     argparser.add_argument(
         "--save", type=bool, default=False, help="Whether to save the student model."
@@ -466,17 +466,19 @@ def main():
     )
     print(f"Number of the student model params: {TRAIN_NUMBERS}")
 
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
     filename = None
+    feature_prefix = os.path.splitext(os.path.basename(args.feature))[0]
     if args.save:
         if not os.path.exists(os.path.dirname(args.save_path)):
             # 创建路径
             os.makedirs(os.path.dirname(args.save_path))
-
-        filename = os.path.join(args.save_path, f"best_student_model_{timestamp}.pkl")
+        student_save_path = os.path.join(args.save_path, args.data_name, args.teacher_name, feature_prefix)
+        student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}"
+        filename = os.path.join(student_save_path, f"GraphAdapter_{student_file_prefix}.pkl")
     # First stage, Teacher model pretraining
     # 处理teacher_model 相关的路径文件名
-    feature_prefix = os.path.splitext(os.path.basename(args.feature))[0]
+
     # 创建保存路径
     save_path = os.path.join(args.teacher_path, args.data_name, args.teacher_name, feature_prefix)
     os.makedirs(save_path, exist_ok=True)
