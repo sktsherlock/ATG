@@ -474,7 +474,7 @@ def main():
             # 创建路径
             os.makedirs(os.path.dirname(args.save_path))
         student_save_path = os.path.join(args.save_path, args.data_name, args.teacher_name, feature_prefix)
-        student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}"
+        student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}_a_{args.alpha}"
         filename = os.path.join(student_save_path, f"GraphAdapter_{student_file_prefix}.pkl")
     # First stage, Teacher model pretraining
     # 处理teacher_model 相关的路径文件名
