@@ -14,7 +14,7 @@ from RevGAT.model import RevGAT
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate, _contrastive_loss
-from GraphData import load_data
+from GraphData import load_data, set_seed
 
 
 def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
@@ -309,6 +309,9 @@ def args_init():
     argparser.add_argument(
         "--warmup_epochs", type=int, default=None, help="The warmup epochs"
     )
+    argparser.add_argument(
+        "--seed", type=int, default=42, help="The seed for the teacher models"
+    )
     # ! Data related
     argparser.add_argument(
         "--data_name", type=str, default=None, help="The dataset name.",
@@ -393,7 +396,8 @@ def main():
     graph = graph.to(device)
 
     # Model implementation
-    GraphAdapter = MLP(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu,
+    set_seed(args.seed)
+    GraphAdapter = MLP(in_features, n_layers=args.n_layers, n_hidden=args.teacher_n_hidden, activation=F.relu,
                        dropout=args.dropout).to(device)
     student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
 
@@ -410,7 +414,7 @@ def main():
     )
     print(f"Number of the student model params: {TRAIN_NUMBERS}")
 
-    teacher_model.reset_parameters()
+
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = None
     if args.save:

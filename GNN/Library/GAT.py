@@ -13,7 +13,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from GraphData import load_data
+from GraphData import load_data, set_seed
 from NodeClassification import classification
 
 

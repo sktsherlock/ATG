@@ -12,7 +12,7 @@ import time
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
 
-from GraphData import load_data
+from GraphData import load_data, set_seed
 
 
 def train(model, feat, labels, train_idx, optimizer, label_smoothing):
@@ -276,6 +276,7 @@ def main():
     test_results = []
 
     # Model implementation
+    set_seed(args.seed)
     model = MLP(in_features, n_classes, args.n_layers, args.n_hidden, F.relu, args.dropout).to(device)
 
     TRAIN_NUMBERS = sum(
@@ -284,6 +285,7 @@ def main():
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
+        set_seed(args.seed)
         model.reset_parameters()
         val_result, test_result = classification(
             args, model, feat, labels, train_idx, val_idx, test_idx, run

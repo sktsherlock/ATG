@@ -1,6 +1,7 @@
 import numpy as np
 import torch as th
 import dgl
+import random
 from ogb.nodeproppred import DglNodePropPredDataset
 
 
@@ -38,3 +39,16 @@ def load_data(graph_path, train_ratio=0.6, val_ratio=0.2, name=None):
         test_idx = th.tensor(test_idx)
 
     return graph, labels, train_idx, val_idx, test_idx
+
+
+def set_seed(seed: int):
+    """
+    Helper function for reproducible behavior to set the seed in `random`, `numpy`, `torch` and/or `tf` (if installed).
+
+    Args:
+        seed (`int`): The seed to set.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    th.manual_seed(seed)
+    th.cuda.manual_seed_all(seed)
