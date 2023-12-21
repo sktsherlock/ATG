@@ -59,6 +59,7 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
 
         wandb.log({f'Teacher_Best_Train_{args.metric}': train_result, f'Teacher_Best_Val_{args.metric}': val_result,
                    f'Teacher_Best_Test_{args.metric}': test_result})
+        print(f"Final Train {args.metric}: {train_result}, Best Val {args.metric}: {val_result}, Final Test {args.metric}: {test_result}")
 
     else:
         # Start Training and save the trained model
