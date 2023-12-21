@@ -10,8 +10,8 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from GraphData import load_data
-from NodeClassification import classification, set_seed
+from GraphData import load_data, set_seed
+from NodeClassification import classification
 
 
 # 模型定义模块
