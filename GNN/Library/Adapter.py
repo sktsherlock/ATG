@@ -376,6 +376,10 @@ def args_init():
         "--teacher_path", type=str, default='/dataintent/local/user/v-haoyan1/Model/',
         help="Path to save the Teacher Model", required=True
     )
+    argparser.add_argument(
+        "--teacher_name", type=str, default='RevGAT',
+        help="The TEACHER NAME", required=True
+    )
     # ! Split dataset
     argparser.add_argument(
         "--train_ratio", type=float, default=0.6, help="training ratio"
@@ -459,7 +463,7 @@ def main():
     # 处理teacher_model 相关的路径文件名
     feature_prefix = os.path.splitext(os.path.basename(args.feature))[0]
     # 创建保存路径
-    save_path = os.path.join(args.teacher_path, args.data_name, feature_prefix)
+    save_path = os.path.join(args.teacher_path, args.data_name, args.teacher_name, feature_prefix)
     os.makedirs(save_path, exist_ok=True)
     teacher_file_prefix = f"lr_{args.lr}_h_{args.teacher_n_hidden}_l_{args.teacher_layers}_h_{args.teacher_n_heads}"
     # 保存 teacher model
