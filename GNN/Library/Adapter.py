@@ -66,7 +66,7 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
         if args.early_stop_patience is not None:
             stopper = EarlyStopping(patience=50)
         optimizer = optim.AdamW(
-            teacher_model.parameters(), lr=args.lr, weight_decay=0
+            teacher_model.parameters(), lr=args.teacher_lr, weight_decay=0
         )
         lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
             optimizer,
@@ -315,6 +315,9 @@ def args_init():
     )
     argparser.add_argument(
         "--teacher-n-heads", type=int, default=3, help="number of teacher models hidden units"
+    )
+    argparser.add_argument(
+        "--teacher-lr", type=float, default=0.005, help="learning rate"
     )
     argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
