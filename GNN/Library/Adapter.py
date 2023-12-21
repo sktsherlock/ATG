@@ -98,6 +98,7 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
 
         if epoch % args.log_every == 0:
             print(
+                f"Teacher Runing Epoch: {epoch}/{args.n_epochs}, Average epoch time: {total_time / epoch:.2f}\n"
                 f"Loss: {train_loss.item():.4f}\n"
                 f"Teacher Train/Val/Test loss: {train_loss:.4f}/{val_loss:.4f}/{test_loss:.4f}\n"
                 f"Teacher Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
@@ -396,7 +397,7 @@ def main():
     graph = graph.to(device)
 
     # Model implementation
-    set_seed(args.seed)
+    # set_seed(args.seed)
     GraphAdapter = MLP(in_features, n_layers=args.n_layers, n_hidden=args.teacher_n_hidden, activation=F.relu,
                        dropout=args.dropout).to(device)
     student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
