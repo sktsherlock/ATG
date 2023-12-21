@@ -131,6 +131,10 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
 
 def student_training(
         args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename, n_running):
+
+    if args.early_stop_patience is not None:
+        stopper = EarlyStopping(patience=args.early_stop_patience)
+
     student_optimizer = optim.AdamW(
         student_model.parameters(), lr=args.lr, weight_decay=args.wd
     )
@@ -199,6 +203,10 @@ def student_training(
             final_test_result = test_results
             if args.save:
                 th.save(student_model, filename)
+
+        if args.early_stop_patience is not None:
+            if stopper.step(val_loss):
+                break
 
         if epoch % args.log_every == 0:
             print(
@@ -490,3 +498,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+python Adapter.py --feature /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/Arxiv_bert_base_uncased_256_mean.npy --data_name ogbn-arxiv --early_stop_patience 40 --teacher_path /dataintent/local/user/v-haoyan1/Model/ --teacher_name RevGAT
+"""
