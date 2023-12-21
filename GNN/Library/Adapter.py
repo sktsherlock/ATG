@@ -485,7 +485,7 @@ def main():
     for run in range(args.n_runs):
         student_model.reset_parameters()
         val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx,
-                                                   val_idx, test_idx, filename, run)
+                                                   val_idx, test_idx, filename, run+1)
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
         test_results.append(test_result)
