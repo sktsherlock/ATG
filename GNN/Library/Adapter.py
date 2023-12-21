@@ -448,7 +448,7 @@ def main():
     teacher_file_prefix = f"lr_{args.lr}_h_{args.teacher_n_hidden}_l_{args.teacher_layers}_h_{args.teacher_n_heads}"
     # 保存 teacher model
     model_path = os.path.join(save_path, f"{teacher_file_prefix}.pth")
-    teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
+    teacher_model = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
 
 
     # run
