@@ -48,7 +48,18 @@ def evaluate(
 
 def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx, test_idx, model_path):
     if os.path.exists(model_path):
+        print("Model path already exists, directly load it from: {}".format(model_path))
         teacher_model.load_state_dict(th.load(model_path))
+        teacher_model.eval()
+        train_result, val_result, test_result, _, _ = evaluate(teacher_model, graph, feat, label,
+                                                               train_idx, val_idx, test_idx,
+                                                               metric=args.metric,
+                                                               label_smoothing=0.1,
+                                                               average=args.average)
+
+        wandb.log({f'Teacher_Best_Train_{args.metric}': train_result, f'Teacher_Best_Val_{args.metric}': val_result,
+                   f'Teacher_Best_Test_{args.metric}': test_result})
+
     else:
         # Start Training and save the trained model
         if args.early_stop_patience is not None:
@@ -67,7 +78,7 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
 
         # training loop
         total_time = 0
-        best_val_result, final_test_result, best_val_loss = 0, 0, float("inf")
+        best_train_result, best_val_result, final_test_result, best_val_loss = 0, 0, 0, float("inf")
 
         for epoch in range(1, args.n_epochs + 1):
             tic = time.time()
@@ -93,8 +104,10 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
+                best_train_result = train_result
                 best_val_result = val_result
                 final_test_result = test_result
+                th.save(teacher_model.state_dict(), model_path)
 
             if args.early_stop_patience is not None:
                 if stopper.step(val_loss):
@@ -108,18 +121,16 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
                     f"Teacher Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
                 )
 
-        print("*" * 50)
         print('Teacher model training over.')
         print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
-        print("*" * 50)
-
-        th.save(teacher_model.state_dict(), model_path)
+        wandb.log({f'Teacher_Best_Train_{args.metric}': best_train_result, f'Teacher_Best_Val_{args.metric}': best_val_result,
+                   f'Teacher_Best_Test_{args.metric}': final_test_result})
 
     return teacher_model
 
 
 def student_training(
-        args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename):
+        args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename, n_running):
     student_optimizer = optim.AdamW(
         student_model.parameters(), lr=args.lr, weight_decay=args.wd
     )
@@ -151,7 +162,6 @@ def student_training(
 
         # student model forward
         student_preds = student_model.forward(feat)
-
 
         student_loss = cross_entropy(student_preds[train_idx], labels[train_idx])
 
@@ -190,8 +200,14 @@ def student_training(
             if args.save:
                 th.save(student_model, filename)
 
-    print('Saving the best student model')
-    print('***********************')
+        if epoch % args.log_every == 0:
+            print(
+                f"Run: {n_running}/{args.n_runs}, Epoch: {epoch}/{args.n_epochs}, Average epoch time: {total_time / epoch:.2f}\n"
+                f"Loss: {loss.item():.4f}\n"
+                f"Train/Val/Test loss: {student_loss:.4f}/{val_loss:.4f}/{test_loss:.4f}\n"
+                f"Train/Val/Test/Best Val/Final Test {args.metric}: {train_results:.4f}/{val_results:.4f}/{test_results:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
+            )
+
     print(f"Best Student Mdeol val acc: {best_val_result}, Final test acc: {final_test_result}")
     return best_val_result, final_test_result
 
@@ -259,7 +275,6 @@ class MLP(nn.Module):
             h = self.dropout(h)
 
         return self.linears[-1](h), feat
-
 
 
 def args_init():
@@ -358,7 +373,8 @@ def args_init():
         "--save", type=bool, default=False, help="Whether to save the student model."
     )
     argparser.add_argument(
-        "--teacher_path", type=str, default='/dataintent/local/user/v-haoyan1/Model/', help="Path to save the Teacher Model", required=True
+        "--teacher_path", type=str, default='/dataintent/local/user/v-haoyan1/Model/',
+        help="Path to save the Teacher Model", required=True
     )
     # ! Split dataset
     argparser.add_argument(
@@ -412,12 +428,13 @@ def main():
     graph = graph.to(device)
 
     # Model implementation
-    # set_seed(args.seed)
+    set_seed(args.seed)
     GraphAdapter = MLP(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu,
                        dropout=args.dropout).to(device)
     student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
 
-    teacher_model = RevGAT(feat.shape[1], n_classes, args.teacher_n_hidden,  args.teacher_layers, args.teacher_n_heads, F.relu, dropout=0.5, attn_drop=0,
+    teacher_model = RevGAT(feat.shape[1], n_classes, args.teacher_n_hidden, args.teacher_layers, args.teacher_n_heads,
+                           F.relu, dropout=0.5, attn_drop=0,
                            edge_drop=0, use_attn_dst=False, use_symmetric_norm=True).to(device)
 
     TRAIN_NUMBERS = sum(
@@ -429,7 +446,6 @@ def main():
         [np.prod(p.size()) for p in student_model.parameters() if p.requires_grad]
     )
     print(f"Number of the student model params: {TRAIN_NUMBERS}")
-
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = None
@@ -450,14 +466,14 @@ def main():
     model_path = os.path.join(save_path, f"{teacher_file_prefix}.pth")
     teacher_model = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
 
-
     # run
     val_results = []
     test_results = []
 
     for run in range(args.n_runs):
         student_model.reset_parameters()
-        val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename)
+        val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx,
+                                                   val_idx, test_idx, filename, run)
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
         test_results.append(test_result)
