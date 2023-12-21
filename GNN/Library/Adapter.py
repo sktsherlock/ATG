@@ -490,8 +490,12 @@ def main():
         # run
         val_results = []
         test_results = []
+        if args.save:
+            n_runs = 1
+        else:
+            n_runs = args.n_runs
 
-        for run in range(args.n_runs):
+        for run in range(n_runs):
             student_model.reset_parameters()
             val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx,
                                                        val_idx, test_idx, filename, run+1)
