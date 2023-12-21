@@ -287,7 +287,7 @@ def args_init():
         "--teacher-n-hidden", type=int, default=256, help="number of teacher models hidden units"
     )
     argparser.add_argument(
-        "--teacher-n-layers", type=int, default=5, help="number of teacher models hidden units"
+        "--teacher-layers", type=int, default=5, help="number of teacher models hidden units"
     )
     argparser.add_argument(
         "--teacher-n-heads", type=int, default=3, help="number of teacher models hidden units"
