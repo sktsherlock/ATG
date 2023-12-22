@@ -291,9 +291,14 @@ def print_trainable_parameters(model):
 
 
 def set_peft_config(modeling_args):
-    config = {'peft_type': modeling_args.peft_type, 'target_modules': modeling_args.lora_target_modules,
-              'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-              'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+    if modeling_args.model_name_or_path in {"facebook/opt-1.3b", "facebook/opt-2.7b"}:
+        config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj"],
+                  'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+    else:
+        config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
+                  'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
     peft_config = get_peft_config(config)
     return peft_config
 
