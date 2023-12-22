@@ -233,6 +233,25 @@ class ModelArguments:
     )
 
 
+class Classifier(torch.nn.Module):
+    def __init__(self, model, in_feats, n_labels):
+        super().__init__()
+        self.Adapter = model
+        hidden_dim = in_feats
+        self.classifier = torch.nn.Linear(hidden_dim, n_labels)
+
+    def reset_parameters(self):
+        self.Adapter.reset_parameters()
+
+        self.classifier.reset_parameters()
+
+    def forward(self, feat):
+        # Extract outputs from the model
+        outputs, feat = self.Adapter(feat)
+        outputs = outputs + feat
+        logits = self.classifier(outputs)
+        return logits
+
 
 
 def get_label_list(raw_dataset, split="train") -> List[str]:
