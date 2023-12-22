@@ -30,7 +30,8 @@ python TextAttributeExtract.py --csv_file 'Data/Movies/Movies.csv' --model_name 
 ```python
 python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'bert-base-uncased' --name 'Arxiv' --path 'Data/ogb/Arxiv/Feature/' --max_length 256 --batch_size 1000 --cls 
 python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'bert-large-uncased' --name 'Arxiv' --path 'Data/ogb/Arxiv/Feature/' --max_length 256 --batch_size 1000 --cls 
-
+python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Arxiv.csv' --model_name 'roberta-large' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 256 --batch_size 1000 --cls 
+python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'roberta-base' --name 'Arxiv' --path 'Data/ogb/Arxiv/Feature/' --max_length 256 --batch_size 1000 --cls 
 
 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/arxiv.csv' --model_name 'bert-large-uncased' --name 'Arxiv' --path 'Data/ogb/Arxiv/Category/' --max_length 128 --batch_size 2000 --cls --text_column 'TC'
 
