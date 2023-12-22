@@ -291,7 +291,7 @@ def print_trainable_parameters(model):
 
 
 def set_peft_config(modeling_args):
-    config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
+    config = {'peft_type': modeling_args.peft_type, 'target_modules': modeling_args.lora_target_modules,
               'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
               'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
     peft_config = get_peft_config(config)
