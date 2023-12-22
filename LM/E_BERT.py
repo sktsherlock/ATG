@@ -3,6 +3,8 @@ import os
 import random
 import sys
 import shutil
+import torch.nn as nn
+import torch.nn.functional as F
 from dataclasses import dataclass, field
 from typing import List, Optional, Union
 
@@ -233,12 +235,12 @@ class ModelArguments:
     )
 
 
-class Classifier(torch.nn.Module):
+class Classifier(nn.Module):
     def __init__(self, model, in_feats, n_labels):
         super().__init__()
         self.Adapter = model
         hidden_dim = in_feats
-        self.classifier = torch.nn.Linear(hidden_dim, n_labels)
+        self.classifier = nn.Linear(hidden_dim, n_labels)
 
     def reset_parameters(self):
         self.Adapter.reset_parameters()
@@ -252,6 +254,51 @@ class Classifier(torch.nn.Module):
         logits = self.classifier(outputs)
         return logits
 
+
+
+class MLP(nn.Module):
+    def __init__(
+            self,
+            in_feats,
+            n_layers,
+            n_hidden,
+            activation,
+            dropout=0.0,
+    ):
+        super().__init__()
+        self.n_layers = n_layers
+        self.n_hidden = n_hidden
+
+        self.linears = nn.ModuleList()
+        self.norms = nn.ModuleList()
+
+        for i in range(n_layers):
+            in_hidden = n_hidden if i > 0 else in_feats
+            out_hidden = n_hidden if i < n_layers - 1 else in_feats
+
+            self.linears.append(nn.Linear(in_hidden, out_hidden))
+
+            if i < n_layers - 1:
+                self.norms.append(nn.BatchNorm1d(out_hidden))
+
+        self.activation = activation
+        self.dropout = nn.Dropout(dropout)
+
+    def reset_parameters(self):
+        for linear in self.linears:
+            linear.reset_parameters()
+
+        for norm in self.norms:
+            norm.reset_parameters()
+
+    def forward(self, feat):
+        h = feat
+
+        for i in range(self.n_layers - 1):
+            h = F.relu(self.norms[i](self.linears[i](h)))
+            h = self.dropout(h)
+
+        return self.linears[-1](h), feat
 
 
 def get_label_list(raw_dataset, split="train") -> List[str]:
