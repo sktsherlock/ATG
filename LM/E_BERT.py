@@ -532,8 +532,8 @@ def main():
 
     # for training ,we will update the config with label infos,
     # if do_train is not set, we will use the label infos in the config
-    if training_args.do_train:  # classification, training
-        label_to_id = {v: i for i, v in enumerate(label_list)}
+    # if training_args.do_train:  # classification, training
+    label_to_id = {v: i for i, v in enumerate(label_list)}
 
 
 
