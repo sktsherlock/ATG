@@ -330,6 +330,8 @@ def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
             splitted_idx["valid"],
             splitted_idx["test"],
         )
+        _, labels = data[0]
+        labels = labels[:, 0]
     else:
         np.random.seed(42)
         indices = np.random.permutation(nodes_num)
@@ -343,8 +345,9 @@ def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
         train_idx = torch.tensor(train_idx)
         val_idx = torch.tensor(val_idx)
         test_idx = torch.tensor(test_idx)
+        labels = None
 
-    return train_idx, val_idx, test_idx
+    return train_idx, val_idx, test_idx, labels
 
 
 def print_trainable_parameters(model):
@@ -421,7 +424,7 @@ def main():
     train_data = raw_data['train']
     nodes_num = len(raw_data['train'])
 
-    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
+    train_ids, val_ids, test_ids, labels = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
     # 根据划分的索引创建划分后的数据集
     train_dataset = train_data.select(train_ids)
     val_dataset = train_data.select(val_ids)
@@ -457,6 +460,8 @@ def main():
                     f"Labels {diff} in {split} set but not in training set, adding them to the label list"
                 )
                 label_list += list(diff)
+    print("Labels by NLP pipeline: {}".format(label_list))
+    print("Labels by GNN pipeline: {}".format(labels))
     # if label is -1, we throw a warning and remove it from the label list
     for label in label_list:
         if label == -1:
