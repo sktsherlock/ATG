@@ -302,14 +302,21 @@ class MLP(nn.Module):
 
 
 def get_label_list(raw_dataset, split="train") -> List[str]:
-    """Get the list of labels from a mutli-label dataset"""
+    """Get the list of labels from a multi-label dataset"""
 
-    if isinstance(raw_dataset[split]["label"][0], list):
-        label_list = [label for sample in raw_dataset[split]["label"] for label in sample]
+    label_column = raw_dataset[split]["label"]
+
+    if isinstance(label_column[0], list):
+        # For multi-label case
+        label_list = [label for sample in label_column for label in sample]
         label_list = list(set(label_list))
+    elif isinstance(label_column[0], int):
+        # For single-label case with int values
+        label_list = list(set(label_column))
     else:
-        label_list = raw_dataset[split].unique("label")
-    # we will treat the label list as a list of string instead of int, consistent with model.config.label2id
+        raise ValueError("Unsupported label type. Expected list or int.")
+
+    # Convert labels to string
     label_list = [str(label) for label in label_list]
     return label_list
 
@@ -377,9 +384,9 @@ def main():
     # training_args.save_strategy = 'epoch'
     # training_args.load_best_model_at_end = True
     training_args.save_total_limit = None
-    training_args.do_train = True
-    training_args.do_eval = True
-    training_args.do_predict = True
+    # training_args.do_train = True
+    # training_args.do_eval = True
+    # training_args.do_predict = True
 
     send_example_telemetry("run_classification", model_args, data_args)
 
