@@ -13,6 +13,7 @@ import numpy as np
 from datasets import Value, load_dataset
 import torch
 from datasets import DatasetDict, Dataset
+from E_BERT import MLP, Classifier
 from ogb.nodeproppred import DglNodePropPredDataset
 
 
