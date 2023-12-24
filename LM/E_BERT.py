@@ -434,7 +434,7 @@ def main():
         "validation": val_dataset,
         "test": test_dataset
     })
-    print(raw_datasets)
+
     if data_args.remove_columns is not None:
         for split in raw_datasets.keys():
             for column in data_args.remove_columns.split(","):
@@ -551,7 +551,6 @@ def main():
         # Tokenize the texts
         result = tokenizer(examples["sentence"], padding=padding, max_length=max_seq_length, truncation=True)
         result["label"] = examples["label"]
-        print(examples["label"])
         return result
 
     # Running the preprocessing pipeline on all the datasets
