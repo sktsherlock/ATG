@@ -263,7 +263,7 @@ class MLP(nn.Module):
             n_layers,
             n_hidden,
             activation,
-            dropout=0.0,
+            dropout=0.5,
     ):
         super().__init__()
         self.n_layers = n_layers
