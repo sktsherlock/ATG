@@ -301,7 +301,7 @@ class MLP(nn.Module):
         return self.linears[-1](h), feat
 
 
-def get_label_list(raw_dataset, split="train") -> List[str]:
+def get_label_list(raw_dataset, split="train") -> List[int]:
     """Get the list of labels from a multi-label dataset"""
 
     label_column = raw_dataset[split]["label"]
@@ -316,8 +316,6 @@ def get_label_list(raw_dataset, split="train") -> List[str]:
     else:
         raise ValueError("Unsupported label type. Expected list or int.")
 
-    # Convert labels to string
-    label_list = [str(label) for label in label_list]
     return label_list
 
 
@@ -460,8 +458,6 @@ def main():
                     f"Labels {diff} in {split} set but not in training set, adding them to the label list"
                 )
                 label_list += list(diff)
-    print("Labels by NLP pipeline: {}".format(label_list))
-    print("Labels by GNN pipeline: {}".format(labels))
     # if label is -1, we throw a warning and remove it from the label list
     for label in label_list:
         if label == -1:
@@ -535,12 +531,6 @@ def main():
         # We will pad later, dynamically at batch creation, to the max sequence length in each batch
         padding = False
 
-    # for training ,we will update the config with label infos,
-    # if do_train is not set, we will use the label infos in the config
-    # if training_args.do_train:  # classification, training
-    label_to_id = {v: i for i, v in enumerate(label_list)}
-    print(f'Label to id: {label_to_id}')
-
 
 
     if data_args.max_seq_length > tokenizer.model_max_length:
@@ -560,8 +550,8 @@ def main():
                     examples["sentence"][i] += data_args.text_column_delimiter + examples[column][i]
         # Tokenize the texts
         result = tokenizer(examples["sentence"], padding=padding, max_length=max_seq_length, truncation=True)
-        if label_to_id is not None and "label" in examples:
-            result["label"] = [(label_to_id[str(l)] if l != -1 else -1) for l in examples["label"]]
+        result["label"] = examples["label"]
+        print(examples["label"])
         return result
 
     # Running the preprocessing pipeline on all the datasets
