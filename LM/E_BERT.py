@@ -636,6 +636,15 @@ def main():
         data_collator=data_collator,
     )
 
+
+    if training_args.do_eval and model_args.training_objective == 'Adapter':
+        logger.info("*** First Evaluate ***")
+        metrics = trainer.evaluate(eval_dataset=eval_dataset)
+        max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
+        metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
+        trainer.log_metrics("First_eval", metrics)
+        trainer.save_metrics("First_eval", metrics)
+
     # Training
     if training_args.do_train:
         train_result = trainer.train()
