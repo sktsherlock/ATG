@@ -31,7 +31,7 @@ from transformers import (
     set_seed,
 )
 
-from Task import CLSClassifier, MEANClassifier
+from Task import CLSClassifier, MEANClassifier, AdapterClassifier
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
 
@@ -164,6 +164,10 @@ class ModelArguments:
     cache_dir: Optional[str] = field(
         default=None,
         metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+    )
+    filename: Optional[str] = field(
+        default=None,
+        metadata={"help": "Where you save the adapter model"},
     )
     out_dir: Optional[str] = field(
         default=None,
@@ -426,6 +430,13 @@ def main():
     elif model_args.training_objective == 'Mean':
         model = MEANClassifier(
             encoder, num_labels,
+            dropout=model_args.drop_out,
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
+        )
+    elif model_args.training_objective == 'Adapter':
+        adapter = torch.load(model_args.filename)
+        model = AdapterClassifier(
+            encoder, adapter=adapter,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
         )
