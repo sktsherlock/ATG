@@ -251,6 +251,7 @@ class MLP(nn.Module):
             n_hidden,
             activation,
             dropout=0.0,
+            input_drop=0.0,
     ):
         super().__init__()
         self.n_layers = n_layers
@@ -270,6 +271,7 @@ class MLP(nn.Module):
 
         self.activation = activation
         self.dropout = nn.Dropout(dropout)
+        self.input_drop = nn.Dropout(input_drop)
 
     def reset_parameters(self):
         for linear in self.linears:
@@ -280,6 +282,9 @@ class MLP(nn.Module):
 
     def forward(self, feat):
         h = feat
+        h = self.input_drop(h)
+        noise = th.randn_like(h)
+        h = h + noise
 
         for i in range(self.n_layers - 1):
             h = F.relu(self.norms[i](self.linears[i](h)))
@@ -323,6 +328,9 @@ def args_init():
     )
     argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
+    )
+    argparser.add_argument(
+        "--input_drop", type=float, default=0.2, help="dropout rate"
     )
     argparser.add_argument(
         "--batch", type=int, default=64, help="number of hidden units"
@@ -451,7 +459,7 @@ def main():
     # Model implementation
     set_seed(args.seed)
     GraphAdapter = MLP(in_features, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu,
-                       dropout=args.dropout).to(device)
+                       dropout=args.dropout, input_drop=args.input_drop).to(device)
     student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
 
     if args.teacher_name == 'RevGAT':
