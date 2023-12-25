@@ -656,8 +656,7 @@ def main():
         data_collator=data_collator,
     )
 
-
-    if training_args.do_eval (model_args.training_objective == 'Adapter' or model_args.training_objective == 'ResAdapter'):
+    if training_args.do_eval and model_args.training_objective in ['Adapter', 'ResAdapter']:
         logger.info("*** First Evaluate ***")
         metrics = trainer.evaluate(eval_dataset=eval_dataset)
         max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
