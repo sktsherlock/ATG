@@ -454,13 +454,13 @@ def main():
                        dropout=args.dropout).to(device)
     student_model = Classifier(GraphAdapter, in_feats=in_features, n_labels=n_classes).to(device)
 
-    if args.teacher_name is 'RevGAT':
+    if args.teacher_name == 'RevGAT':
         teacher_model = RevGAT(feat.shape[1], n_classes, args.teacher_n_hidden, args.teacher_layers, args.teacher_n_heads,
                                F.relu, dropout=0.5, attn_drop=0,
                                edge_drop=0, use_attn_dst=False, use_symmetric_norm=True).to(device)
-    elif args.teacher_name is 'GCN':
+    elif args.teacher_name == 'GCN':
         teacher_model = GCN(feat.shape[1], args.teacher_n_hidden,  n_classes, args.teacher_layers, F.relu, dropout=0.2).to(device)
-    elif args.teacher_name is 'SAGE':
+    elif args.teacher_name == 'SAGE':
         teacher_model = GraphSAGE(feat.shape[1], args.teacher_n_hidden, n_classes, args.teacher_layers, F.relu, dropout=0.2, aggregator_type='mean').to(device)
     else:
         raise ValueError
