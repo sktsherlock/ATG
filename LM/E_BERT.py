@@ -208,6 +208,10 @@ class ModelArguments:
         default=1.0,
         metadata={"help": "The scale to trade off the LLM outputs and GraphTuning outputs"}
     )
+    freeze: bool = field(
+        default=True,
+        metadata={"help": "Whether to freeze the Graph Adapter."}
+    )
     label_smoothing: float = field(
         default=0.1,
         metadata={"help": "The label smoothing factor to use"}
@@ -528,8 +532,9 @@ def main():
     elif model_args.training_objective == 'Adapter':
 
         adapter = torch.load(model_args.filename)
-        for param in adapter.parameters():
-            param.requires_grad = False
+        if model_args.freeze:
+            for param in adapter.parameters():
+                param.requires_grad = False
         model = AdapterClassifier(
             peft_encoder, adapter=adapter,
             dropout=model_args.drop_out,
