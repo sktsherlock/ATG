@@ -237,13 +237,19 @@ class ModelArguments:
             "For example, ['q', 'v'] or '.*decoder.*(SelfAttention|EncDecAttention).*(q|v)$' "
         },
     )
+    lora_layers_to_transform: Optional[Union[List[int], int]] = field(
+        default=None,
+        metadata={
+            "help": "The layer indexes to transform, is this argument is specified, PEFT will transform only the layers indexes that are specified inside this list. If a single integer is passed, PEFT will transform only the layer at this index. "
+            "This only works when target_modules is a list of str."
+        },
+    )
 
 
 class MLP(nn.Module):
     def __init__(
             self,
             in_feats,
-            out_hidden,
             n_layers,
             n_hidden,
             activation,
@@ -252,14 +258,13 @@ class MLP(nn.Module):
         super().__init__()
         self.n_layers = n_layers
         self.n_hidden = n_hidden
-        self.out_hidden = out_hidden
 
         self.linears = nn.ModuleList()
         self.norms = nn.ModuleList()
 
         for i in range(n_layers):
             in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden if i < n_layers - 1 else out_hidden
+            out_hidden = n_hidden if i < n_layers - 1 else in_feats
 
             self.linears.append(nn.Linear(in_hidden, out_hidden))
 
@@ -283,19 +288,15 @@ class MLP(nn.Module):
             h = F.relu(self.norms[i](self.linears[i](h)))
             h = self.dropout(h)
 
-        return self.linears[-1](h)
+        return self.linears[-1](h), feat
 
 
 class Classifier(nn.Module):
-    def __init__(self, model, in_feats, n_labels, freeze_classifier=True):
+    def __init__(self, model, in_feats, n_labels):
         super().__init__()
         self.Adapter = model
         hidden_dim = in_feats
         self.classifier = nn.Linear(hidden_dim, n_labels)
-
-        if freeze_classifier:
-            for param in self.classifier.parameters():
-                param.requires_grad = False
 
     def reset_parameters(self):
         self.Adapter.reset_parameters()
@@ -304,7 +305,8 @@ class Classifier(nn.Module):
 
     def forward(self, feat):
         # Extract outputs from the model
-        outputs = self.Adapter(feat)
+        outputs, feat = self.Adapter(feat)
+        outputs = outputs + feat
         logits = self.classifier(outputs)
         return logits
 
@@ -376,11 +378,13 @@ def set_peft_config(modeling_args):
     if modeling_args.model_name_or_path in {"facebook/opt-1.3b", "facebook/opt-2.7b", "facebook/opt-6.7b"}:
         config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj"],
                   'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout,
+                  'layers_to_transform': modeling_args.lora_layers_to_transform}
     else:
         config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
                   'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout,
+                  'layers_to_transform': modeling_args.lora_layers_to_transform}
     peft_config = get_peft_config(config)
     return peft_config
 
@@ -524,7 +528,8 @@ def main():
     elif model_args.training_objective == 'Adapter':
 
         adapter = torch.load(model_args.filename)
-        adapter.classifier.reset_parameters()
+        for param in adapter.parameters():
+            param.requires_grad = False
         model = AdapterClassifier(
             peft_encoder, adapter=adapter,
             dropout=model_args.drop_out,
