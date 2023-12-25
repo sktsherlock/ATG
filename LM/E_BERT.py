@@ -516,6 +516,7 @@ def main():
     elif model_args.training_objective == 'Adapter':
 
         adapter = torch.load(model_args.filename)
+        adapter.classifier.reset_parameters()
         model = AdapterClassifier(
             peft_encoder, adapter=adapter,
             dropout=model_args.drop_out,
