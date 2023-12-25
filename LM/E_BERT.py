@@ -31,7 +31,7 @@ from transformers import (
     set_seed,
 )
 
-from Task import CLSClassifier, MEANClassifier, AdapterClassifier
+from Task import CLSClassifier, MEANClassifier, AdapterClassifier, ResAdapterClassifier
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
 
@@ -204,6 +204,10 @@ class ModelArguments:
         default=0.2,
         metadata={"help": "The drop out ratio"}
     )
+    scale: float = field(
+        default=1.0,
+        metadata={"help": "The scale to trade off the LLM outputs and GraphTuning outputs"}
+    )
     label_smoothing: float = field(
         default=0.1,
         metadata={"help": "The label smoothing factor to use"}
@@ -235,46 +239,27 @@ class ModelArguments:
     )
 
 
-class Classifier(nn.Module):
-    def __init__(self, model, in_feats, n_labels):
-        super().__init__()
-        self.Adapter = model
-        hidden_dim = in_feats
-        self.classifier = nn.Linear(hidden_dim, n_labels)
-
-    def reset_parameters(self):
-        self.Adapter.reset_parameters()
-
-        self.classifier.reset_parameters()
-
-    def forward(self, feat):
-        # Extract outputs from the model
-        outputs, feat = self.Adapter(feat)
-        outputs = outputs + feat
-        logits = self.classifier(outputs)
-        return logits
-
-
-
 class MLP(nn.Module):
     def __init__(
             self,
             in_feats,
+            out_hidden,
             n_layers,
             n_hidden,
             activation,
-            dropout=0.5,
+            dropout=0.0,
     ):
         super().__init__()
         self.n_layers = n_layers
         self.n_hidden = n_hidden
+        self.out_hidden = out_hidden
 
         self.linears = nn.ModuleList()
         self.norms = nn.ModuleList()
 
         for i in range(n_layers):
             in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden if i < n_layers - 1 else in_feats
+            out_hidden = n_hidden if i < n_layers - 1 else out_hidden
 
             self.linears.append(nn.Linear(in_hidden, out_hidden))
 
@@ -298,7 +283,30 @@ class MLP(nn.Module):
             h = F.relu(self.norms[i](self.linears[i](h)))
             h = self.dropout(h)
 
-        return self.linears[-1](h), feat
+        return self.linears[-1](h)
+
+
+class Classifier(nn.Module):
+    def __init__(self, model, in_feats, n_labels, freeze_classifier=True):
+        super().__init__()
+        self.Adapter = model
+        hidden_dim = in_feats
+        self.classifier = nn.Linear(hidden_dim, n_labels)
+
+        if freeze_classifier:
+            for param in self.classifier.parameters():
+                param.requires_grad = False
+
+    def reset_parameters(self):
+        self.Adapter.reset_parameters()
+
+        self.classifier.reset_parameters()
+
+    def forward(self, feat):
+        # Extract outputs from the model
+        outputs = self.Adapter(feat)
+        logits = self.classifier(outputs)
+        return logits
 
 
 def get_label_list(raw_dataset, split="train") -> List[int]:
@@ -521,6 +529,17 @@ def main():
             peft_encoder, adapter=adapter,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
+        )
+    elif model_args.training_objective == 'ResAdapter':
+
+        adapter = torch.load(model_args.filename)
+        GraphTuner = Classifier(adapter.Adapter, adapter.Adapter.out_hidden, num_labels, freeze_classifier=False)
+
+        model = ResAdapterClassifier(
+            peft_encoder, graphTuner=GraphTuner, n_labels=num_labels,
+            dropout=model_args.drop_out,
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
+            scale=model_args.scale
         )
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
