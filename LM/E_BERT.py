@@ -657,7 +657,7 @@ def main():
     )
 
 
-    if training_args.do_eval and model_args.training_objective == 'Adapter':
+    if training_args.do_eval (model_args.training_objective == 'Adapter' or model_args.training_objective == 'ResAdapter'):
         logger.info("*** First Evaluate ***")
         metrics = trainer.evaluate(eval_dataset=eval_dataset)
         max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
