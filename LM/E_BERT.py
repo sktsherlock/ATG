@@ -241,13 +241,6 @@ class ModelArguments:
             "For example, ['q', 'v'] or '.*decoder.*(SelfAttention|EncDecAttention).*(q|v)$' "
         },
     )
-    lora_layers_to_transform: Optional[Union[List[int], int]] = field(
-        default=None,
-        metadata={
-            "help": "The layer indexes to transform, is this argument is specified, PEFT will transform only the layers indexes that are specified inside this list. If a single integer is passed, PEFT will transform only the layer at this index. "
-            "This only works when target_modules is a list of str."
-        },
-    )
 
 
 class MLP(nn.Module):
@@ -382,13 +375,11 @@ def set_peft_config(modeling_args):
     if modeling_args.model_name_or_path in {"facebook/opt-1.3b", "facebook/opt-2.7b", "facebook/opt-6.7b"}:
         config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj"],
                   'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout,
-                  'layers_to_transform': modeling_args.lora_layers_to_transform}
+                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
     else:
         config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
                   'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout,
-                  'layers_to_transform': modeling_args.lora_layers_to_transform}
+                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
     peft_config = get_peft_config(config)
     return peft_config
 
