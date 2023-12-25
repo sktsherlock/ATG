@@ -263,8 +263,7 @@ class Classifier(nn.Module):
 
     def forward(self, feat):
         # Extract outputs from the model
-        outputs, feat = self.Adapter(feat)
-        outputs = outputs + feat
+        outputs = self.Adapter(feat)
         logits = self.classifier(outputs)
         return logits
 
