@@ -480,7 +480,7 @@ def main():
     GraphLearner = MLP(in_features, out_hidden=args.n_hidden, n_layers=args.n_layers, n_hidden=args.n_hidden, activation=F.relu,
                        dropout=args.dropout).to(device)
 
-    student_model = Classifier(GraphLearner, in_feats=in_features, n_labels=n_classes).to(device)
+    student_model = Classifier(GraphLearner, in_feats=args.n_hidden, n_labels=n_classes).to(device)
 
     GraphTeacher = RevGAT(feat.shape[1], args.teacher_n_hidden, args.teacher_n_hidden, args.teacher_layers, args.teacher_n_heads,
                            F.relu, dropout=0.5, attn_drop=0,
