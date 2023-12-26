@@ -283,8 +283,6 @@ class MLP(nn.Module):
     def forward(self, feat):
         h = feat
         h = self.input_drop(h)
-        noise = th.randn_like(h)
-        h = h + noise
 
         for i in range(self.n_layers - 1):
             h = F.relu(self.norms[i](self.linears[i](h)))
