@@ -393,7 +393,7 @@ def set_peft_config(modeling_args):
         """
 
         config = {'peft_type': modeling_args.peft_type,
-                  'encoder_reparameterization_type ': "MLP", 'num_virtual_tokens': 20,
+                  'encoder_reparameterization_type': "MLP", 'num_virtual_tokens': 20,
                   'num_transformer_submodules': 1}
     else:
         config = None
