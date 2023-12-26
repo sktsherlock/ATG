@@ -250,6 +250,7 @@ class MLP(nn.Module):
             n_hidden,
             activation,
             dropout=0.0,
+            input_drop=0.0,
     ):
         super().__init__()
         self.n_layers = n_layers
@@ -269,6 +270,7 @@ class MLP(nn.Module):
 
         self.activation = activation
         self.dropout = nn.Dropout(dropout)
+        self.input_drop = nn.Dropout(input_drop)
 
     def reset_parameters(self):
         for linear in self.linears:
@@ -279,6 +281,7 @@ class MLP(nn.Module):
 
     def forward(self, feat):
         h = feat
+        h = self.input_drop(h)
 
         for i in range(self.n_layers - 1):
             h = F.relu(self.norms[i](self.linears[i](h)))
