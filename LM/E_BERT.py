@@ -42,7 +42,6 @@ require_version("datasets>=1.8.0", "To fix: pip install -r examples/pytorch/text
 logger = logging.getLogger(__name__)
 
 
-
 @dataclass
 class DataTrainingArguments:
     """
@@ -146,14 +145,14 @@ class DataTrainingArguments:
     metric_name: Optional[str] = field(default=None, metadata={"help": "The metric to use for evaluation."})
 
 
-
 @dataclass
 class ModelArguments:
     """
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
     """
     model_name_or_path: str = field(
-        default='prajjwal1/bert-tiny', metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        default='prajjwal1/bert-tiny',
+        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
@@ -238,7 +237,7 @@ class ModelArguments:
         default=None,
         metadata={
             "help": "List of module names or regex expression of the module names to replace with Lora."
-            "For example, ['q', 'v'] or '.*decoder.*(SelfAttention|EncDecAttention).*(q|v)$' "
+                    "For example, ['q', 'v'] or '.*decoder.*(SelfAttention|EncDecAttention).*(q|v)$' "
         },
     )
 
@@ -370,16 +369,32 @@ def print_trainable_parameters(model):
     )
 
 
-
 def set_peft_config(modeling_args):
-    if modeling_args.model_name_or_path in {"facebook/opt-1.3b", "facebook/opt-2.7b", "facebook/opt-6.7b"}:
-        config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj"],
-                  'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+    if modeling_args.peft_type in {"LORA"}:
+        if modeling_args.model_name_or_path in {"facebook/opt-1.3b", "facebook/opt-2.7b", "facebook/opt-6.7b"}:
+            config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj"],
+                      'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+                      'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+        else:
+            config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
+                      'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+                      'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+    elif modeling_args.peft_type in {"P_TUNING"}:
+        """
+        num_virtual_tokens：虚拟token的数量，换句话说就是提示（prompt）。
+        num_virtual_tokens (`int`): The number of virtual tokens to use.
+        token_dim (`int`): The hidden embedding dimension of the base transformer model.
+        num_transformer_submodules (`int`): The number of transformer submodules in the base transformer model.
+        num_attention_heads (`int`): The number of attention heads in the base transformer model.
+        num_layers (`int`): The number of layers in the base transformer model.
+        """
+
+        config = {'peft_type': modeling_args.peft_type,
+                  'encoder_reparameterization_type ': "MLP", 'num_virtual_tokens': 20,
+                  'num_transformer_submodules': 1}
     else:
-        config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
-                  'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+        config = None
+        raise Exception
     peft_config = get_peft_config(config)
     return peft_config
 
@@ -429,7 +444,8 @@ def main():
     train_data = raw_data['train']
     nodes_num = len(raw_data['train'])
 
-    train_ids, val_ids, test_ids, labels = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
+    train_ids, val_ids, test_ids, labels = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio,
+                                                         data_name=data_args.data_name)
     # 根据划分的索引创建划分后的数据集
     train_dataset = train_data.select(train_ids)
     val_dataset = train_data.select(val_ids)
@@ -451,8 +467,6 @@ def main():
     if data_args.label_column_name is not None and data_args.label_column_name != "label":
         for key in raw_datasets.keys():
             raw_datasets[key] = raw_datasets[key].rename_column(data_args.label_column_name, "label")
-
-
 
     label_list = get_label_list(raw_datasets, split="train")
     for split in ["validation", "test"]:
@@ -476,7 +490,6 @@ def main():
     if num_labels <= 1:
         raise ValueError("You need more than one label to do classification.")
 
-
     # Load pretrained model and tokenizer
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
@@ -484,7 +497,6 @@ def main():
     config.cls_head_bias = model_args.cls_head_bias
     config.problem_type = "single_label_classification"
     logger.info("setting problem type to single label classification")
-
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
@@ -494,7 +506,6 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
-
 
     # 创建用于分类的模型
     # 加载PLM 作为Encoder
@@ -551,8 +562,6 @@ def main():
     else:
         # We will pad later, dynamically at batch creation, to the max sequence length in each batch
         padding = False
-
-
 
     if data_args.max_seq_length > tokenizer.model_max_length:
         logger.warning(
@@ -694,11 +703,6 @@ def main():
         trainer.save_metrics("test", metrics)
 
     shutil.rmtree(training_args.output_dir)
-
-
-
-
-
 
 
 if __name__ == "__main__":
