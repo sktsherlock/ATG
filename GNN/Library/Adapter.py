@@ -490,7 +490,7 @@ def main():
     if args.save:
         student_save_path = os.path.join(args.save_path, args.data_name, args.teacher_name, feature_prefix)
         os.makedirs(student_save_path, exist_ok=True)
-        student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}_a_{args.alpha}"
+        student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}_a_{args.alpha}_e_{args.n_epochs}"
         filename = os.path.join(student_save_path, f"GraphAdapter_{student_file_prefix}.pkl")
     # First stage, Teacher model pretraining
     # 处理teacher_model 相关的路径文件名
