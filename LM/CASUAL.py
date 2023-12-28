@@ -91,7 +91,7 @@ def main():
         torch_dtype=torch.bfloat16,
         token=access_token,
         trust_remote_code=True,
-        device=local_rank
+        device_map="auto",
     )
     print('MP SIZE:', world_size)
     if args.speed:
