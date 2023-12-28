@@ -85,7 +85,13 @@ def main():
         device_map="auto",
     )
 
-    Demonstration = """
+
+    Demonstration = """Task Arithmetic in the Tangent Space: Improved Editing of Pre-Trained Models. Task arithmetic has recently emerged as a cost-effective and scalable approach to edit pre-trained models directly in weight space: By adding the fine-tuned weights of different tasks, the model's performance can be improved on these tasks, while negating them leads to task forgetting. Yet, our understanding of the effectiveness of task arithmetic and its underlying principles remains limited. We present a comprehensive study of task arithmetic in vision-language models and show that weight disentanglement is the crucial factor that makes it effective. This property arises during pre-training and manifests when distinct directions in weight space govern separate, localized regions in function space associated with the tasks. Notably, we show that fine-tuning models in their tangent space by linearizing them amplifies weight disentanglement. This leads to substantial performance improvements across multiple task arithmetic benchmarks and diverse models. Building on these findings, we provide theoretical and empirical analyses of the neural tangent kernel (NTK) of these models and establish a compelling link between task arithmetic and the spatial localization of the NTK eigenfunctions. Overall, our work uncovers novel insights into the fundamental mechanisms of task arithmetic and offers a more reliable and effective approach to edit pre-trained models through the NTK linearization.
+Summarise the keywords from the above text.
+Keywords:
+model editing, transfer learning, neural tangent kernel, vision-language pre-training, deep learning science."""
+
+    Five_Demonstration = """
 The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
 Summarise the keywords from the above text.
 Keywords:
@@ -112,13 +118,17 @@ Keywords:
 model editing, transfer learning, neural tangent kernel, vision-language pre-training, deep learning science.
 """
     # Summary
-    prompt = """
-Summarise the keywords from the above text.
+    prompt = """Summarise the keywords from the above text.
 Keywords:
 """
 
-    def add_prompt(example, column_name='TA'):
-        example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{prompt}"
+    def add_prompt(example, column_name='TA', num=1):
+        if num == 5:
+            example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{prompt}"
+        elif num == 1:
+            example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{prompt}"
+        else:
+            example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{prompt}"
         return example
 
     prompt_dataset = dataset.map(add_prompt)
@@ -152,7 +162,7 @@ Keywords:
                          repetition_penalty=2.5,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
                          return_full_text=False)):
-        generated_text = out[0]['generated_text'] if args.task_name is "text-generation" else out[0]['summary_text']
+        generated_text = out[0]['generated_text'] if args.task_name == "text-generation" else out[0]['summary_text']
         generated_text_list.append(generated_text)
 
     df = pd.DataFrame({'Keywords': generated_text_list})
