@@ -10,6 +10,7 @@ from transformers.pipelines.pt_utils import KeyDataset
 from tqdm import tqdm
 import csv
 import pandas as pd
+import deepspeed
 
 
 # Casual LLM for extracting the keywords from the raw text file
@@ -33,9 +34,12 @@ def main():
                         help='Path to the NPY File')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
 
-
     # 加载token
     access_token = "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"
+
+    local_rank = int(os.getenv('LOCAL_RANK', '0'))
+    world_size = int(os.getenv('WORLD_SIZE', '1'))
+
     # 解析命令行参数
     args = parser.parse_args()
     model_name = args.model_name
@@ -85,6 +89,10 @@ def main():
         device_map="auto",
     )
 
+    pipe.model = deepspeed.init_inference(pipe.model,
+                                          mp_size=world_size,
+                                          dtype=torch.float,
+                                          replace_with_kernel_inject=True)
 
     Demonstration = """Task Arithmetic in the Tangent Space: Improved Editing of Pre-Trained Models. Task arithmetic has recently emerged as a cost-effective and scalable approach to edit pre-trained models directly in weight space: By adding the fine-tuned weights of different tasks, the model's performance can be improved on these tasks, while negating them leads to task forgetting. Yet, our understanding of the effectiveness of task arithmetic and its underlying principles remains limited. We present a comprehensive study of task arithmetic in vision-language models and show that weight disentanglement is the crucial factor that makes it effective. This property arises during pre-training and manifests when distinct directions in weight space govern separate, localized regions in function space associated with the tasks. Notably, we show that fine-tuning models in their tangent space by linearizing them amplifies weight disentanglement. This leads to substantial performance improvements across multiple task arithmetic benchmarks and diverse models. Building on these findings, we provide theoretical and empirical analyses of the neural tangent kernel (NTK) of these models and establish a compelling link between task arithmetic and the spatial localization of the NTK eigenfunctions. Overall, our work uncovers novel insights into the fundamental mechanisms of task arithmetic and offers a more reliable and effective approach to edit pre-trained models through the NTK linearization.
 Summarise the keywords from the above text.
@@ -139,8 +147,6 @@ Keywords:
 
     # 打开CSV文件并创建写入器
     generated_text_list = []  # 创建一个列表用于存储生成的文本
-
-
 
     # for idx in tqdm(range(len(key_dataset))):
     #     data = key_dataset[idx]
