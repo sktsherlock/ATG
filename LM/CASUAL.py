@@ -140,7 +140,7 @@ Keywords:
         elif num == 1:
             example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{prompt}"
         else:
-            example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{prompt}"
+            example[f"{column_name}"] = f"{example[f'{column_name}']}\n{prompt}"
         return example
 
     prompt_dataset = dataset.map(add_prompt)
