@@ -80,21 +80,18 @@ def main():
 
 
     # Summary
-    prompt = """Summarise the keywords from the above text. For example: Neural Radiance Field, One-shot Talking Face Generation.
-                Keywords:
-            """
+    prompt = """ Summarise the keywords from the above text. For example: Neural Radiance Field, One-shot Talking Face Generation.\n\n Keywords: """
 
     def add_prompt(example, column_name='text'):
         example[f"{column_name}"] = f"{example[f'{column_name}']}\n\n{prompt}"
         return example
 
-    print(dataset)
     prompt_dataset = dataset.map(add_prompt)
-    print(prompt_dataset['train']['text'])
 
     for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "text"), do_sample=True, max_new_tokens=20,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
         print(out)
+
 
 
 if __name__ == "__main__":
