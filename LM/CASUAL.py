@@ -36,7 +36,7 @@ def main():
     parser.add_argument('--max_new_tokens', type=int, default=20, help='Seed')
     parser.add_argument('--num', type=int, default=1, help='Few shot')
     parser.add_argument('--speed', type=bool, default=True)
-    parser.add_argument('--prompt', type=str, default='Summary', help='Prefix name for the  NPY file')
+    parser.add_argument('--prompt', type=str, default='keywords', help='Prefix name for the  NPY file')
 
     # 加载token
     access_token = "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"
