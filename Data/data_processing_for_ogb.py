@@ -58,14 +58,14 @@ def main(raw_url, data_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_root', type=str, help='Path to the data file', required=True)
+    parser.add_argument('--data_root', default='/dataintent/local/user/v-haoyan1/OGB/', type=str, help='Path to the data file')
     args = parser.parse_args()
 
     if not os.path.exists(f'./ogb'):
         os.makedirs(f'./ogb')
 
     data_root = args.data_root
-    output_csv_path = f'./ogb/arxiv.csv'
+    output_csv_path = f'/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv'
     raw_text_url = "https://snap.stanford.edu/ogb/data/misc/ogbn_arxiv/titleabs.tsv.gz"
 
     dataset = DglNodePropPredDataset('ogbn-arxiv', root=data_root)
