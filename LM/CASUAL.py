@@ -28,7 +28,6 @@ def main():
                         help='Name or path of the Huggingface model')
     parser.add_argument('--task_name', type=str, default='text-generation',
                         help='Name or path of the Huggingface model')
-    parser.add_argument('--local_rank', type=int, default=-1, help='For distributed training: local_rank')
     parser.add_argument('--tokenizer_name', type=str, default=None)
     parser.add_argument('--name', type=str, default='Arxiv', help='Prefix name for the  NPY file')
     parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/',
