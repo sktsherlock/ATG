@@ -26,8 +26,8 @@ def main():
     parser.add_argument('--model_name', type=str, default='facebook/opt-2.7b',
                         help='Name or path of the Huggingface model')
     parser.add_argument('--tokenizer_name', type=str, default=None)
-    parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
-    parser.add_argument('--path', type=str, default='./', help='Path to the NPY File')
+    parser.add_argument('--name', type=str, default='Arxiv', help='Prefix name for the  NPY file')
+    parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/', help='Path to the NPY File')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
@@ -42,17 +42,13 @@ def main():
 
     tokenizer_name = args.tokenizer_name
 
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    base_dir = os.path.dirname(root_dir.rstrip('/'))
-    Text_path = os.path.join(base_dir, args.path)
-    cache_path = f"{Text_path}cache/"
+    Text_path = args.path
 
     if not os.path.exists(Text_path):
         os.makedirs(Text_path)
-    if not os.path.exists(cache_path):
-        os.makedirs(cache_path)
 
-    output_file = Text_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + ".csv"
+
+    output_file = Text_path + '_' + model_name.split('/')[-1].replace("-", "_") + ".csv"
     print(output_file)
 
     # Set seed before initializing model.
@@ -140,6 +136,7 @@ Keywords:
     generated_text_list = []  # 创建一个列表用于存储生成的文本
 
     for t in tqdm(range(len(KeyDataset(prompt_dataset['train'], "TA")))):
+        print(t)
         inputs = tokenizer(t, return_tensors="pt").to("cuda")
         generated_ids = model_8bit.generate(**inputs)
         out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, do_sample=True, max_new_tokens=20,
