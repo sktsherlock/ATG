@@ -84,16 +84,17 @@ Keywords:
 in-context learning, mechanistic interpretability, language models, induction heads.
 """
     # Summary
-    prompt = """Summarise the keywords from the above text.\nKeywords:
+    prompt = """Summarise the keywords from the above text.
+Keywords:
 """
 
-    def add_prompt(example, column_name='abstract'):
+    def add_prompt(example, column_name='TA'):
         example[f"{column_name}"] = f"{Demonstration}\n\n{example[f'{column_name}']}\n\n{prompt}"
         return example
 
     prompt_dataset = dataset.map(add_prompt)
 
-    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "abstract"), do_sample=True, max_new_tokens=20,
+    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
         print(out)
 
