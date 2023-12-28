@@ -7,6 +7,7 @@ import os
 from transformers.pipelines.pt_utils import KeyDataset
 from tqdm import tqdm
 import csv
+import pandas as pd
 # Casual LLM for extracting the keywords from the raw text file
 # facebook/opt-66b; mosaicml/mpt-30b-instruct; mosaicml/mpt-30b ; meta-llama/Llama-2-7b-hf;  meta-llama/Llama-2-70b-hf  ; tiiuae/falcon-40b-instruct ;
 # Summnarization: facebook/bart-large-cnn;
@@ -123,17 +124,17 @@ Keywords:
     #     print(out)
 
     # 打开CSV文件并创建写入器
-    with open(output_file, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
+    generated_text_list = []  # 创建一个列表用于存储生成的文本
 
-        # 写入CSV文件的表头
-        writer.writerow(['LLM_Keywords'])
 
-        # 生成文本并写入CSV文件
-        for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2.5,
-                             top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
-            generated_text = out[0]['generated_text']
-            writer.writerow([generated_text])
+    # 生成文本并写入CSV文件
+    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2.5,
+                         top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
+        generated_text = out[0]['generated_text']
+        generated_text_list.append(generated_text)
+
+    df = pd.DataFrame({'Keywords': generated_text_list})
+    df.to_csv(output_file, index=False)
 
     print("CSV file has been generated successfully.")
 
