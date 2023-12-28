@@ -138,9 +138,8 @@ Keywords:
         inputs = tokenizer(data, return_tensors="pt").to("cuda")
         generated_ids = model_8bit.generate(**inputs, do_sample=True, max_new_tokens=20,
                                             use_cache=True, repetition_penalty=2.5,
-                                            top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
-                                            return_full_text=False)
-        out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+                                            top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id)
+        out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, return_full_text=False)
         print(out)
 
         generated_text = out[0]
