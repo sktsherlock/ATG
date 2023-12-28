@@ -90,9 +90,9 @@ def main():
 
     print(dataset)
     prompt_dataset = dataset.map(add_prompt)
-    print(prompt_dataset)
+    print(prompt_dataset['train']['text'])
 
-    for out in tqdm(pipe(KeyDataset(prompt_dataset, "text"), do_sample=True, max_new_tokens=20,
+    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "text"), do_sample=True, max_new_tokens=20,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
         print(out)
 
