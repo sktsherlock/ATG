@@ -88,7 +88,9 @@ def main():
         example[f"{column_name}"] = f"{example[f'{column_name}']}\n\n{prompt}"
         return example
 
+    print(dataset)
     prompt_dataset = dataset.map(add_prompt)
+    print(prompt_dataset)
 
     for out in tqdm(pipe(KeyDataset(prompt_dataset, "text"), do_sample=True, max_new_tokens=20,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
