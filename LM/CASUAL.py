@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/',
                         help='Path to the NPY File')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
+    parser.add_argument('--num', type=int, default=1, help='Few shot')
 
     # 加载token
     access_token = "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"
@@ -131,7 +132,7 @@ model editing, transfer learning, neural tangent kernel, vision-language pre-tra
 Keywords:
 """
 
-    def add_prompt(example, column_name='TA', num=1):
+    def add_prompt(example, column_name='TA', num=args.num):
         if num == 5:
             example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{prompt}"
         elif num == 1:
@@ -182,5 +183,5 @@ Keywords:
 if __name__ == "__main__":
     main()
 """
-python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv
+python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv --
 """
