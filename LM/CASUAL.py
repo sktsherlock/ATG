@@ -8,6 +8,8 @@ from transformers.pipelines.pt_utils import KeyDataset
 from tqdm import tqdm
 import csv
 import pandas as pd
+
+
 # Casual LLM for extracting the keywords from the raw text file
 # facebook/opt-66b; mosaicml/mpt-30b-instruct; mosaicml/mpt-30b ; meta-llama/Llama-2-7b-hf;  meta-llama/Llama-2-70b-hf  ; tiiuae/falcon-40b-instruct ;
 # Summnarization: facebook/bart-large-cnn;
@@ -29,7 +31,8 @@ def main():
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
 
-
+    # 加载token
+    access_token = "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"
     # 解析命令行参数
     args = parser.parse_args()
     model_name = args.model_name
@@ -68,18 +71,22 @@ def main():
 
     # 加载模型和分词器
     if tokenizer_name:
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True, token=access_token)
     else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, token=access_token)
 
-    pipe = pipeline(
-        "text-generation",
-        model=model_name,
-        tokenizer=tokenizer,
-        torch_dtype=torch.bfloat16,
-        trust_remote_code=True,
-        device_map="auto",
-    )
+    model_8bit = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", load_in_8bit=True,
+                                                      token=access_token)
+
+    # pipe = pipeline(
+    #     "text-generation",
+    #     model=model_name,
+    #     tokenizer=tokenizer,
+    #     torch_dtype=torch.bfloat16,
+    #     token=access_token,
+    #     trust_remote_code=True,
+    #     device_map="auto",
+    # )
 
     Demonstration = """
 The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
@@ -126,23 +133,33 @@ Keywords:
     # 打开CSV文件并创建写入器
     generated_text_list = []  # 创建一个列表用于存储生成的文本
 
+    for t in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"))):
+        inputs = tokenizer(t, return_tensors="pt").to("cuda")
+        generated_ids = model_8bit.generate(**inputs)
+        out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, do_sample=True, max_new_tokens=20,
+                                     use_cache=True, repetition_penalty=2.5,
+                                     top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
+                                     return_full_text=False)
 
-    # 生成文本并写入CSV文件
-    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2.5,
-                         top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
         generated_text = out[0]['generated_text']
         generated_text_list.append(generated_text)
 
     df = pd.DataFrame({'Keywords': generated_text_list})
     df.to_csv(output_file, index=False)
 
+    # Pipe 的方式生成并保存文本
+    # for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True,
+    #                      repetition_penalty=2.5,
+    #                      top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
+    #                      return_full_text=False)):
+    #     generated_text = out[0]['generated_text']
+    #     generated_text_list.append(generated_text)
+    #
+    # df = pd.DataFrame({'Keywords': generated_text_list})
+    # df.to_csv(output_file, index=False)
+
     print("CSV file has been generated successfully.")
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
