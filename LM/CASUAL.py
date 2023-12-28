@@ -92,7 +92,7 @@ def main():
         trust_remote_code=True,
         device_map="auto",
     )
-
+    print('MP SIZE:', world_size)
     if args.speed:
         pipe.model = deepspeed.init_inference(pipe.model,
                                               max_tokens=4096,
