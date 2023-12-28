@@ -90,7 +90,6 @@ def main():
     )
 
     pipe.model = deepspeed.init_inference(pipe.model,
-                                          max_tokens=4096,
                                           mp_size=world_size,
                                           dtype=torch.bfloat16,
                                           replace_with_kernel_inject=True)
