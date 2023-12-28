@@ -10,6 +10,7 @@ from tqdm import tqdm
 # facebook/opt-66b; mosaicml/mpt-30b-instruct; mosaicml/mpt-30b ; meta-llama/Llama-2-7b-hf;  meta-llama/Llama-2-70b-hf  ; tiiuae/falcon-40b-instruct ;
 # Summnarization: facebook/bart-large-cnn;
 
+
 def main():
     # 定义命令行参数
     parser = argparse.ArgumentParser(
@@ -21,7 +22,6 @@ def main():
     parser.add_argument('--tokenizer_name', type=str, default=None)
     parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
     parser.add_argument('--path', type=str, default='./', help='Path to the NPY File')
-    parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
@@ -30,12 +30,8 @@ def main():
 
     # 解析命令行参数
     args = parser.parse_args()
-    csv_file = args.csv_file
-    text_column = args.text_column
     model_name = args.model_name
     name = args.name
-    max_length = args.max_length
-    batch_size = args.batch_size
 
     tokenizer_name = args.tokenizer_name
 
@@ -49,7 +45,7 @@ def main():
     if not os.path.exists(cache_path):
         os.makedirs(cache_path)
 
-    output_file = Text_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
+    output_file = Text_path + name + '_' + model_name.split('/')[-1].replace("-", "_")
 
     # Set seed before initializing model.
     set_seed(args.seed)
@@ -99,6 +95,8 @@ def main():
         print(out)
 
 
+if __name__ == "__main__":
+    main()
 
 
 
