@@ -90,11 +90,11 @@ def main():
         device_map="auto",
     )
 
-    pipe.model = deepspeed.init_inference(pipe.model,
-                                          max_tokens=4096,
-                                          mp_size=world_size,
-                                          dtype=torch.float,
-                                          replace_with_kernel_inject=True)
+    # pipe.model = deepspeed.init_inference(pipe.model,
+    #                                       max_tokens=4096,
+    #                                       mp_size=world_size,
+    #                                       dtype=torch.float,
+    #                                       replace_with_kernel_inject=True)
 
     Demonstration = """Task Arithmetic in the Tangent Space: Improved Editing of Pre-Trained Models. Task arithmetic has recently emerged as a cost-effective and scalable approach to edit pre-trained models directly in weight space: By adding the fine-tuned weights of different tasks, the model's performance can be improved on these tasks, while negating them leads to task forgetting. Yet, our understanding of the effectiveness of task arithmetic and its underlying principles remains limited. We present a comprehensive study of task arithmetic in vision-language models and show that weight disentanglement is the crucial factor that makes it effective. This property arises during pre-training and manifests when distinct directions in weight space govern separate, localized regions in function space associated with the tasks. Notably, we show that fine-tuning models in their tangent space by linearizing them amplifies weight disentanglement. This leads to substantial performance improvements across multiple task arithmetic benchmarks and diverse models. Building on these findings, we provide theoretical and empirical analyses of the neural tangent kernel (NTK) of these models and establish a compelling link between task arithmetic and the spatial localization of the NTK eigenfunctions. Overall, our work uncovers novel insights into the fundamental mechanisms of task arithmetic and offers a more reliable and effective approach to edit pre-trained models through the NTK linearization.
 Summarise the keywords from the above text.
