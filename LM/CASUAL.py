@@ -48,7 +48,7 @@ def main():
         os.makedirs(Text_path)
 
 
-    output_file = Text_path + '_' + model_name.split('/')[-1].replace("-", "_") + ".csv"
+    output_file = Text_path + 'Keywords_' + model_name.split('/')[-1].replace("-", "_") + ".csv"
     print(output_file)
 
     # Set seed before initializing model.
@@ -145,6 +145,7 @@ Keywords:
                                      use_cache=True, repetition_penalty=2.5,
                                      top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
                                      return_full_text=False)
+        print(out)
 
         generated_text = out[0]['generated_text']
         generated_text_list.append(generated_text)
