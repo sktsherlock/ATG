@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/',
                         help='Path to the NPY File')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
+    parser.add_argument('--max_new_tokens', type=int, default=20, help='Seed')
     parser.add_argument('--num', type=int, default=1, help='Few shot')
     parser.add_argument('--speed', type=bool, default=True)
     parser.add_argument('--prompt', type=str, default='Summary', help='Prefix name for the  NPY file')
@@ -181,7 +182,7 @@ Summary:
     # df.to_csv(output_file, index=False)
 
     # Pipe 的方式生成并保存文本
-    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True,
+    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=args.max_new_tokens, use_cache=True,
                          repetition_penalty=2.0,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
                          return_full_text=False)):
