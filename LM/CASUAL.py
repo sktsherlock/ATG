@@ -130,7 +130,7 @@ Keywords:
 model editing, transfer learning, neural tangent kernel, vision-language pre-training, deep learning science.
 """
     # Summary
-    prompt = """Summarise the above keywords that are beneficial for text classification tasks.
+    prompt = """Summarise the keywords from the above text.
 Keywords:
 """
 
