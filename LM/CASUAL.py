@@ -35,6 +35,7 @@ def main():
     parser.add_argument('--seed', type=int, default=42, help='Seed')
     parser.add_argument('--num', type=int, default=1, help='Few shot')
     parser.add_argument('--speed', type=bool, default=True)
+    parser.add_argument('--prompt', type=str, default='Summary', help='Prefix name for the  NPY file')
 
     # 加载token
     access_token = "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"
@@ -130,20 +131,32 @@ Keywords:
 model editing, transfer learning, neural tangent kernel, vision-language pre-training, deep learning science.
 """
     # Summary
-    prompt = """Summarise the keywords from the above text.
+    Keywords_prompt = """Summarise the keywords from the above text.
 Keywords:
 """
 
-    def add_prompt(example, column_name='TA', num=args.num):
+    Summary_prompt = """Please summarise the above description from a paper on the arxiv CS field.
+Summary:
+"""
+
+    def add_keywords_prompt(example, column_name='TA', num=args.num):
         if num == 5:
-            example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{prompt}"
+            example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
         elif num == 1:
-            example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{prompt}"
+            example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
         else:
-            example[f"{column_name}"] = f"{example[f'{column_name}']}\n{prompt}"
+            example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Keywords_prompt}"
         return example
 
-    prompt_dataset = dataset.map(add_prompt)
+
+    def add_summary_prompt(example, column_name='TA'):
+        example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Summary_prompt}"
+        return example
+
+    if args.prompt == 'keywords':
+        prompt_dataset = dataset.map(add_keywords_prompt)
+    else:
+        prompt_dataset = dataset.map(add_summary_prompt)
 
     # for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2,
     #                      top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
