@@ -25,21 +25,20 @@ def main():
     parser.add_argument('--text_column', type=str, default='text', help='Name of the column containing text data')
     parser.add_argument('--model_name', type=str, default='facebook/opt-2.7b',
                         help='Name or path of the Huggingface model')
+    parser.add_argument('--task_name', type=str, default='text-generation',
+                        help='Name or path of the Huggingface model')
     parser.add_argument('--tokenizer_name', type=str, default=None)
     parser.add_argument('--name', type=str, default='Arxiv', help='Prefix name for the  NPY file')
     parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/',
                         help='Path to the NPY File')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
-    parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
-    parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
-    parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
+
 
     # 加载token
     access_token = "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"
     # 解析命令行参数
     args = parser.parse_args()
     model_name = args.model_name
-    name = args.name
 
     tokenizer_name = args.tokenizer_name
 
@@ -77,7 +76,7 @@ def main():
     #                                                   token=access_token)
 
     pipe = pipeline(
-        "text-generation",
+        args.task_name,
         model=model_name,
         tokenizer=tokenizer,
         torch_dtype=torch.bfloat16,
@@ -131,7 +130,7 @@ Keywords:
     # 打开CSV文件并创建写入器
     generated_text_list = []  # 创建一个列表用于存储生成的文本
 
-    key_dataset = KeyDataset(prompt_dataset['train'], "TA")
+
 
     # for idx in tqdm(range(len(key_dataset))):
     #     data = key_dataset[idx]
@@ -153,7 +152,7 @@ Keywords:
                          repetition_penalty=2.5,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
                          return_full_text=False)):
-        generated_text = out[0]['generated_text']
+        generated_text = out[0]['generated_text'] if args.task_name is "text-generation" else out[0]['summary_text']
         generated_text_list.append(generated_text)
 
     df = pd.DataFrame({'Keywords': generated_text_list})
