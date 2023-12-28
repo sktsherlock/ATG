@@ -32,6 +32,7 @@ def main():
     parser.add_argument('--name', type=str, default='Arxiv', help='Prefix name for the  NPY file')
     parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/',
                         help='Path to the NPY File')
+    parser.add_argument('--local_rank', type=int, help='Seed')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
     parser.add_argument('--max_new_tokens', type=int, default=20, help='Seed')
     parser.add_argument('--num', type=int, default=0, help='Few shot')
@@ -91,6 +92,7 @@ def main():
         token=access_token,
         trust_remote_code=True,
         device_map="auto",
+        device=local_rank,
     )
     print('MP SIZE:', world_size)
     if args.speed:
@@ -198,5 +200,6 @@ Summary:
 if __name__ == "__main__":
     main()
 """
-python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv --model_name meta-llama/Llama-2-7b-hf 
+CUDA_VISIBLE_DEVICES=0,1,2,3 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv --model_name  mosaicml/mpt-7b
+
 """
