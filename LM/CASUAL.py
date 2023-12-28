@@ -34,7 +34,7 @@ def main():
                         help='Path to the NPY File')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
     parser.add_argument('--max_new_tokens', type=int, default=20, help='Seed')
-    parser.add_argument('--num', type=int, default=1, help='Few shot')
+    parser.add_argument('--num', type=int, default=0, help='Few shot')
     parser.add_argument('--speed', type=bool, default=True)
     parser.add_argument('--prompt', type=str, default='keywords', help='Prefix name for the  NPY file')
 
@@ -198,5 +198,5 @@ Summary:
 if __name__ == "__main__":
     main()
 """
-python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv --
+python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv --model_name meta-llama/Llama-2-7b-hf 
 """
