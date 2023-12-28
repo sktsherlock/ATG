@@ -40,7 +40,7 @@ def process_raw_text_df(meta_data, node_ids, categories):
     data['prompt_category'] = data.apply(lambda per_row: 'This paper belongs to the {} sub-category of arXiv Computer Science (cs) field.'.format(per_row['category']), axis=1)
     # Merge title and abstract
     data['TA'] = data.apply(
-        lambda per_row: '{} {}'.format(per_row['title'], per_row['abstract']), axis=1)
+        lambda per_row: '{}. {}'.format(per_row['title'], per_row['abstract']), axis=1)
     return data
 
 
@@ -61,8 +61,6 @@ if __name__ == '__main__':
     parser.add_argument('--data_root', default='/dataintent/local/user/v-haoyan1/OGB/', type=str, help='Path to the data file')
     args = parser.parse_args()
 
-    if not os.path.exists(f'./ogb'):
-        os.makedirs(f'./ogb')
 
     data_root = args.data_root
     output_csv_path = f'/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv'
