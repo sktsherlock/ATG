@@ -262,7 +262,7 @@ def main():
             return TokenClassifierOutput(logits=node_mean_emb)
 
     # 读取CSV文件
-    df = pd.read_csv(os.path.join(base_dir,csv_file))
+    df = pd.read_csv(os.path.join(base_dir, csv_file))
     text_data = df[text_column].tolist()
 
     # 加载模型和分词器

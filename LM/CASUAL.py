@@ -3,6 +3,8 @@ import argparse
 from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM, set_seed
 import torch
 from datasets import load_dataset
+from datasets import Dataset
+from torch.utils.data import DataLoader
 import os
 from transformers.pipelines.pt_utils import KeyDataset
 from tqdm import tqdm
@@ -126,6 +128,10 @@ Keywords:
 
     prompt_dataset = dataset.map(add_prompt)
 
+
+
+
+
     # for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2,
     #                      top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
     #     print(out)
@@ -133,7 +139,7 @@ Keywords:
     # 打开CSV文件并创建写入器
     generated_text_list = []  # 创建一个列表用于存储生成的文本
 
-    for t in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"))):
+    for t in tqdm(range(len(KeyDataset(prompt_dataset['train'], "TA")))):
         inputs = tokenizer(t, return_tensors="pt").to("cuda")
         generated_ids = model_8bit.generate(**inputs)
         out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, do_sample=True, max_new_tokens=20,
@@ -163,3 +169,6 @@ Keywords:
 
 if __name__ == "__main__":
     main()
+"""
+python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv
+"""
