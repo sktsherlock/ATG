@@ -78,7 +78,7 @@ def main():
         device_map="auto",
     )
 
-    Demonstration = """Title: The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Abstract: Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
+    Demonstration = """Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
 Summarise the keywords from the above text.
 Keywords:
 in-context learning, mechanistic interpretability, language models, induction heads.
@@ -87,13 +87,13 @@ in-context learning, mechanistic interpretability, language models, induction he
     prompt = """Summarise the keywords from the above text.\nKeywords:
 """
 
-    def add_prompt(example, column_name='text'):
+    def add_prompt(example, column_name='abstract'):
         example[f"{column_name}"] = f"{Demonstration}\n\n{example[f'{column_name}']}\n\n{prompt}"
         return example
 
     prompt_dataset = dataset.map(add_prompt)
 
-    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "text"), do_sample=True, max_new_tokens=20,
+    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "abstract"), do_sample=True, max_new_tokens=20,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
         print(out)
 
