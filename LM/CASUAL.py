@@ -92,7 +92,6 @@ def main():
         token=access_token,
         trust_remote_code=True,
         device_map="auto",
-        device=local_rank,
     )
     print('MP SIZE:', world_size)
     if args.speed:
