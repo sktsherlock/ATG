@@ -27,7 +27,8 @@ def main():
                         help='Name or path of the Huggingface model')
     parser.add_argument('--tokenizer_name', type=str, default=None)
     parser.add_argument('--name', type=str, default='Arxiv', help='Prefix name for the  NPY file')
-    parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/', help='Path to the NPY File')
+    parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/',
+                        help='Path to the NPY File')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
@@ -46,7 +47,6 @@ def main():
 
     if not os.path.exists(Text_path):
         os.makedirs(Text_path)
-
 
     output_file = Text_path + 'Keywords_' + model_name.split('/')[-1].replace("-", "_") + ".csv"
     print(output_file)
@@ -124,10 +124,6 @@ Keywords:
 
     prompt_dataset = dataset.map(add_prompt)
 
-
-
-
-
     # for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2,
     #                      top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
     #     print(out)
@@ -140,14 +136,14 @@ Keywords:
     for idx in tqdm(range(len(key_dataset))):
         data = key_dataset[idx]
         inputs = tokenizer(data, return_tensors="pt").to("cuda")
-        generated_ids = model_8bit.generate(**inputs)
-        out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, do_sample=True, max_new_tokens=20,
-                                     use_cache=True, repetition_penalty=2.5,
-                                     top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
-                                     return_full_text=False)
+        generated_ids = model_8bit.generate(**inputs, do_sample=True, max_new_tokens=20,
+                                            use_cache=True, repetition_penalty=2.5,
+                                            top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
+                                            return_full_text=False)
+        out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
         print(out)
 
-        generated_text = out[0]['generated_text']
+        generated_text = out[0]
         generated_text_list.append(generated_text)
 
     df = pd.DataFrame({'Keywords': generated_text_list})
