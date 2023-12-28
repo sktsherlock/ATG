@@ -135,9 +135,11 @@ Keywords:
     # 打开CSV文件并创建写入器
     generated_text_list = []  # 创建一个列表用于存储生成的文本
 
-    for t in tqdm(range(len(KeyDataset(prompt_dataset['train'], "TA")))):
-        print(t)
-        inputs = tokenizer(t, return_tensors="pt").to("cuda")
+    key_dataset = KeyDataset(prompt_dataset['train'], "TA")
+
+    for idx in tqdm(range(len(key_dataset))):
+        data = key_dataset[idx]
+        inputs = tokenizer(data, return_tensors="pt").to("cuda")
         generated_ids = model_8bit.generate(**inputs)
         out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, do_sample=True, max_new_tokens=20,
                                      use_cache=True, repetition_penalty=2.5,
