@@ -26,6 +26,8 @@ elif args.config_name == 'meta-llama/Llama-2-7b-hf':
     from Config import LLAMA2_7b as config
 elif args.config_name == 'tiiuae/falcon-40b-instruct':
     from Config import FLACON_40b as config
+elif args.config_name == 'mosaicml/mpt-7b':
+    from Config import MPT_7b as config
 else:
     raise ValueError
 
@@ -212,5 +214,5 @@ print("CSV file has been generated successfully.")
 """
 CUDA_VISIBLE_DEVICES=1 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  mosaicml/mpt-30b-instruct --num 0
 CUDA_VISIBLE_DEVICES=2 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  mosaicml/mpt-7b --num 0
-CUDA_VISIBLE_DEVICES=3 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  meta-llama/Llama-2-7b-hf --num 0
+CUDA_VISIBLE_DEVICES=5 python CASUAL.py --config_name  mosaicml/mpt-7b 
 """
