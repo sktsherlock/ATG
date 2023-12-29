@@ -56,6 +56,14 @@ def main(raw_url, data_path):
     if args.save:
         arxiv_csv.to_csv(output_csv_path, sep=',', index=False, header=True)
 
+    # 统计每行的单词数
+    arxiv_csv['word_count'] = arxiv_csv[column_name].str.split().str.len()
+    arxiv_csv['text_length'] = arxiv_csv.apply(lambda x: len(x[f'{column_name}'].split(' ')) if x[f'{column_name}'] else 0, axis=1)
+
+    # 输出结果
+    print(arxiv_csv['word_count'].describe())
+    print('***************************')
+    print(arxiv_csv['text_length'].describe())
 
 
 
@@ -65,9 +73,10 @@ if __name__ == '__main__':
     parser.add_argument('--save', default=False, type=bool,
                         help='Whether to save the csv file')
     parser.add_argument('--max_length', type=int, default=1024, help='Few shot')
+    parser.add_argument('--column_name', type=str, default="TA", help='The column for the text')
     args = parser.parse_args()
 
-
+    column_name = args.column_name
     data_root = args.data_root
     output_csv_path = f'/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv'
     raw_text_url = "https://snap.stanford.edu/ogb/data/misc/ogbn_arxiv/titleabs.tsv.gz"
