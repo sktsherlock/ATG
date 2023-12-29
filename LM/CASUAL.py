@@ -167,6 +167,8 @@ Summary:
             example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
         elif num == 3:
             example[f"{column_name}"] = f"{Three_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
+        elif num == 0:
+            example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Keywords_prompt}"
         else:
             raise ValueError
         return example
