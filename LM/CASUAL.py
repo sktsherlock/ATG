@@ -32,7 +32,6 @@ def main():
     parser.add_argument('--name', type=str, default='Arxiv', help='Prefix name for the  NPY file')
     parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/',
                         help='Path to the NPY File')
-    parser.add_argument('--local_rank', type=int, help='Seed')
     parser.add_argument('--seed', type=int, default=42, help='Seed')
     parser.add_argument('--max_new_tokens', type=int, default=20, help='Seed')
     parser.add_argument('--num', type=int, default=0, help='Few shot')
@@ -93,13 +92,14 @@ def main():
         trust_remote_code=True,
         device_map="auto",
     )
-    print('MP SIZE:', world_size)
+
     if args.speed:
         pipe.model = deepspeed.init_inference(pipe.model,
                                               max_tokens=4096,
                                               mp_size=world_size,
-                                              dtype=torch.float,
+                                              dtype=torch.half,
                                               replace_with_kernel_inject=True)
+    pipe.model.eval()
 
     Demonstration = """The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
 Summarise the keywords from the above text.
