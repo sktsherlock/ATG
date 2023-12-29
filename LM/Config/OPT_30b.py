@@ -8,7 +8,7 @@ task_name = 'text-generation'
 seed = 42
 max_new_tokens = 20
 num = 1
-speed = True
+speed = False
 
 csv_file = '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv'
 text_column = 'TA'
