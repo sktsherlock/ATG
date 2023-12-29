@@ -201,7 +201,6 @@ for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], config.text_column), do
                      top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
                      return_full_text=config.return_full_text)):
     generated_text = out[0]['generated_text'] if config.task_name == "text-generation" else out[0]['summary_text']
-    print(generated_text)
     generated_text_list.append(generated_text)
 
 df = pd.DataFrame({'Keywords': generated_text_list})
