@@ -6,7 +6,7 @@ import deepspeed
 from transformers import AutoTokenizer, AutoConfig, AutoModelForCausalLM
 
 
-
+access_token = "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"
 #  model_name = 'bigscience/bloomz-7b1-mt'
 model_name = 'meta-llama/Llama-2-7b-hf'
 
@@ -15,12 +15,13 @@ world_size = int(os.getenv('WORLD_SIZE', '1'))
 local_rank = int(os.getenv('LOCAL_RANK', '0'))
 
 config = AutoConfig.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name, config=config)
+tokenizer = AutoTokenizer.from_pretrained(model_name, config=config, token=access_token)
 #  tokenizer = LlamaTokenizer.from_pretrained(model_name, config=config)
 model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.half,
         low_cpu_mem_usage=True,
+        token=access_token,
 )
 
 ## ds-inference
