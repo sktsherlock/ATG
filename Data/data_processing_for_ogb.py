@@ -37,7 +37,7 @@ def process_raw_text_df(meta_data, node_ids, categories):
     # data['title'] = data.apply(lambda per_row: 'Title: {}'.format(per_row['title']), axis=1)
     # data['title'] = data.apply(lambda per_row: '{}'.format(per_row['title']), axis=1)
     # data['abstract'] = data.apply(lambda per_row: 'Abstract: {}'.format(per_row['abstract']), axis=1)
-    data['abstract'] = data.apply(lambda per_row: '{}'.format(per_row['abstract'][:1024]), axis=1)
+    data['abstract'] = data.apply(lambda x: ' '.join(x['abstract'].split(' ')[:args.max_length]), axis=1)
     print(data['abstract'])
     data['prompt_category'] = data.apply(lambda per_row: 'This paper belongs to the {} sub-category of arXiv Computer Science (cs) field.'.format(per_row['category']), axis=1)
     # Merge title and abstract
@@ -64,11 +64,12 @@ if __name__ == '__main__':
     parser.add_argument('--data_root', default='/dataintent/local/user/v-haoyan1/OGB/', type=str, help='Path to the data file')
     parser.add_argument('--save', default=False, type=bool,
                         help='Whether to save the csv file')
+    parser.add_argument('--max_length', type=int, default=1024, help='Few shot')
     args = parser.parse_args()
 
 
     data_root = args.data_root
-    output_csv_path = f'/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/ogbn_arxiv.csv'
+    output_csv_path = f'/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv'
     raw_text_url = "https://snap.stanford.edu/ogb/data/misc/ogbn_arxiv/titleabs.tsv.gz"
 
     dataset = DglNodePropPredDataset('ogbn-arxiv', root=data_root)
