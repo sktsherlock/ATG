@@ -23,7 +23,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Generate the text from the raw text attribute.')
     parser.add_argument('--csv_file', type=str, help='Path to the CSV file')
-    parser.add_argument('--text_column', type=str, default='text', help='Name of the column containing text data')
+    parser.add_argument('--text_column', type=str, default='TA', help='Name of the column containing text data')
     parser.add_argument('--model_name', type=str, default='facebook/opt-2.7b',
                         help='Name or path of the Huggingface model')
     parser.add_argument('--task_name', type=str, default='text-generation',
@@ -141,7 +141,7 @@ Keywords:
 Summary:
 """
 
-    def add_keywords_prompt(example, column_name='TA', num=args.num):
+    def add_keywords_prompt(example, column_name=args.text_column, num=args.num):
         if num == 5:
             example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
         elif num == 1:
@@ -183,7 +183,7 @@ Summary:
     # df.to_csv(output_file, index=False)
 
     # Pipe 的方式生成并保存文本
-    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=args.max_new_tokens, use_cache=True,
+    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], args.text_column), do_sample=True, max_new_tokens=args.max_new_tokens, use_cache=True,
                          repetition_penalty=2.5,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
                          return_full_text=False)):
