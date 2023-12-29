@@ -37,6 +37,8 @@ def process_raw_text_df(meta_data, node_ids, categories):
     # data['title'] = data.apply(lambda per_row: 'Title: {}'.format(per_row['title']), axis=1)
     # data['title'] = data.apply(lambda per_row: '{}'.format(per_row['title']), axis=1)
     # data['abstract'] = data.apply(lambda per_row: 'Abstract: {}'.format(per_row['abstract']), axis=1)
+    data['abstract'] = data.apply(lambda per_row: '{}'.format(per_row['abstract'][:1024]), axis=1)
+    print(data['abstract'])
     data['prompt_category'] = data.apply(lambda per_row: 'This paper belongs to the {} sub-category of arXiv Computer Science (cs) field.'.format(per_row['category']), axis=1)
     # Merge title and abstract
     data['TA'] = data.apply(
@@ -51,7 +53,8 @@ def main(raw_url, data_path):
     text = pd.read_table(raw_text_path, header=None, skiprows=[0])
     arxiv_csv = process_raw_text_df(text, node_ids, categories)
     # 保存ogb-arxiv文件
-    arxiv_csv.to_csv(output_csv_path, sep=',', index=False, header=True)
+    if args.save:
+        arxiv_csv.to_csv(output_csv_path, sep=',', index=False, header=True)
 
 
 
@@ -59,6 +62,8 @@ def main(raw_url, data_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', default='/dataintent/local/user/v-haoyan1/OGB/', type=str, help='Path to the data file')
+    parser.add_argument('--save', default=False, type=bool,
+                        help='Whether to save the csv file')
     args = parser.parse_args()
 
 
