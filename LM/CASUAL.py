@@ -36,6 +36,7 @@ def main():
     parser.add_argument('--max_new_tokens', type=int, default=20, help='Seed')
     parser.add_argument('--num', type=int, default=0, help='Few shot')
     parser.add_argument('--speed', type=bool, default=True)
+    parser.add_argument('--return_full_text', type=bool, default=False)
     parser.add_argument('--prompt', type=str, default='keywords', help='Prefix name for the  NPY file')
 
     # 加载token
@@ -186,7 +187,7 @@ Summary:
     for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], args.text_column), do_sample=True, max_new_tokens=args.max_new_tokens, use_cache=True,
                          repetition_penalty=2.5,
                          top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
-                         return_full_text=False)):
+                         return_full_text=args.return_full_text)):
         generated_text = out[0]['generated_text'] if args.task_name == "text-generation" else out[0]['summary_text']
         print(generated_text)
         generated_text_list.append(generated_text)
@@ -201,5 +202,6 @@ if __name__ == "__main__":
     main()
 """
 CUDA_VISIBLE_DEVICES=1 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  mosaicml/mpt-30b-instruct --num 0
-CUDA_VISIBLE_DEVICES=1 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  mosaicml/mpt-7b --num 0
+CUDA_VISIBLE_DEVICES=2 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  mosaicml/mpt-7b --num 0
+CUDA_VISIBLE_DEVICES=3 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  meta-llama/Llama-2-7b-hf --num 0
 """
