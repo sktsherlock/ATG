@@ -7,7 +7,7 @@ path = '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Prompt/'
 task_name = 'text-generation'
 seed = 42
 max_new_tokens = 20
-num = 0
+num = 1
 speed = True
 
 csv_file = '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv'
