@@ -11,6 +11,7 @@ from tqdm import tqdm
 import csv
 import pandas as pd
 import deepspeed
+import CASUAL_Config as config
 
 
 # Casual LLM for extracting the keywords from the raw text file
@@ -18,96 +19,75 @@ import deepspeed
 # Summnarization: facebook/bart-large-cnn;
 
 
-def main():
-    # 定义命令行参数
-    parser = argparse.ArgumentParser(
-        description='Generate the text from the raw text attribute.')
-    parser.add_argument('--csv_file', type=str, help='Path to the CSV file')
-    parser.add_argument('--text_column', type=str, default='TA', help='Name of the column containing text data')
-    parser.add_argument('--model_name', type=str, default='facebook/opt-2.7b',
-                        help='Name or path of the Huggingface model')
-    parser.add_argument('--task_name', type=str, default='text-generation',
-                        help='Name or path of the Huggingface model')
-    parser.add_argument('--tokenizer_name', type=str, default=None)
-    parser.add_argument('--name', type=str, default='Arxiv', help='Prefix name for the  NPY file')
-    parser.add_argument('--path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Prompt/',
-                        help='Path to the NPY File')
-    parser.add_argument('--seed', type=int, default=42, help='Seed')
-    parser.add_argument('--max_new_tokens', type=int, default=20, help='Seed')
-    parser.add_argument('--num', type=int, default=0, help='Few shot')
-    parser.add_argument('--speed', type=bool, default=True)
-    parser.add_argument('--return_full_text', type=bool, default=False)
-    parser.add_argument('--prompt', type=str, default='keywords', help='Prefix name for the  NPY file')
 
-    # 加载token
-    access_token = "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"
+# 加载token
+access_token = "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"
 
-    local_rank = int(os.getenv('LOCAL_RANK', '0'))
-    world_size = int(os.getenv('WORLD_SIZE', '1'))
+local_rank = int(os.getenv('LOCAL_RANK', '0'))
+world_size = int(os.getenv('WORLD_SIZE', '1'))
 
-    # 解析命令行参数
-    args = parser.parse_args()
-    model_name = args.model_name
+# 解析命令行参数
+model_name = config.model_name
 
-    tokenizer_name = args.tokenizer_name
+tokenizer_name = config.tokenizer_name
 
-    Text_path = args.path
+Text_path = config.path
 
-    if not os.path.exists(Text_path):
-        os.makedirs(Text_path)
+if not os.path.exists(Text_path):
+    os.makedirs(Text_path)
 
-    output_file = Text_path + 'Keywords_' + model_name.split('/')[-1].replace("-", "_") + f"_{args.num}_shot.csv"
-    print(output_file)
+output_file = Text_path + 'Keywords_' + model_name.split('/')[-1].replace("-", "_") + f"_{config.num}_shot.csv"
+print(output_file)
 
-    # Set seed before initializing model.
-    set_seed(args.seed)
+# Set seed before initializing model.
+set_seed(config.seed)
 
-    # 加载数据集
-    # Loading a dataset from your local files. CSV training and evaluation files are needed.
-    csv_file = args.csv_file
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    base_dir = os.path.dirname(root_dir.rstrip('/'))
+# 加载数据集
+# Loading a dataset from your local files. CSV training and evaluation files are needed.
+csv_file = config.csv_file
+root_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.dirname(root_dir.rstrip('/'))
 
-    data_files = os.path.join(base_dir, csv_file)
+data_files = os.path.join(base_dir, csv_file)
 
-    dataset = load_dataset(
-        "csv",
-        data_files=data_files,
-    )
+dataset = load_dataset(
+    "csv",
+    data_files=data_files,
+)
 
-    # 加载模型和分词器
-    if tokenizer_name:
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True, token=access_token)
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, token=access_token)
+# 加载模型和分词器
+if tokenizer_name:
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True, token=access_token)
+else:
+    tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, token=access_token)
 
-    # model_8bit = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", load_in_8bit=True,
-    #                                                   token=access_token)
+# model_8bit = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", load_in_8bit=True,
+#                                                   token=access_token)
 
-    pipe = pipeline(
-        args.task_name,
-        model=model_name,
-        tokenizer=tokenizer,
-        torch_dtype=torch.bfloat16,
-        token=access_token,
-        trust_remote_code=True,
-        device_map="auto",
-    )
+pipe = pipeline(
+    config.task_name,
+    model=model_name,
+    tokenizer=tokenizer,
+    torch_dtype=torch.bfloat16,
+    token=access_token,
+    trust_remote_code=True,
+    device_map="auto",
+)
 
-    if args.speed:
-        pipe.model = deepspeed.init_inference(pipe.model,
-                                              max_tokens=4096,
-                                              mp_size=world_size,
-                                              dtype=torch.half,
-                                              replace_with_kernel_inject=True)
-    pipe.model.eval()
+if config.speed:
+    pipe.model = deepspeed.init_inference(pipe.model,
+                                          max_tokens=4096,
+                                          mp_size=world_size,
+                                          dtype=torch.half,
+                                          replace_with_kernel_inject=True)
+pipe.model.eval()
 
-    Demonstration = """The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
+Demonstration = """The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
 Summarise the keywords from the above text.
 Keywords:
 in-context learning, mechanistic interpretability, language models, induction heads."""
 
-    Three_Demonstration = """
+Three_Demonstration = """
 The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
 Summarise the keywords from the above text.
 Keywords:
@@ -124,7 +104,7 @@ Keywords:
 Neural Radiance Field, One-shot Talking Face Generation.
 """
 
-    Five_Demonstration = """
+Five_Demonstration = """
 The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
 Summarise the keywords from the above text.
 Keywords:
@@ -151,77 +131,75 @@ Keywords:
 model editing, transfer learning, neural tangent kernel, vision-language pre-training, deep learning science.
 """
 
-    # Summary
-    Keywords_prompt = """Summarise the keywords from the above text.
+# Summary
+Keywords_prompt = """Summarise the keywords from the above text.
 Keywords:
 """
 
-    Summary_prompt = """Please summarise the above description from a paper on the arxiv CS field.
+Summary_prompt = """Please summarise the above description from a paper on the arxiv CS field.
 Summary:
 """
 
-    def add_keywords_prompt(example, column_name=args.text_column, num=args.num):
-        if num == 5:
-            example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
-        elif num == 1:
-            example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
-        elif num == 3:
-            example[f"{column_name}"] = f"{Three_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
-        elif num == 0:
-            example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Keywords_prompt}"
-        else:
-            raise ValueError
-        return example
-
-
-    def add_summary_prompt(example, column_name='TA'):
-        example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Summary_prompt}"
-        return example
-
-    if args.prompt == 'keywords':
-        prompt_dataset = dataset.map(add_keywords_prompt)
+def add_keywords_prompt(example, column_name=config.text_column, num=config.num):
+    if num == 5:
+        example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
+    elif num == 1:
+        example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
+    elif num == 3:
+        example[f"{column_name}"] = f"{Three_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
+    elif num == 0:
+        example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Keywords_prompt}"
     else:
-        prompt_dataset = dataset.map(add_summary_prompt)
-
-    # for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2,
-    #                      top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
-    #     print(out)
-
-    # 打开CSV文件并创建写入器
-    generated_text_list = []  # 创建一个列表用于存储生成的文本
-
-    # for idx in tqdm(range(len(key_dataset))):
-    #     data = key_dataset[idx]
-    #     inputs = tokenizer(data, return_tensors="pt").to("cuda")
-    #     generated_ids = model_8bit.generate(**inputs, do_sample=True, max_new_tokens=20,
-    #                                         use_cache=True, repetition_penalty=2.5,
-    #                                         top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id)
-    #     out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, return_full_text=False)
-    #
-    #
-    #     generated_text = out[0]
-    #     generated_text_list.append(generated_text)
-
-    # df = pd.DataFrame({'Keywords': generated_text_list})
-    # df.to_csv(output_file, index=False)
-
-    # Pipe 的方式生成并保存文本
-    for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], args.text_column), do_sample=True, max_new_tokens=args.max_new_tokens, use_cache=True,
-                         repetition_penalty=2.5,
-                         top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
-                         return_full_text=args.return_full_text)):
-        generated_text = out[0]['generated_text'] if args.task_name == "text-generation" else out[0]['summary_text']
-        print(generated_text)
-        generated_text_list.append(generated_text)
-
-    df = pd.DataFrame({'Keywords': generated_text_list})
-    df.to_csv(output_file, index=False)
-
-    print("CSV file has been generated successfully.")
+        raise ValueError
+    return example
 
 
-if __name__ == "__main__":
-    main()
+def add_summary_prompt(example, column_name='TA'):
+    example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Summary_prompt}"
+    return example
+
+if config.prompt == 'keywords':
+    prompt_dataset = dataset.map(add_keywords_prompt)
+else:
+    prompt_dataset = dataset.map(add_summary_prompt)
+
+# for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2,
+#                      top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
+#     print(out)
+
+# 打开CSV文件并创建写入器
+generated_text_list = []  # 创建一个列表用于存储生成的文本
+
+# for idx in tqdm(range(len(key_dataset))):
+#     data = key_dataset[idx]
+#     inputs = tokenizer(data, return_tensors="pt").to("cuda")
+#     generated_ids = model_8bit.generate(**inputs, do_sample=True, max_new_tokens=20,
+#                                         use_cache=True, repetition_penalty=2.5,
+#                                         top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id)
+#     out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, return_full_text=False)
+#
+#
+#     generated_text = out[0]
+#     generated_text_list.append(generated_text)
+
+# df = pd.DataFrame({'Keywords': generated_text_list})
+# df.to_csv(output_file, index=False)
+
+# Pipe 的方式生成并保存文本
+for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], config.text_column), do_sample=True, max_new_tokens=config.max_new_tokens, use_cache=True,
+                     repetition_penalty=2.5,
+                     top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
+                     return_full_text=config.return_full_text)):
+    generated_text = out[0]['generated_text'] if config.task_name == "text-generation" else out[0]['summary_text']
+    print(generated_text)
+    generated_text_list.append(generated_text)
+
+df = pd.DataFrame({'Keywords': generated_text_list})
+df.to_csv(output_file, index=False)
+
+print("CSV file has been generated successfully.")
+
+
 """
 CUDA_VISIBLE_DEVICES=1 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  mosaicml/mpt-30b-instruct --num 0
 CUDA_VISIBLE_DEVICES=2 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  mosaicml/mpt-7b --num 0
