@@ -17,15 +17,15 @@ parser.add_argument('--config_name', type=str, default='meta-llama/Llama-2-7b-hf
 args = parser.parse_args()
 
 if args.config_name == 'facebook/opt-30b':
-    from LM.Config import OPT_30b as config
+    from Config import OPT_30b as config
 elif args.config_name == 'mosaicml/mpt-30b':
-    from LM.Config import MPT_30b as config
+    from Config import MPT_30b as config
 elif args.config_name == 'meta-llama/Llama-2-70b-hf':
-    from LM.Config import LLAMA2_70b as config
+    from Config import LLAMA2_70b as config
 elif args.config_name == 'meta-llama/Llama-2-7b-hf':
-    from LM.Config import LLAMA2_7b as config
+    from Config import LLAMA2_7b as config
 elif args.config_name == 'tiiuae/falcon-40b-instruct':
-    from LM.Config import FLACON_40b as config
+    from Config import FLACON_40b as config
 else:
     raise ValueError
 
