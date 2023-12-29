@@ -56,7 +56,7 @@ def main():
     if not os.path.exists(Text_path):
         os.makedirs(Text_path)
 
-    output_file = Text_path + 'Keywords_' + model_name.split('/')[-1].replace("-", "_") + f"_{args.num}shot.csv"
+    output_file = Text_path + 'Keywords_' + model_name.split('/')[-1].replace("-", "_") + f"_{args.num}_shot.csv"
     print(output_file)
 
     # Set seed before initializing model.
@@ -107,6 +107,23 @@ Summarise the keywords from the above text.
 Keywords:
 in-context learning, mechanistic interpretability, language models, induction heads."""
 
+    Three_Demonstration = """
+The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
+Summarise the keywords from the above text.
+Keywords:
+in-context learning, mechanistic interpretability, language models, induction heads.
+
+LRM: Large Reconstruction Model for Single Image to 3D. We propose the first Large Reconstruction Model (LRM) that predicts the 3D model of an object from a single input image within just 5 seconds. In contrast to many previous methods that are trained on small-scale datasets such as ShapeNet in a category-specific fashion, LRM adopts a highly scalable transformer-based architecture with 500 million learnable parameters to directly predict a neural radiance field (NeRF) from the input image. We train our model in an end-to-end manner on massive multi-view data containing around 1 million objects, including both synthetic renderings from Objaverse and real captures from MVImgNet. This combination of a high-capacity model and large-scale training data empowers our model to be highly generalizable and produce high-quality 3D reconstructions from various testing inputs including real-world in-the-wild captures and images from generative models. Video demos and interactable 3D meshes can be found on this anonymous website: https://scalei3d.github.io/LRM.
+Summarise the keywords from the above text.
+Keywords:
+3D Reconstruction, Large-Scale, Transformers.
+
+Real3D-Portrait: One-shot Realistic 3D Talking Portrait Synthesis. One-shot 3D talking portrait generation aims to reconstruct a 3D avatar from an unseen image, and then animate it with a reference video or audio to generate a talking portrait video. The existing methods fail to simultaneously achieve the goals of accurate 3D avatar reconstruction and stable talking face animation. Besides, while the existing works mainly focus on synthesizing the head part, it is also vital to generate natural torso and background segments to obtain a realistic talking portrait video. To address these limitations, we present Real3D-Potrait, a framework that (1) improves the one-shot 3D reconstruction power with a large image-to-plane model that distills 3D prior knowledge from a 3D face generative model; (2) facilitates accurate motion-conditioned animation with an efficient motion adapter; (3) synthesizes realistic video with natural torso movement and switchable background using a head-torso-background super-resolution model; and (4) supports one-shot audio-driven talking face generation with a generalizable audio-to-motion model. Extensive experiments show that Real3D-Portrait generalizes well to unseen identities and generates more realistic talking portrait videos compared to previous methods. Video samples are available at https://real3dportrait.github.io.
+Summarise the keywords from the above text.
+Keywords:
+Neural Radiance Field, One-shot Talking Face Generation.
+"""
+
     Five_Demonstration = """
 The mechanistic basis of data dependence and abrupt learning in an in-context classification task. Transformer models exhibit in-context learning: the ability to accurately predict the response to a novel query based on illustrative examples in the input sequence, which contrasts with traditional in-weights learning of query-output relationships. What aspects of the training data distribution and architecture favor in-context vs in-weights learning? Recent work has shown that specific distributional properties inherent in language, such as burstiness, large dictionaries and skewed rank-frequency distributions, control the trade-off or simultaneous appearance of these two forms of learning. We first show that these results are recapitulated in a minimal attention-only network trained on a simplified dataset. In-context learning (ICL) is driven by the abrupt emergence of an induction head, which subsequently competes with in-weights learning. By identifying progress measures that precede in-context learning and targeted experiments, we construct a two-parameter model of an induction head which emulates the full data distributional dependencies displayed by the attention-based network. A phenomenological model of induction head formation traces its abrupt emergence to the sequential learning of three nested logits enabled by an intrinsic curriculum. We propose that the sharp transitions in attention-based networks arise due to a specific chain of multi-layer operations necessary to achieve ICL, which is implemented by nested nonlinearities sequentially learned during training.
 Summarise the keywords from the above text.
@@ -133,6 +150,7 @@ Summarise the keywords from the above text.
 Keywords:
 model editing, transfer learning, neural tangent kernel, vision-language pre-training, deep learning science.
 """
+
     # Summary
     Keywords_prompt = """Summarise the keywords from the above text.
 Keywords:
@@ -147,8 +165,10 @@ Summary:
             example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
         elif num == 1:
             example[f"{column_name}"] = f"{Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
+        elif num == 3:
+            example[f"{column_name}"] = f"{Three_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
         else:
-            example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Keywords_prompt}"
+            raise ValueError
         return example
 
 
