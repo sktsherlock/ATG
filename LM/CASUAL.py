@@ -23,8 +23,8 @@ import CASUAL_Config as config
 # 加载token
 access_token = "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"
 
-local_rank = int(os.getenv('LOCAL_RANK', '0'))
 world_size = int(os.getenv('WORLD_SIZE', '1'))
+local_rank = int(os.getenv('LOCAL_RANK', '0'))
 
 # 解析命令行参数
 model_name = config.model_name
@@ -77,7 +77,7 @@ pipe = pipeline(
 if config.speed:
     pipe.model = deepspeed.init_inference(pipe.model,
                                           max_tokens=4096,
-                                          mp_size=world_size,
+                                          tensor_parallel={'tp_size': world_size},
                                           dtype=torch.half,
                                           replace_with_kernel_inject=True)
 pipe.model.eval()
