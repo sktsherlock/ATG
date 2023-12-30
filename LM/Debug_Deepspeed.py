@@ -43,7 +43,7 @@ for _ in range(50):
         **inputs,
         do_sample=True,
         temperature=0.5,
-        max_new_tokens=20,
+        max_new_tokens=300,
     )
     gen_text = tokenizer.decode(gen_tokens[0])
     print(gen_text)
