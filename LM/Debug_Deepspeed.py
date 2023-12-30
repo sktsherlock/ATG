@@ -8,7 +8,7 @@ from transformers import AutoTokenizer, AutoConfig, AutoModelForCausalLM
 
 access_token = "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"
 #  model_name = 'bigscience/bloomz-7b1-mt'
-model_name = 'meta-llama/Llama-2-70b-hf'
+model_name = 'mosaicml/mpt-30b'
 
 
 world_size = int(os.getenv('WORLD_SIZE', '1'))
