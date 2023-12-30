@@ -8,7 +8,7 @@ from transformers import AutoTokenizer, AutoConfig, AutoModelForCausalLM
 
 access_token = "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"
 #  model_name = 'bigscience/bloomz-7b1-mt'
-model_name = 'meta-llama/Llama-2-7b-hf'
+model_name = 'meta-llama/Llama-2-70b-hf'
 
 
 world_size = int(os.getenv('WORLD_SIZE', '1'))
@@ -43,7 +43,7 @@ for _ in range(50):
         **inputs,
         do_sample=True,
         temperature=0.5,
-        max_new_tokens=300,
+        max_new_tokens=20,
     )
     gen_text = tokenizer.decode(gen_tokens[0])
     print(gen_text)
