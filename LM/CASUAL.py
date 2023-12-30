@@ -28,6 +28,8 @@ elif args.config_name == 'tiiuae/falcon-40b-instruct':
     from Config import FLACON_40b as config
 elif args.config_name == 'mosaicml/mpt-7b':
     from Config import MPT_7b as config
+elif args.config_name == 'facebook/opt-6.7b':
+    from Config import OPT_6b as config
 else:
     raise ValueError
 
