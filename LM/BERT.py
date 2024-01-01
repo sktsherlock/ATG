@@ -222,17 +222,23 @@ class ModelArguments:
 
 
 
-def get_label_list(raw_dataset, split="train") -> List[str]:
-    """Get the list of labels from a mutli-label dataset"""
+def get_label_list(raw_dataset, split="train") -> List[int]:
+    """Get the list of labels from a multi-label dataset"""
 
-    if isinstance(raw_dataset[split]["label"][0], list):
-        label_list = [label for sample in raw_dataset[split]["label"] for label in sample]
+    label_column = raw_dataset[split]["label"]
+
+    if isinstance(label_column[0], list):
+        # For multi-label case
+        label_list = [label for sample in label_column for label in sample]
         label_list = list(set(label_list))
+    elif isinstance(label_column[0], int):
+        # For single-label case with int values
+        label_list = list(set(label_column))
     else:
-        label_list = raw_dataset[split].unique("label")
-    # we will treat the label list as a list of string instead of int, consistent with model.config.label2id
-    label_list = [str(label) for label in label_list]
+        raise ValueError("Unsupported label type. Expected list or int.")
+
     return label_list
+
 
 
 def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
@@ -244,6 +250,8 @@ def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
             splitted_idx["valid"],
             splitted_idx["test"],
         )
+        _, labels = data[0]
+        labels = labels[:, 0]
     else:
         np.random.seed(42)
         indices = np.random.permutation(nodes_num)
@@ -257,8 +265,9 @@ def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
         train_idx = torch.tensor(train_idx)
         val_idx = torch.tensor(val_idx)
         test_idx = torch.tensor(test_idx)
+        labels = None
 
-    return train_idx, val_idx, test_idx
+    return train_idx, val_idx, test_idx, labels
 
 
 def print_trainable_parameters(model):
@@ -336,7 +345,7 @@ def main():
     train_data = raw_data['train']
     nodes_num = len(raw_data['train'])
 
-    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
+    train_ids, val_ids, test_ids, labels = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
     # 根据划分的索引创建划分后的数据集
     train_dataset = train_data.select(train_ids)
     val_dataset = train_data.select(val_ids)
@@ -348,7 +357,7 @@ def main():
         "validation": val_dataset,
         "test": test_dataset
     })
-    print(raw_datasets)
+
     if data_args.remove_columns is not None:
         for split in raw_datasets.keys():
             for column in data_args.remove_columns.split(","):
@@ -450,19 +459,6 @@ def main():
         # We will pad later, dynamically at batch creation, to the max sequence length in each batch
         padding = False
 
-    # for training ,we will update the config with label infos,
-    # if do_train is not set, we will use the label infos in the config
-    if training_args.do_train:  # classification, training
-        label_to_id = {v: i for i, v in enumerate(label_list)}
-        # update config with label infos
-        if model.config.label2id != label_to_id:
-            logger.warning(
-                "The label2id key in the model config.json is not equal to the label2id key of this "
-                "run. You can ignore this if you are doing finetuning."
-            )
-        model.config.label2id = label_to_id
-        model.config.id2label = {id: label for label, id in config.label2id.items()}
-
 
     if data_args.max_seq_length > tokenizer.model_max_length:
         logger.warning(
@@ -481,8 +477,7 @@ def main():
                     examples["sentence"][i] += data_args.text_column_delimiter + examples[column][i]
         # Tokenize the texts
         result = tokenizer(examples["sentence"], padding=padding, max_length=max_seq_length, truncation=True)
-        if label_to_id is not None and "label" in examples:
-            result["label"] = [(label_to_id[str(l)] if l != -1 else -1) for l in examples["label"]]
+        result["label"] = examples["label"]
         return result
 
     # Running the preprocessing pipeline on all the datasets

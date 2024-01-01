@@ -8,3 +8,8 @@ CUDA_VISIBLE_DEVICES=1 python BERT.py --model_name_or_path prajjwal1/bert-tiny -
 
  --text_column_name text --label_column_name label --num_train_epochs 5 
 --label_column_name=label --text_column_name=text --warmup_ratio=0.1
+
+## OGBN-Arxiv
+### First step
+1. Title+Keytwords
+2. Title+Abstract
