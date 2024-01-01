@@ -7,7 +7,8 @@ from tqdm import tqdm
 import pandas as pd
 import deepspeed
 import argparse
-
+import warnings
+warnings.filterwarnings("ignore")
 # Casual LLM for extracting the keywords from the raw text file
 # facebook/opt-66b; mosaicml/mpt-30b-instruct; mosaicml/mpt-30b ; meta-llama/Llama-2-7b-hf;  meta-llama/Llama-2-70b-hf  ; tiiuae/falcon-40b-instruct ;
 # Summnarization: facebook/bart-large-cnn;
@@ -32,7 +33,6 @@ elif args.config_name == 'facebook/opt-6.7b':
     from Config import OPT_6b as config
 else:
     raise ValueError
-
 
 # 加载token
 access_token = "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"
@@ -154,6 +154,7 @@ Summary_prompt = """Please summarise the above description from a paper on the a
 Summary:
 """
 
+
 def add_keywords_prompt(example, column_name=config.text_column, num=config.num):
     if num == 5:
         example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
@@ -171,6 +172,7 @@ def add_keywords_prompt(example, column_name=config.text_column, num=config.num)
 def add_summary_prompt(example, column_name='TA'):
     example[f"{column_name}"] = f"{example[f'{column_name}']}\n{Summary_prompt}"
     return example
+
 
 if config.prompt == 'keywords':
     prompt_dataset = dataset.map(add_keywords_prompt)
@@ -199,19 +201,39 @@ generated_text_list = []  # 创建一个列表用于存储生成的文本
 # df = pd.DataFrame({'Keywords': generated_text_list})
 # df.to_csv(output_file, index=False)
 
+
+# for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], config.text_column), do_sample=True,
+#                      max_new_tokens=config.max_new_tokens, use_cache=True,
+#                      repetition_penalty=2.5,
+#                      top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
+#                      return_full_text=config.return_full_text)):
+#     generated_text = out[0]['generated_text'] if config.task_name == "text-generation" else out[0]['summary_text']
+#     generated_text_list.append(generated_text)
+
+batch_size = 1000  # 每次生成的批次大小
+
 # Pipe 的方式生成并保存文本
-for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], config.text_column), do_sample=True, max_new_tokens=config.max_new_tokens, use_cache=True,
-                     repetition_penalty=2.5,
-                     top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
-                     return_full_text=config.return_full_text)):
+for i, out in enumerate(tqdm(pipe(KeyDataset(prompt_dataset['train'], config.text_column), do_sample=True,
+                                  max_new_tokens=config.max_new_tokens, use_cache=True,
+                                  repetition_penalty=2.5,
+                                  top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
+                                  return_full_text=config.return_full_text))):
     generated_text = out[0]['generated_text'] if config.task_name == "text-generation" else out[0]['summary_text']
     generated_text_list.append(generated_text)
 
-df = pd.DataFrame({'Keywords': generated_text_list})
-df.to_csv(output_file, index=False)
+    # 每生成一个批次后，保存到CSV文件
+    if (i + 1) % batch_size == 0:
+        df = pd.DataFrame({'Keywords': generated_text_list})
+        df.to_csv(output_file, mode='a', index=False, header=not i)  # 追加到CSV文件中
+        generated_text_list = []  # 清空列表以存储下一个批次的生成文本
+
+# 生成完成后，将剩余的文本保存到CSV文件
+if generated_text_list:
+    df = pd.DataFrame({'Keywords': generated_text_list})
+    df.to_csv(output_file, mode='a', index=False, header=False)  # 追加到CSV文件中
+
 
 print("CSV file has been generated successfully.")
-
 
 """
 CUDA_VISIBLE_DEVICES=1 python CASUAL.py --csv_file /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv --model_name  mosaicml/mpt-30b-instruct --num 0
