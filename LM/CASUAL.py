@@ -91,7 +91,7 @@ pipe = pipeline(
 
 if config.speed:
     pipe.model = deepspeed.init_inference(pipe.model,
-                                          max_tokens=4096,
+                                          max_out_tokens=4096,
                                           tensor_parallel={'tp_size': world_size},
                                           dtype=torch.half,
                                           replace_with_kernel_inject=True)
