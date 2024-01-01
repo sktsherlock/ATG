@@ -15,6 +15,7 @@ warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config_name', type=str, default='meta-llama/Llama-2-7b-hf', help='Path to the config file')
+parser.add_argument('--num', type=int, default=1, help='The prompt numbers')
 args = parser.parse_args()
 
 if args.config_name == 'facebook/opt-30b':
@@ -50,7 +51,7 @@ Text_path = config.path
 if not os.path.exists(Text_path):
     os.makedirs(Text_path)
 
-output_file = Text_path + 'Keywords_' + model_name.split('/')[-1].replace("-", "_") + f"_{config.num}_shot.csv"
+output_file = Text_path + 'Keywords_' + model_name.split('/')[-1].replace("-", "_") + f"_{args.num}_shot.csv"
 print(output_file)
 
 # Set seed before initializing model.
@@ -155,7 +156,7 @@ Summary:
 """
 
 
-def add_keywords_prompt(example, column_name=config.text_column, num=config.num):
+def add_keywords_prompt(example, column_name=config.text_column, num=args.num):
     if num == 5:
         example[f"{column_name}"] = f"{Five_Demonstration}\n{example[f'{column_name}']}\n{Keywords_prompt}"
     elif num == 1:
