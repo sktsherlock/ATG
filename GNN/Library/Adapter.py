@@ -48,6 +48,22 @@ def evaluate(
     return train_results, val_results, test_results, val_loss, test_loss
 
 
+
+@th.no_grad()
+def get_preds(
+        model, graph, feat, train_idx, val_idx, test_idx):
+    model.eval()
+    with th.no_grad():
+        pred = model(graph, feat)
+    # Get prediction results on train, val, and test
+    train_preds = th.argmax(pred[train_idx], dim=1)
+    val_preds = th.argmax(pred[val_idx], dim=1)
+    test_preds = th.argmax(pred[test_idx], dim=1)
+
+    return train_preds, val_preds, test_preds
+
+
+
 def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx, test_idx, model_path):
     if os.path.exists(model_path):
         print("Model path already exists, directly load it from: {}".format(model_path))
@@ -58,10 +74,13 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
                                                                metric=args.metric,
                                                                label_smoothing=0.1,
                                                                average=args.average)
+        train_preds, val_preds, test_preds = get_preds(teacher_model, graph, feat, train_idx, val_idx, test_idx)
 
         wandb.log({f'Teacher_Best_Train_{args.metric}': train_result, f'Teacher_Best_Val_{args.metric}': val_result,
                    f'Teacher_Best_Test_{args.metric}': test_result})
         print(f"Final Train {args.metric}: {train_result}, Best Val {args.metric}: {val_result}, Final Test {args.metric}: {test_result}")
+
+
 
     else:
         # Start Training and save the trained model
@@ -124,12 +143,18 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
                     f"Teacher Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
                 )
 
+
         print('Teacher model training over.')
         print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
         wandb.log({f'Teacher_Best_Train_{args.metric}': best_train_result, f'Teacher_Best_Val_{args.metric}': best_val_result,
                    f'Teacher_Best_Test_{args.metric}': final_test_result})
 
-    return teacher_model
+        teacher_model.load_state_dict(th.load(model_path))
+        teacher_model.eval()
+        train_preds, val_preds, test_preds = get_preds(teacher_model, graph, feat, train_idx, val_idx, test_idx)
+
+
+    return teacher_model, train_preds, val_preds, test_preds
 
 
 def student_training(
@@ -500,7 +525,21 @@ def main():
     teacher_file_prefix = f"lr_{args.teacher_lr}_h_{args.teacher_n_hidden}_l_{args.teacher_layers}_h_{args.teacher_n_heads}"
     # 保存 teacher model
     model_path = os.path.join(save_path, f"{teacher_file_prefix}.pth")
-    teacher_model = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
+    teacher_model, train_preds, val_preds, test_preds = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
+    # 保存 teacher predictions
+    preds_path = os.path.join(save_path, teacher_file_prefix)
+    os.makedirs(preds_path, exist_ok=True)
+    # 将 train、val 和 test 的预测结果保存到文件
+    train_preds_path = os.path.join(preds_path, "train_preds.npy")
+    val_preds_path = os.path.join(preds_path, "val_preds.npy")
+    test_preds_path = os.path.join(preds_path, "test_preds.npy")
+
+    # 保存 train、val 和 test 的预测结果
+    np.save(train_preds_path, train_preds.cpu().numpy())
+    np.save(val_preds_path, val_preds.cpu().numpy())
+    np.save(test_preds_path, test_preds.cpu().numpy())
+
+
     if args.train_student:
         # run
         val_results = []
