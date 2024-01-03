@@ -35,7 +35,7 @@ def count_words(csv_file, column_name, threshold):
     total_count = len(data)
     percentage = (count_greater_than_threshold / total_count) * 100
 
-    print(f"行数大于512的记录数: {count_greater_than_threshold}")
+    print(f"行数大于{threshold}的记录数: {count_greater_than_threshold}")
     print(f"总记录数: {total_count}")
     print(f"占比: {percentage}%")
 
