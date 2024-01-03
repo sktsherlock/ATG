@@ -225,6 +225,7 @@ def main():
     base_dir = os.path.dirname(root_dir.rstrip('/'))
     Feature_path = os.path.join(base_dir, args.path)
     cache_path = f"{Feature_path}cache/"
+    print(Feature_path)
 
     if not os.path.exists(Feature_path):
         os.makedirs(Feature_path)
