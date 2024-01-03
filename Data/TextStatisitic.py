@@ -12,6 +12,8 @@ def count_words(csv_file, column_name):
     head_data = data.head(num_rows)
     print(head_data)
 
+    if column_name == 'Debug':
+        return
     # 统计每行的单词数
     data['word_count'] = data[column_name].str.split().str.len()
     data['text_length'] = data.apply(lambda x: len(x[f'{column_name}'].split(' ')) if x[f'{column_name}'] else 0, axis=1)

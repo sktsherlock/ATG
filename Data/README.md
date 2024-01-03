@@ -61,3 +61,19 @@ python data_processing_for_ogb.py --data_root '/home/aiscuser/OGB/'
 
 python TextStatisitic.py --csv_file '/home/aiscuser/ATG/Data/ogb/arxiv.csv' --column_name 'text'
 ```
+
+# Download from the CS-TAG
+## Books-Children and Books-Histrory
+```shell
+mkdir -p ~/ATG/Data/Books/Children/
+cd ~/ATG/Data/Books/Children/
+gdown --id 1H_7Pmfg-8o3sLNflzWOHsgL5WG01i7B6 -O ChildrenGraph.pt
+gdown --id 1mERB7AF31EGHbyfvQpKholgk1cTSCKBj -O Children.csv
+# Children.csv  ChildrenGraph.pt 
+
+mkdir -p ~/ATG/Data/Books/History/
+cd ~/ATG/Data/Books/History/
+gdown --id 14qGkKaRAEER-huyPEJOPl9NuKtpYIInF -O HistoryGraph.pt
+gdown --id 1gpBLHC6dbcpy9Ug_cvaEEzEegnRJ9dsQ -O History.csv
+# History.csv  HistoryGraph.pt 
+```

@@ -538,6 +538,7 @@ def main():
     np.save(train_preds_path, train_preds.cpu().numpy())
     np.save(val_preds_path, val_preds.cpu().numpy())
     np.save(test_preds_path, test_preds.cpu().numpy())
+    print('Teacher Preds save successifuly')
 
 
     if args.train_student:
