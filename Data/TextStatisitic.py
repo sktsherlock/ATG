@@ -28,8 +28,8 @@ def count_words(csv_file, column_name):
     max_length = data['text_length'].max()
     max_length_row = data[data['text_length'] == max_length]
     print(f'The max length row is in :{max_length_row}')
-    max_length_row_text = max_length_row[column_name].iloc[0]
-    print(max_length_row_text)
+    # max_length_row_text = max_length_row[column_name].iloc[0]
+    # print(max_length_row_text)
 
 
 
