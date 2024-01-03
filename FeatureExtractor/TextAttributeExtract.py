@@ -297,14 +297,21 @@ def main():
 
     # CLS 特征提取
     if args.cls:
-        trainer = Trainer(model=CLS_Feateres_Extractor, args=inference_args)
-        cls_emb = trainer.predict(dataset)
-        # 保存CLS(首个字符的表示)表示为NPY文件
-        np.save(output_file + "_cls.npy", cls_emb.predictions)
+        if not os.path.exists(output_file + "_cls.npy"):
+            trainer = Trainer(model=CLS_Feateres_Extractor, args=inference_args)
+            cls_emb = trainer.predict(dataset)
+            # 保存CLS(首个字符的表示)表示为NPY文件
+            np.save(output_file + "_cls.npy", cls_emb.predictions)
+        else:
+            print('Existing saved CLS')
 
-    trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
-    mean_emb = trainer.predict(dataset)
-    np.save(output_file + "_mean.npy", mean_emb.predictions)
+    if not os.path.exists(output_file + "_mean.npy"):
+        trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
+        mean_emb = trainer.predict(dataset)
+        # 保存平均特征表示为NPY文件
+        np.save(output_file + "_mean.npy", mean_emb.predictions)
+    else:
+        print('Existing saved MEAN')
 
 
 if __name__ == "__main__":

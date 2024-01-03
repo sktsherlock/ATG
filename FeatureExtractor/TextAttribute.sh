@@ -14,7 +14,7 @@ model_names=("prajjwal1/bert-tiny" "prajjwal1/bert-mini" "bert-base-uncased" "be
 for model_name in "${model_names[@]}"
 do
   # 设置不同 model_name 对应的 batch_size
-  if [[ "$model_name" == "BERT-Large" || "$model_name" == "RoBERTa-Large" ]]; then
+  if [[ "$model_name" == "bert-large-uncased" || "$model_name" == "roberta-large" ]]; then
     batch_size=500
   else
     batch_size=1000
