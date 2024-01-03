@@ -38,6 +38,6 @@ def count_words(csv_file, column_name):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--csv_file', type=str, help='Path to the csv file', required=True)
-    parser.add_argument('--column_name', type=str, help='The column for the text', default='Debug')
+    parser.add_argument('--column_name', type=str, help='The column for the text', required=True)
     args = parser.parse_args()
     count_words(args.csv_file, args.column_name)
