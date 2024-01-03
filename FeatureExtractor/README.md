@@ -45,7 +45,7 @@ python TextAttributeExtract.py --csv_file 'Data/ogb/arxiv.csv' --model_name 'fac
 
 
 ```python
-python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv' --model_name 'bert-large-uncased' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 128 --batch_size 2000 --cls --text_column 'TC'
+CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv' --model_name 'bert-large-uncased' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 512 --batch_size 500 --cls --text_column 'TA'
 
 
 
