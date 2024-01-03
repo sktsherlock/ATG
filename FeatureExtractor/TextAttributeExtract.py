@@ -226,6 +226,7 @@ def main():
     Feature_path = os.path.join(base_dir, args.path)
     cache_path = f"{Feature_path}cache/"
     print(Feature_path)
+    print(model_name)
 
     if not os.path.exists(Feature_path):
         os.makedirs(Feature_path)
