@@ -2,7 +2,7 @@ import pandas as pd
 import argparse
 
 
-def count_words(csv_file, column_name):
+def count_words(csv_file, column_name, threshold):
     # 读取 CSV 文件为 DataFrame
     data = pd.read_csv(csv_file)
     column_names = data.columns.tolist()
@@ -31,6 +31,14 @@ def count_words(csv_file, column_name):
     # max_length_row_text = max_length_row[column_name].iloc[0]
     # print(max_length_row_text)
 
+    count_greater_than_threshold = len(data[data['text_length'] > threshold])
+    total_count = len(data)
+    percentage = (count_greater_than_threshold / total_count) * 100
+
+    print(f"行数大于512的记录数: {count_greater_than_threshold}")
+    print(f"总记录数: {total_count}")
+    print(f"占比: {percentage}%")
+
 
 
 
@@ -39,5 +47,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--csv_file', type=str, help='Path to the csv file', required=True)
     parser.add_argument('--column_name', type=str, help='The column for the text', required=True)
+    parser.add_argument('--threshold', type=int, help='The column for the text', default=512)
     args = parser.parse_args()
-    count_words(args.csv_file, args.column_name)
+    count_words(args.csv_file, args.column_name, args.threshold)
