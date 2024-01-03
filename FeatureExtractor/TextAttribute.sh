@@ -8,7 +8,7 @@ name=$5
 gpu_ids=$6
 
 # 定义要遍历的 model_names
-model_names=("prajjwal1/bert-tiny" "prajjwal1/bert-mini" "bert-base-uncased" "bert-large-uncased" "roberta-base" "roberta-large")
+model_names=("bert-large-uncased" "roberta-large" "prajjwal1/bert-tiny" "prajjwal1/bert-mini" "bert-base-uncased" "roberta-base" )
 
 # 循环遍历不同的 model_name
 for model_name in "${model_names[@]}"
