@@ -12,8 +12,7 @@ def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
             splitted_idx["valid"],
             splitted_idx["test"],
         )
-        _, labels = data[0]
-        labels = labels[:, 0]
+
     else:
         np.random.seed(42)
         indices = np.random.permutation(nodes_num)
@@ -27,6 +26,6 @@ def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
         train_idx = torch.tensor(train_idx)
         val_idx = torch.tensor(val_idx)
         test_idx = torch.tensor(test_idx)
-        labels = None
 
-    return train_idx, val_idx, test_idx, labels
+
+    return train_idx, val_idx, test_idx

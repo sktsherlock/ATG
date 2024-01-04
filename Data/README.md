@@ -78,3 +78,14 @@ gdown --id 1gpBLHC6dbcpy9Ug_cvaEEzEegnRJ9dsQ -O History.csv
 # History.csv  HistoryGraph.pt 
 ```
 
+# 统计数据信息
+```shell
+# Arxiv
+bash Statisitic.sh /dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv TA 512
+# Movies
+bash Statisitic.sh /dataintent/local/user/v-haoyan1/Data/Movies/Movies.csv text 512
+# Children
+bash Statisitic.sh /dataintent/local/user/v-haoyan1/Data/Books/Children/Children.csv text 512
+# History
+bash Statisitic.sh /dataintent/local/user/v-haoyan1/Data/Books/History/History.csv text 512
+```
