@@ -13,8 +13,7 @@ import numpy as np
 from datasets import Value, load_dataset
 import torch
 from datasets import DatasetDict, Dataset
-from E_BERT import MLP, Classifier
-from ogb.nodeproppred import DglNodePropPredDataset
+from utils import split_dataset
 
 
 import transformers
@@ -241,35 +240,6 @@ def get_label_list(raw_dataset, split="train") -> List[int]:
 
 
 
-def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
-    if data_name == 'ogbn-arxiv':
-        data = DglNodePropPredDataset(name=data_name)
-        splitted_idx = data.get_idx_split()
-        train_idx, val_idx, test_idx = (
-            splitted_idx["train"],
-            splitted_idx["valid"],
-            splitted_idx["test"],
-        )
-        _, labels = data[0]
-        labels = labels[:, 0]
-    else:
-        np.random.seed(42)
-        indices = np.random.permutation(nodes_num)
-
-        train_size = int(nodes_num * train_ratio)
-        val_size = int(nodes_num * val_ratio)
-
-        train_idx = indices[:train_size]
-        val_idx = indices[train_size:train_size + val_size]
-        test_idx = indices[train_size + val_size:]
-        train_idx = torch.tensor(train_idx)
-        val_idx = torch.tensor(val_idx)
-        test_idx = torch.tensor(test_idx)
-        labels = None
-
-    return train_idx, val_idx, test_idx, labels
-
-
 def print_trainable_parameters(model):
     """
     Prints the number of trainable parameters in the model.
@@ -345,7 +315,7 @@ def main():
     train_data = raw_data['train']
     nodes_num = len(raw_data['train'])
 
-    train_ids, val_ids, test_ids, labels = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
+    train_ids, val_ids, test_ids, _ = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
     # 根据划分的索引创建划分后的数据集
     train_dataset = train_data.select(train_ids)
     val_dataset = train_data.select(val_ids)
