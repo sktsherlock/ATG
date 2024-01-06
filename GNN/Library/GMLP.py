@@ -108,8 +108,8 @@ def get_batch(feat, adj_label, batch_size, train_idx):
     return features_batch, adj_label_batch
 
 
-def train(model, labels, train_idx, optimizer, args):
-    features_batch, adj_label_batch = get_batch(batch_size=args.batch_size)
+def train(model, labels, train_idx, optimizer, args, feat, graph):
+    features_batch, adj_label_batch = get_batch(feat, graph, batch_size=args.batch_size, train_idx=train_idx)
 
     model.train()
     optimizer.zero_grad()
@@ -144,7 +144,7 @@ def evaluate(
 
 
 def classification(
-        args, model, feat, labels, train_idx, val_idx, test_idx, n_running):
+        args, model, feat, labels, train_idx, val_idx, test_idx, n_running, graph):
     if args.early_stop_patience is not None:
         stopper = EarlyStopping(patience=args.early_stop_patience)
     optimizer = optim.AdamW(
@@ -169,7 +169,7 @@ def classification(
         if args.warmup_epochs is not None:
             adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
 
-        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, train_idx, optimizer, args)
+        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, train_idx, optimizer, args, feat, graph)
 
         if epoch % args.eval_steps == 0:
             (
@@ -396,7 +396,7 @@ def main():
     for run in range(args.n_runs):
         Model.reset_parameters()
         val_result, test_result = classification(args, feat=feat, labels=labels, model=Model,n_running=run, test_idx=test_idx,
-                                                 train_idx=train_idx, val_idx=val_idx)
+                                                 train_idx=train_idx, val_idx=val_idx, graph=graph)
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
         test_results.append(test_result)
