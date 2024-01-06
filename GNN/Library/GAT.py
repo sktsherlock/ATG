@@ -362,7 +362,7 @@ def args_init():
         "--data_name", type=str, default=None, help="The dataset name.",
     )
     argparser.add_argument(
-        "--feature", type=str, default=None, help="Use LM embedding as feature", required=True
+        "--feature", type=str, default=None, help="Use LM embedding as feature",
     )
     argparser.add_argument(
         "--graph_path", type=str, default=None, help="The datasets to be implemented.",
@@ -426,7 +426,7 @@ def main():
         graph = graph.remove_self_loop().add_self_loop()
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
-    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
+    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
     n_classes = (labels.max()+1).item()
     print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
 

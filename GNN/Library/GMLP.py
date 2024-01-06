@@ -97,19 +97,19 @@ class GAdapter(nn.Module):
         return class_feature, feature_cls
 
 
-def get_batch(feat, adj_label, batch_size, train_idx):
+def get_batch(feat, graph, batch_size):
     """
     get a batch of feature & adjacency matrix
     """
-    rand_indx = th.tensor(np.random.choice(np.arange(adj_label.shape[0]), batch_size)).type(th.long).cuda()
-    rand_indx[0:len(train_idx)] = train_idx
+    rand_indx = th.tensor(np.random.choice(np.arange(graph.num_nodes()), batch_size)).type(th.long).cuda()
+    # rand_indx[0:len(train_idx)] = train_idx
     features_batch = feat[rand_indx]
-    adj_label_batch = adj_label[rand_indx, :][:, rand_indx]
+    adj_label_batch = graph[rand_indx, :][:, rand_indx]
     return features_batch, adj_label_batch
 
 
 def train(model, labels, train_idx, optimizer, args, feat, graph):
-    features_batch, adj_label_batch = get_batch(feat, graph, batch_size=args.batch_size, train_idx=train_idx)
+    features_batch, adj_label_batch = get_batch(feat, graph, batch_size=args.batch_size)
 
     model.train()
     optimizer.zero_grad()
