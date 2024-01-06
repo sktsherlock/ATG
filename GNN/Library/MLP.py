@@ -256,7 +256,7 @@ def main():
     device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
 
     # load data
-    _, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
+    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
                                                         val_ratio=args.val_ratio, name=args.data_name)
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
