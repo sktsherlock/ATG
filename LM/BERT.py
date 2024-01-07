@@ -31,7 +31,7 @@ from transformers import (
     set_seed,
 )
 
-from Task import CLSClassifier, MEANClassifier, AdapterClassifier
+from Task import CLSClassifier, MEANClassifier, AdapterClassifier, GAdapterClassifier
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
 
@@ -207,6 +207,10 @@ class ModelArguments:
     drop_out: float = field(
         default=0.2,
         metadata={"help": "The drop out ratio"}
+    )
+    resduial: bool = field(
+        default=True,
+        metadata={"help": "Whether to ues skip connection."}
     )
     label_smoothing: float = field(
         default=0.1,
@@ -412,6 +416,15 @@ def main():
             encoder, num_labels,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
+        )
+    elif model_args.training_objective == 'GAdapter':
+        Gadapter = torch.load(model_args.filename)
+
+        model = GAdapterClassifier(
+            encoder, adapter=Gadapter,
+            dropout=model_args.drop_out,
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
+            resduial=model_args.resduial
         )
     elif model_args.training_objective == 'Adapter':
         adapter = torch.load(model_args.filename)
