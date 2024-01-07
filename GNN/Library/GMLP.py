@@ -105,6 +105,9 @@ def get_batch(feat, adj, batch_size, sub_train_idx):
     rand_indx[0:len(sub_train_idx)] = sub_train_idx
     features_batch = feat[rand_indx]
     adj_label_batch = adj[rand_indx, :][:, rand_indx]
+    print(adj_label_batch)
+    print(adj_label_batch.shape)
+
     return features_batch, adj_label_batch
 
 
