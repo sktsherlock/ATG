@@ -350,6 +350,9 @@ def args_init():
         "--teacher-lr", type=float, default=0.005, help="learning rate"
     )
     argparser.add_argument(
+        "--teacher_drop", type=float, default=0.5, help="dropout rate"
+    )
+    argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
     )
     argparser.add_argument(
@@ -490,7 +493,7 @@ def main():
                                F.relu, dropout=0.5, attn_drop=0,
                                edge_drop=0, use_attn_dst=False, use_symmetric_norm=True).to(device)
     elif args.teacher_name == 'GCN':
-        teacher_model = GCN(feat.shape[1], args.teacher_n_hidden,  n_classes, args.teacher_layers, F.relu, dropout=0.2).to(device)
+        teacher_model = GCN(feat.shape[1], args.teacher_n_hidden,  n_classes, args.teacher_layers, F.relu, dropout=args.teacher_drop).to(device)
     elif args.teacher_name == 'SAGE':
         teacher_model = GraphSAGE(feat.shape[1], args.teacher_n_hidden, n_classes, args.teacher_layers, F.relu, dropout=0.2, aggregator_type='mean').to(device)
     else:
@@ -522,7 +525,7 @@ def main():
     # 创建保存路径
     save_path = os.path.join(args.teacher_path, args.data_name, args.teacher_name, feature_prefix)
     os.makedirs(save_path, exist_ok=True)
-    teacher_file_prefix = f"lr_{args.teacher_lr}_h_{args.teacher_n_hidden}_l_{args.teacher_layers}_h_{args.teacher_n_heads}"
+    teacher_file_prefix = f"lr_{args.teacher_lr}_d_{args.teacher_drop}_h_{args.teacher_n_hidden}_l_{args.teacher_layers}_h_{args.teacher_n_heads}"
     # 保存 teacher model
     model_path = os.path.join(save_path, f"{teacher_file_prefix}.pth")
     teacher_model, train_preds, val_preds, test_preds = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
