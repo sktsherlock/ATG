@@ -422,7 +422,7 @@ def main():
         Gadapter.input_drop = torch.nn.Dropout(0.0)
 
         model = GAdapterClassifier(
-            encoder, adapter=Gadapter,
+            encoder, adapter=Gadapter, n_labels=num_labels,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
             resduial=model_args.resduial
