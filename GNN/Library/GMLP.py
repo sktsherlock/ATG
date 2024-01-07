@@ -107,6 +107,8 @@ def get_batch(feat, adj, batch_size, sub_train_idx, sub_train_indx_tensor):
 
     rand_indx_tensor = th.tensor(rand_indx).type(th.long).cuda()
     rand_indx_tensor[0:len(sub_train_indx_tensor)] = sub_train_indx_tensor
+    print(adj)
+    print(rand_indx_tensor)
     adj_label_batch = adj[rand_indx_tensor, :][:, rand_indx_tensor]
     print(adj_label_batch)
     print(adj_label_batch.shape)
