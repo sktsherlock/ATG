@@ -111,7 +111,7 @@ def get_batch(feat, graph, batch_size, sub_train_idx):
 
 def train(model, labels, sub_train_idx, optimizer, args, feat, graph, device):
     features_batch, adj_label_batch = get_batch(feat, graph, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
-    sub_train_idx.to(device)
+    sub_train_idx = th.tensor(sub_train_idx).to(device)
     model.train()
     optimizer.zero_grad()
 
