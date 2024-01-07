@@ -552,18 +552,19 @@ def main():
         # run
         val_results = []
         test_results = []
-        if args.save:
-            n_runs = 1
-        else:
-            n_runs = args.n_runs
 
-        for run in range(n_runs):
+
+        for run in range(args.n_runs):
             student_model.reset_parameters()
             val_result, test_result = student_training(args, student_model, feat, labels, train_idx,
                                                        val_idx, test_idx, GAdapter_filename, Classifier_filename, run+1, teacher_graph_preds)
             wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
             val_results.append(val_result)
             test_results.append(test_result)
+            if args.save:
+                break
+
+
 
         print(f"Runned {args.n_runs} times")
         print(f"Average val accuracy: {np.mean(val_results)} ± {np.std(val_results)}")
