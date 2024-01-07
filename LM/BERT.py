@@ -419,7 +419,7 @@ def main():
         )
     elif model_args.training_objective == 'GAdapter':
         Gadapter = torch.load(model_args.filename)
-        Gadapter.input_drop = 0.0
+        Gadapter.input_drop = torch.nn.Dropout(0.0)
 
         model = GAdapterClassifier(
             encoder, adapter=Gadapter,
