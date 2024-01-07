@@ -51,16 +51,13 @@ def evaluate(
 
 @th.no_grad()
 def get_preds(
-        model, graph, feat, train_idx, val_idx, test_idx):
+        model, graph, feat):
     model.eval()
     with th.no_grad():
         pred = model(graph, feat)
-    # Get prediction results on train, val, and test
-    train_preds = th.argmax(pred[train_idx], dim=1)
-    val_preds = th.argmax(pred[val_idx], dim=1)
-    test_preds = th.argmax(pred[test_idx], dim=1)
+    # Get prediction results
 
-    return train_preds, val_preds, test_preds
+    return pred
 
 
 
@@ -74,7 +71,7 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
                                                                metric=args.metric,
                                                                label_smoothing=0.1,
                                                                average=args.average)
-        train_preds, val_preds, test_preds = get_preds(teacher_model, graph, feat, train_idx, val_idx, test_idx)
+        preds = get_preds(teacher_model, graph, feat)
 
         wandb.log({f'Teacher_Best_Train_{args.metric}': train_result, f'Teacher_Best_Val_{args.metric}': val_result,
                    f'Teacher_Best_Test_{args.metric}': test_result})
@@ -151,14 +148,14 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
 
         teacher_model.load_state_dict(th.load(model_path))
         teacher_model.eval()
-        train_preds, val_preds, test_preds = get_preds(teacher_model, graph, feat, train_idx, val_idx, test_idx)
+        preds = get_preds(teacher_model, graph, feat)
 
 
-    return teacher_model, train_preds, val_preds, test_preds
+    return teacher_model, preds
 
 
 def student_training(
-        args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename, n_running):
+        args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename, n_running, teacher_graph_preds):
 
     if args.early_stop_patience is not None:
         stopper = EarlyStopping(patience=args.early_stop_patience)
@@ -189,8 +186,8 @@ def student_training(
 
         kl_loss_fn = nn.KLDivLoss(reduction='batchmean')
         # teacher model
-        with th.no_grad():  # 教师网络不用反向传播
-            teacher_graph_preds = teacher_model(graph, feat)
+        # with th.no_grad():  # 教师网络不用反向传播
+        #     teacher_graph_preds = teacher_model(graph, feat)
 
         # student model forward
         student_preds = student_model.forward(feat)
@@ -528,25 +525,23 @@ def main():
     teacher_file_prefix = f"lr_{args.teacher_lr}_d_{args.teacher_drop}_h_{args.teacher_n_hidden}_l_{args.teacher_layers}_h_{args.teacher_n_heads}"
     # 保存 teacher model
     model_path = os.path.join(save_path, f"{teacher_file_prefix}.pth")
-    teacher_model, train_preds, val_preds, test_preds = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
+    teacher_model, preds = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
     print("Teacher model will be saved to {}".format(model_path))
     # 保存 teacher predictions
     preds_path = os.path.join(save_path, teacher_file_prefix)
     os.makedirs(preds_path, exist_ok=True)
     # 将 train、val 和 test 的预测结果保存到文件
 
-    train_preds_path = os.path.join(preds_path, "train_preds.npy")
-    val_preds_path = os.path.join(preds_path, "val_preds.npy")
-    test_preds_path = os.path.join(preds_path, "test_preds.npy")
+    preds_path = os.path.join(preds_path, "preds.npy")
 
     # 保存 train、val 和 test 的预测结果
-    if os.path.exists(test_preds_path):
+    if os.path.exists(preds_path):
         print("NPY OK")
     else:
-        np.save(train_preds_path, train_preds.cpu().numpy())
-        np.save(val_preds_path, val_preds.cpu().numpy())
-        np.save(test_preds_path, test_preds.cpu().numpy())
+        np.save(preds_path, preds.cpu().numpy())
         print('Teacher Preds save successifuly')
+
+    teacher_graph_preds = np.load(preds_path)
 
 
     if args.train_student:
@@ -561,7 +556,7 @@ def main():
         for run in range(n_runs):
             student_model.reset_parameters()
             val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx,
-                                                       val_idx, test_idx, filename, run+1)
+                                                       val_idx, test_idx, filename, run+1, teacher_graph_preds)
             wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
             val_results.append(val_result)
             test_results.append(test_result)
