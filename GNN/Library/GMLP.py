@@ -97,22 +97,24 @@ class GAdapter(nn.Module):
         return class_feature, feature_cls
 
 
-def get_batch(feat, adj, batch_size, sub_train_idx):
+def get_batch(feat, adj, batch_size, sub_train_idx, sub_train_indx_tensor):
     """
     get a batch of feature & adjacency matrix
     """
     rand_indx = np.random.choice(np.arange(adj.shape[0]), batch_size)
     rand_indx[0:len(sub_train_idx)] = sub_train_idx
     features_batch = feat[rand_indx]
-    adj_label_batch = adj[rand_indx, :][:, rand_indx]
+
+    rand_indx_tensor = th.tensor(rand_indx).type(th.long).cuda()
+    adj_label_batch = adj[rand_indx_tensor, :][:, rand_indx_tensor]
     print(adj_label_batch)
     print(adj_label_batch.shape)
 
     return features_batch, adj_label_batch
 
 
-def train(model, labels, sub_train_idx, optimizer, args, feat, device, adj):
-    features_batch, sub_adj = get_batch(feat, adj, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
+def train(model, labels, sub_train_idx, sub_train_indx_tensor, optimizer, args, feat, device, adj):
+    features_batch, sub_adj = get_batch(feat, adj, batch_size=args.batch_size, sub_train_idx=sub_train_idx, sub_train_indx_tensor=sub_train_indx_tensor)
     sub_train_idx = th.tensor(sub_train_idx).to(device)
     model.train()
     optimizer.zero_grad()
@@ -177,7 +179,8 @@ def classification(
 
         # 对train_idx 进行采样
         sub_train_indx = np.random.choice(train_idx.cpu(), 2048)
-        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, optimizer, args, feat, device, adj)
+        sub_train_indx_tensor = th.tensor(sub_train_indx).type(th.long).cuda()
+        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, sub_train_indx_tensor, optimizer, args, feat, device, adj)
 
         if epoch % args.eval_steps == 0:
             (
