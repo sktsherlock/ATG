@@ -16,13 +16,13 @@ from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learni
 from GraphData import load_data, set_seed
 
 
-def get_feature_dis(x):
+def get_feature_dis(x, device):
     """
     x :           batch_size x nhid
     x_dis(i,j):   item means the similarity between x(i) and x(j).
     """
     x_dis = x @ x.T
-    mask = th.eye(x_dis.shape[0]).cuda()
+    mask = th.eye(x_dis.shape[0]).to(device)
     x_sum = th.sum(x ** 2, 1).reshape(-1, 1)
     x_sum = th.sqrt(x_sum).reshape(-1, 1)
     x_sum = x_sum @ x_sum.T
@@ -116,7 +116,7 @@ def train(model, labels, sub_train_idx, optimizer, args, feat, device, graph):
     optimizer.zero_grad()
 
     output, embeddings = model(features_batch)
-    x_dis = get_feature_dis(embeddings)
+    x_dis = get_feature_dis(embeddings, device)
     loss_train_class = cross_entropy(output[sub_train_idx], labels[sub_train_idx])
     loss_Ncontrast = ncontrast(x_dis, sub_graph, tau=args.tau)
     loss_train = loss_train_class + loss_Ncontrast * args.alpha
