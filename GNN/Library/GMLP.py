@@ -120,10 +120,9 @@ def train(model, labels, sub_train_idx, optimizer, args, feat, device, graph):
 
     sub_train_idx = th.tensor(sub_train_idx).to(device)
     x_dis = get_feature_dis(embedding_batch, device)
-    print(x_dis)
-    print(sub_train_idx)
+
     loss_train_class = cross_entropy(output[sub_train_idx], labels[sub_train_idx])
-    print(loss_train_class)
+
     loss_Ncontrast = ncontrast(x_dis, sub_graph, device, tau=args.tau)
     loss_train = loss_train_class + loss_Ncontrast * args.alpha
 
