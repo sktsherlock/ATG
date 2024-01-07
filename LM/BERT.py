@@ -13,7 +13,7 @@ import numpy as np
 from datasets import Value, load_dataset
 import torch
 from datasets import DatasetDict, Dataset
-from utils import split_dataset
+from utils import split_dataset, MLP
 
 
 import transformers
