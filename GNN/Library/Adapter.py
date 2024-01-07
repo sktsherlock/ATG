@@ -526,6 +526,7 @@ def main():
     # 保存 teacher model
     model_path = os.path.join(save_path, f"{teacher_file_prefix}.pth")
     teacher_model, train_preds, val_preds, test_preds = teacher_training(args, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, model_path)
+    print("Teacher model will be saved to {}".format(model_path))
     # 保存 teacher predictions
     preds_path = os.path.join(save_path, teacher_file_prefix)
     os.makedirs(preds_path, exist_ok=True)
