@@ -177,7 +177,7 @@ def classification(
 
         # 对train_idx 进行采样
         sub_train_indx = np.random.choice(train_idx.cpu(), 2048)
-        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, optimizer, args, feat, graph, device, adj)
+        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, optimizer, args, feat, device, adj)
 
         if epoch % args.eval_steps == 0:
             (
