@@ -120,6 +120,7 @@ def train(model, labels, sub_train_idx, optimizer, args, feat, device, graph):
     print(x_dis)
     print(sub_train_idx)
     loss_train_class = cross_entropy(output[sub_train_idx], labels[sub_train_idx])
+    print(loss_train_class)
     loss_Ncontrast = ncontrast(x_dis, sub_graph, tau=args.tau)
     loss_train = loss_train_class + loss_Ncontrast * args.alpha
 
@@ -350,7 +351,7 @@ def main():
     wandb.init(config=args, reinit=True)
 
     device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
-    device = 'cpu'
+    # device = 'cpu'
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
