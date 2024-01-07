@@ -541,7 +541,7 @@ def main():
         np.save(preds_path, preds.cpu().numpy())
         print('Teacher Preds save successifuly')
 
-    teacher_graph_preds = np.load(preds_path)
+    teacher_graph_preds = th.from_numpy(np.load(preds_path)).to(device)
 
 
     if args.train_student:
