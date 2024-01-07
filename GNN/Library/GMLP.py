@@ -97,26 +97,29 @@ class GAdapter(nn.Module):
         return class_feature, feature_cls
 
 
-def get_batch(feat, graph, batch_size, sub_train_idx):
+def get_batch(output, embedding, graph, batch_size, sub_train_idx):
     """
     get a batch of feature & adjacency matrix
     """
     rand_indx = np.random.choice(np.arange(graph.num_nodes()), batch_size)
     rand_indx[0:len(sub_train_idx)] = sub_train_idx
-    features_batch = feat[rand_indx]
+    output_batch = output[rand_indx]
+    embedding_batch = embedding[rand_indx]
     sub_graph = graph.subgraph(rand_indx)
 
-    return features_batch, sub_graph
+    return output_batch, embedding_batch, sub_graph
 
 
 def train(model, labels, sub_train_idx, optimizer, args, feat, device, graph):
-    features_batch, sub_graph = get_batch(feat, graph, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
-    sub_train_idx = th.tensor(sub_train_idx).to(device)
+
     model.train()
     optimizer.zero_grad()
 
-    output, embeddings = model(features_batch)
-    x_dis = get_feature_dis(embeddings, device)
+    output, embeddings = model(feat)
+    output_batch, embedding_batch, sub_graph = get_batch(output, embeddings, graph, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
+
+    sub_train_idx = th.tensor(sub_train_idx).to(device)
+    x_dis = get_feature_dis(embedding_batch, device)
     print(x_dis)
     print(sub_train_idx)
     loss_train_class = cross_entropy(output[sub_train_idx], labels[sub_train_idx])
