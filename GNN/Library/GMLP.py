@@ -117,6 +117,7 @@ def train(model, labels, sub_train_idx, optimizer, args, feat, device, graph):
 
     output, embeddings = model(features_batch)
     x_dis = get_feature_dis(embeddings, device)
+    print(x_dis)
     print(sub_train_idx)
     loss_train_class = cross_entropy(output[sub_train_idx], labels[sub_train_idx])
     loss_Ncontrast = ncontrast(x_dis, sub_graph, tau=args.tau)
