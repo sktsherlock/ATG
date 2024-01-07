@@ -171,7 +171,7 @@ def classification(
 
 
         # 对train_idx 进行采样
-        sub_train_indx = th.tensor(np.random.choice(train_idx, 0.6 * args.batch_size)).type(th.long).cuda()
+        sub_train_indx = th.tensor(np.random.choice(train_idx.cpu(), 0.6 * args.batch_size)).type(th.long).cuda()
         loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, optimizer, args, feat, graph)
 
         if epoch % args.eval_steps == 0:
