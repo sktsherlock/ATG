@@ -534,15 +534,19 @@ def main():
     preds_path = os.path.join(save_path, teacher_file_prefix)
     os.makedirs(preds_path, exist_ok=True)
     # 将 train、val 和 test 的预测结果保存到文件
+
     train_preds_path = os.path.join(preds_path, "train_preds.npy")
     val_preds_path = os.path.join(preds_path, "val_preds.npy")
     test_preds_path = os.path.join(preds_path, "test_preds.npy")
 
     # 保存 train、val 和 test 的预测结果
-    np.save(train_preds_path, train_preds.cpu().numpy())
-    np.save(val_preds_path, val_preds.cpu().numpy())
-    np.save(test_preds_path, test_preds.cpu().numpy())
-    print('Teacher Preds save successifuly')
+    if os.path.exists(test_preds_path):
+        print("NPY OK")
+    else:
+        np.save(train_preds_path, train_preds.cpu().numpy())
+        np.save(val_preds_path, val_preds.cpu().numpy())
+        np.save(test_preds_path, test_preds.cpu().numpy())
+        print('Teacher Preds save successifuly')
 
 
     if args.train_student:
