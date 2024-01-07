@@ -110,7 +110,7 @@ def get_batch(feat, graph, batch_size, sub_train_idx):
 
 
 def train(model, labels, sub_train_idx, optimizer, args, feat, graph, device):
-    features_batch, adj_label_batch = get_batch(feat, graph, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
+    features_batch, sub_graph = get_batch(feat, graph, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
     sub_train_idx = th.tensor(sub_train_idx).to(device)
     model.train()
     optimizer.zero_grad()
@@ -118,7 +118,7 @@ def train(model, labels, sub_train_idx, optimizer, args, feat, graph, device):
     output, embeddings = model(features_batch)
     x_dis = get_feature_dis(embeddings)
     loss_train_class = cross_entropy(output[sub_train_idx], labels[sub_train_idx])
-    loss_Ncontrast = ncontrast(x_dis, adj_label_batch, tau=args.tau)
+    loss_Ncontrast = ncontrast(x_dis, sub_graph, tau=args.tau)
     loss_train = loss_train_class + loss_Ncontrast * args.alpha
 
     loss_train.backward()

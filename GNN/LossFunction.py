@@ -60,13 +60,15 @@ def _contrastive_loss_simsce(z1, z2, device, similarity='inner', temperature=0.1
 
 
 
-def ncontrast(x_dis, adj_label, tau = 1):
+def ncontrast(x_dis, subgraph, tau=1):
     """
     compute the Ncontrast loss
     """
+    device = x_dis.device
+    adj = subgraph.adjacency_matrix(transpose=True).to(device)
     x_dis = torch.exp( tau * x_dis)
     x_dis_sum = torch.sum(x_dis, 1)
-    x_dis_sum_pos = torch.sum(x_dis*adj_label, 1)
+    x_dis_sum_pos = torch.sum(x_dis*adj, 1)
     loss = -torch.log(x_dis_sum_pos * (x_dis_sum**(-1))+1e-8).mean()
     return loss
 
