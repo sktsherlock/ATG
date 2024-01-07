@@ -268,7 +268,7 @@ if __name__ == "__main__":
         device = th.device("cpu")
 
     # load ogbn-products data
-    data = DglNodePropPredDataset(name="ogbn-products")
+    data = DglNodePropPredDataset(name="ogbn-arxiv")
     splitted_idx = data.get_idx_split()
     train_idx, val_idx, test_idx = (
         splitted_idx["train"],
