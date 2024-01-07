@@ -400,7 +400,7 @@ def main():
 
     for run in range(args.n_runs):
         Model.reset_parameters()
-        val_result, test_result = classification(args, feat=feat, labels=labels, model=Model,n_running=run, test_idx=test_idx,
+        val_result, test_result = classification(args, feat=feat, labels=labels, model=Model, n_running=run, test_idx=test_idx,
                                                  train_idx=train_idx, val_idx=val_idx, graph=graph, device=device)
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
