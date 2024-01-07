@@ -97,20 +97,19 @@ class GAdapter(nn.Module):
         return class_feature, feature_cls
 
 
-def get_batch(feat, graph, batch_size, sub_train_idx):
+def get_batch(feat, adj, batch_size, sub_train_idx):
     """
     get a batch of feature & adjacency matrix
     """
-    rand_indx = np.random.choice(np.arange(graph.num_nodes()), batch_size)
+    rand_indx = np.random.choice(np.arange(adj.shape[0]), batch_size)
     rand_indx[0:len(sub_train_idx)] = sub_train_idx
     features_batch = feat[rand_indx]
-    sub_graph = graph.subgraph(rand_indx)
+    adj_label_batch = adj[rand_indx, :][:, rand_indx]
+    return features_batch, adj_label_batch
 
-    return features_batch, sub_graph
 
-
-def train(model, labels, sub_train_idx, optimizer, args, feat, graph, device):
-    features_batch, sub_graph = get_batch(feat, graph, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
+def train(model, labels, sub_train_idx, optimizer, args, feat, device, adj):
+    features_batch, sub_adj = get_batch(feat, adj, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
     sub_train_idx = th.tensor(sub_train_idx).to(device)
     model.train()
     optimizer.zero_grad()
@@ -118,7 +117,7 @@ def train(model, labels, sub_train_idx, optimizer, args, feat, graph, device):
     output, embeddings = model(features_batch)
     x_dis = get_feature_dis(embeddings)
     loss_train_class = cross_entropy(output[sub_train_idx], labels[sub_train_idx])
-    loss_Ncontrast = ncontrast(x_dis, sub_graph, tau=args.tau)
+    loss_Ncontrast = ncontrast(x_dis, sub_adj, tau=args.tau)
     loss_train = loss_train_class + loss_Ncontrast * args.alpha
 
     loss_train.backward()
@@ -164,6 +163,8 @@ def classification(
     total_time = 0
     best_val_result, final_test_result, best_val_loss = 0, 0, float("inf")
 
+    adj = graph.adjacency_matrix(transpose=True).to(device)
+
     for epoch in range(1, args.n_epochs + 1):
         tic = time.time()
 
@@ -173,7 +174,7 @@ def classification(
 
         # 对train_idx 进行采样
         sub_train_indx = np.random.choice(train_idx.cpu(), 2048)
-        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, optimizer, args, feat, graph, device)
+        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, optimizer, args, feat, graph, device, adj)
 
         if epoch % args.eval_steps == 0:
             (
