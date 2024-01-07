@@ -155,7 +155,7 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
 
 
 def student_training(
-        args, student_model, teacher_model, graph, feat, labels, train_idx, val_idx, test_idx, filename, n_running, teacher_graph_preds):
+        args, student_model, feat, labels, train_idx, val_idx, test_idx, GAdapter_file, Classifer_file, n_running, teacher_graph_preds):
 
     if args.early_stop_patience is not None:
         stopper = EarlyStopping(patience=args.early_stop_patience)
@@ -227,7 +227,8 @@ def student_training(
             best_val_result = val_results
             final_test_result = test_results
             if args.save:
-                th.save(student_model, filename)
+                th.save(student_model.Adapter, GAdapter_file)
+                th.save(student_model, Classifer_file)
 
         if args.early_stop_patience is not None:
             if stopper.step(val_loss):
@@ -508,14 +509,17 @@ def main():
     print(f"Number of the student model params: {TRAIN_NUMBERS}")
 
 
-    filename = None
+    GAdapter_filename = None
+    Classifier_filename = None
     feature_prefix = os.path.splitext(os.path.basename(args.feature))[0]
     if args.save:
         student_save_path = os.path.join(args.save_path, args.data_name, args.teacher_name, feature_prefix)
         os.makedirs(student_save_path, exist_ok=True)
         student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}_a_{args.alpha}_e_{args.n_epochs}"
-        filename = os.path.join(student_save_path, f"GraphAdapter_{student_file_prefix}.pkl")
-        print(f'The student model will be saved in the following:{filename}')
+        GAdapter_filename = os.path.join(student_save_path, f"GraphAdapter_{student_file_prefix}.pkl")
+        Classifier_filename = os.path.join(student_save_path, f"Classifier_{student_file_prefix}.pkl")
+        print(f'The GAdapter be saved in the following:{GAdapter_filename}')
+        print(f'The Classifier be saved in the following:{Classifier_filename}')
     # First stage, Teacher model pretraining
     # 处理teacher_model 相关的路径文件名
 
@@ -555,8 +559,8 @@ def main():
 
         for run in range(n_runs):
             student_model.reset_parameters()
-            val_result, test_result = student_training(args, student_model, teacher_model, graph, feat, labels, train_idx,
-                                                       val_idx, test_idx, filename, run+1, teacher_graph_preds)
+            val_result, test_result = student_training(args, student_model, feat, labels, train_idx,
+                                                       val_idx, test_idx, GAdapter_filename, Classifier_filename, run+1, teacher_graph_preds)
             wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
             val_results.append(val_result)
             test_results.append(test_result)
