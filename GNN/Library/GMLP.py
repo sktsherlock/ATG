@@ -101,11 +101,12 @@ def get_batch(feat, graph, batch_size, sub_train_idx):
     """
     get a batch of feature & adjacency matrix
     """
-    rand_indx = th.tensor(np.random.choice(np.arange(graph.num_nodes()), batch_size)).type(th.long).cuda()
+    rand_indx = np.random.choice(np.arange(graph.num_nodes()), batch_size)
     rand_indx[0:len(sub_train_idx)] = sub_train_idx
     features_batch = feat[rand_indx]
-    adj_label_batch = graph[rand_indx, :][:, rand_indx]
-    return features_batch, adj_label_batch
+    sub_graph = graph.subgraph(rand_indx)
+
+    return features_batch, sub_graph
 
 
 def train(model, labels, sub_train_idx, optimizer, args, feat, graph):
@@ -171,7 +172,7 @@ def classification(
 
 
         # 对train_idx 进行采样
-        sub_train_indx = th.tensor(np.random.choice(train_idx.cpu(), 2048)).type(th.long).cuda()
+        sub_train_indx = np.random.choice(train_idx.cpu(), 2048)
         loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, optimizer, args, feat, graph)
 
         if epoch % args.eval_steps == 0:
