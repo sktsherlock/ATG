@@ -97,26 +97,26 @@ class GAdapter(nn.Module):
         return class_feature, feature_cls
 
 
-def get_batch(feat, graph, batch_size):
+def get_batch(feat, graph, batch_size, sub_train_idx):
     """
     get a batch of feature & adjacency matrix
     """
     rand_indx = th.tensor(np.random.choice(np.arange(graph.num_nodes()), batch_size)).type(th.long).cuda()
-    # rand_indx[0:len(train_idx)] = train_idx
+    rand_indx[0:len(sub_train_idx)] = sub_train_idx
     features_batch = feat[rand_indx]
     adj_label_batch = graph[rand_indx, :][:, rand_indx]
     return features_batch, adj_label_batch
 
 
-def train(model, labels, train_idx, optimizer, args, feat, graph):
-    features_batch, adj_label_batch = get_batch(feat, graph, batch_size=args.batch_size)
+def train(model, labels, sub_train_idx, optimizer, args, feat, graph):
+    features_batch, adj_label_batch = get_batch(feat, graph, batch_size=args.batch_size, sub_train_idx=sub_train_idx)
 
     model.train()
     optimizer.zero_grad()
 
     output, embeddings = model(features_batch)
     x_dis = get_feature_dis(embeddings)
-    loss_train_class = cross_entropy(output[train_idx], labels[train_idx])
+    loss_train_class = cross_entropy(output[sub_train_idx], labels[sub_train_idx])
     loss_Ncontrast = ncontrast(x_dis, adj_label_batch, tau=args.tau)
     loss_train = loss_train_class + loss_Ncontrast * args.alpha
 
@@ -169,7 +169,10 @@ def classification(
         if args.warmup_epochs is not None:
             adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
 
-        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, train_idx, optimizer, args, feat, graph)
+
+        # 对train_idx 进行采样
+        sub_train_indx = th.tensor(np.random.choice(train_idx, 0.6 * args.batch_size)).type(th.long).cuda()
+        loss_train_class, loss_Ncontrast, loss_train, output = train(model, labels, sub_train_indx, optimizer, args, feat, graph)
 
         if epoch % args.eval_steps == 0:
             (
@@ -272,7 +275,7 @@ def args_init():
     argparser.add_argument(
         "--alpha", type=float, default=2.0, help="To control the ratio of Ncontrast loss"
     )
-    argparser.add_argument('--batch_size', type=int, default=2048,
+    argparser.add_argument('--batch_size', type=int, default=4096,
                            help='batch size')
     argparser.add_argument('--tau', type=float, default=1.0,
                            help='temperature for Ncontrast loss')
