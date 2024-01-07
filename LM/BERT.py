@@ -220,7 +220,12 @@ class ModelArguments:
         default=True,
         metadata={"help": "Whether to add bias for classifier head."}
     )
-
+    unfreeze_layers: int = field(
+        default=2,
+        metadata={
+            "help": "The layers to unfreeze"
+        },
+    )
 
 
 
@@ -404,6 +409,22 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
+
+    if model_args.unfreeze_layers is not None:
+        for param in encoder.parameters():
+            param.requires_grad = False
+
+        trainable_params = sum(
+                p.numel() for p in encoder.parameters() if p.requires_grad
+            )
+        assert trainable_params == 0
+        for param in encoder.encoder.layer[-model_args.unfreeze_layers:].parameters():
+            param.requires_grad = True
+
+        trainable_params = sum(
+                p.numel() for p in encoder.parameters() if p.requires_grad
+        )
+        print(f" Pass the freeze layer, the LM Encoder  parameters are {trainable_params}")
 
     if model_args.training_objective == "CLS":
         model = CLSClassifier(
