@@ -562,6 +562,7 @@ def main():
             val_results.append(val_result)
             test_results.append(test_result)
             if args.save:
+                print('GAdapter_file saved in the {}'.format(GAdapter_filename))
                 break
 
 
