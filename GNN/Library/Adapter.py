@@ -71,7 +71,7 @@ def get_batch(embedding, graph, batch_size):
     return embedding_batch, sub_graph
 
 
-def get_feature_dis(x, device, batch_size=4096):
+def get_feature_dis(x, device, batch_size=256):
     """
     x :           batch_size x nhid
     x_dis(i,j):   item means the similarity between x(i) and x(j).
@@ -85,8 +85,8 @@ def get_feature_dis(x, device, batch_size=4096):
         batch_x = x[start:end]
         batch_dis = batch_x @ x.T
 
-        mask = th.eye(batch_dis.shape[0]).to(device)
-        batch_x_sum = th.sum(batch_x ** 2, 1).reshape(-1, 1)
+        mask = th.eye(n).to(device)
+        batch_x_sum = th.sum(x ** 2, 1).reshape(-1, 1)
         batch_x_sum = th.sqrt(batch_x_sum).reshape(-1, 1)
         batch_x_sum = batch_x_sum @ batch_x_sum.T
 
@@ -97,7 +97,6 @@ def get_feature_dis(x, device, batch_size=4096):
 
     x_dis = th.cat(x_dis, dim=0)
     return x_dis
-
 
 def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx, test_idx, model_path):
     if os.path.exists(model_path):
