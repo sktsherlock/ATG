@@ -173,6 +173,10 @@ class ModelArguments:
         default=None,
         metadata={"help": "Where do you want to store the training processes"},
     )
+    save_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "Where do you want to store the tuning language models"},
+    )
     use_fast_tokenizer: bool = field(
         default=True,
         metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
@@ -595,6 +599,10 @@ def main():
         metrics = trainer.evaluate(eval_dataset=predict_dataset, metric_key_prefix="test")
         trainer.log_metrics("test", metrics)
         trainer.save_metrics("test", metrics)
+
+    if model_args.save_path is not None:
+        encoder.save_pretrained(model_args.save_path)
+        logger.info("*** PLM Saved successfuly ***")
 
     shutil.rmtree(training_args.output_dir)
 
