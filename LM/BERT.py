@@ -221,7 +221,7 @@ class ModelArguments:
         metadata={"help": "Whether to add bias for classifier head."}
     )
     unfreeze_layers: int = field(
-        default=2,
+        default=None,
         metadata={
             "help": "The layers to unfreeze"
         },
