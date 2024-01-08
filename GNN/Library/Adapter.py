@@ -244,7 +244,7 @@ def student_training(
 
         wandb.log(
             {'Student_loss': loss, 'Student_Train_loss': student_loss, 'Student_Test_loss': test_loss, 'Student_Val_loss': val_loss,
-             'Distillation_loss': distillation_loss, 'Student_Train_Result': train_results,
+             'Distillation_loss': distillation_loss, 'Student_Train_Result': train_results, 'loss_Ncontrast': loss_Ncontrast,
              'Student_Val_Result': val_results, 'Student_Test_Result': test_results})
 
         lr_scheduler.step(loss)
