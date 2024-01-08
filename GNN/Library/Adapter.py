@@ -225,7 +225,7 @@ def student_training(
         x_dis = get_feature_dis(embedding_batch, device)
         loss_Ncontrast = ncontrast(x_dis, sub_graph, device, tau=args.tau)
 
-        loss = args.alpha * student_loss + (1 - args.alpha) * distillation_loss + args.beta * loss_Ncontrast
+        loss = args.alpha * student_loss + args.gnn_ratio * distillation_loss + args.beta * loss_Ncontrast
 
         student_optimizer.zero_grad()
         loss.backward()  # 反向传播
@@ -398,7 +398,10 @@ def args_init():
         "--label-smoothing", type=float, default=0.1, help="the smoothing factor"
     )
     argparser.add_argument(
-        "--alpha", type=float, default=0.5, help="Control the Pseudolabel ratio"
+        "--alpha", type=float, default=1.0, help="Control the Pseudolabel ratio"
+    )
+    argparser.add_argument(
+        "--gnn_ratio", type=float, default=1.0, help="Control the NContrasting"
     )
     argparser.add_argument(
         "--beta", type=float, default=2.0, help="Control the NContrasting"
@@ -550,7 +553,7 @@ def main():
     if args.save:
         student_save_path = os.path.join(args.save_path, args.data_name, args.teacher_name, feature_prefix)
         os.makedirs(student_save_path, exist_ok=True)
-        student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}_a_{args.alpha}_b_{args.beta}_e_{args.n_epochs}"
+        student_file_prefix = f"lr{args.lr}_h{args.n_hidden}_l{args.n_layers}_d{args.dropout}_a{args.alpha}_g{args.gnn_ratio}_b{args.beta}_e{args.n_epochs}"
         GAdapter_filename = os.path.join(student_save_path, f"GraphAdapter_{student_file_prefix}.pkl")
         Classifier_filename = os.path.join(student_save_path, f"Classifier_{student_file_prefix}.pkl")
         print(f'The GAdapter be saved in the following:{GAdapter_filename}')
