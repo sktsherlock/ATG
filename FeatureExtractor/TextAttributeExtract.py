@@ -134,6 +134,7 @@ def main():
             cls_emb = trainer.predict(dataset)
             # 保存CLS(首个字符的表示)表示为NPY文件
             np.save(output_file + "_cls.npy", cls_emb.predictions)
+            print('Existing saved to the {}'.format(output_file))
 
         else:
             print('Existing saved CLS')
@@ -144,6 +145,7 @@ def main():
 
         # 保存平均特征表示为NPY文件
         np.save(output_file + "_mean.npy", mean_emb.predictions)
+        print('Existing saved to the {}'.format(output_file))
 
     else:
         print('Existing saved MEAN')
