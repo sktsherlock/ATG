@@ -406,6 +406,8 @@ def args_init():
     argparser.add_argument(
         "--beta", type=float, default=2.0, help="Control the NContrasting"
     )
+    argparser.add_argument('--batch_size', type=int, default=4096, help='batch size')
+    argparser.add_argument('--tau', type=float, default=1.0, help='temperature for Ncontrast loss')
     argparser.add_argument("--wd", type=float, default=0, help="weight decay")
     # ! default
     argparser.add_argument(
