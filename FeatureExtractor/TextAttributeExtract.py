@@ -3,195 +3,25 @@ import numpy as np
 import pandas as pd
 import torch
 import os
-import sys
-from typing import Optional
+from sklearn.decomposition import PCA
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
     AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
-from dataclasses import dataclass, field
-
-@dataclass
-class DataTrainingArguments:
-    """
-    Arguments pertaining to what data we are going to input our model for training and eval.
-
-    Using `HfArgumentParser` we can turn this class
-    into argparse arguments to be able to specify them on
-    the command line.
-    """
-    dataset_name: Optional[str] = field(
-        default=None, metadata={"help": "The name of the dataset to use (via the datasets library)."}
-    )
-    max_seq_length: int = field(
-        default=128,
-        metadata={
-            "help": (
-                "The maximum total input sequence length after tokenization. Sequences longer "
-                "than this will be truncated, sequences shorter will be padded."
-            )
-        },
-    )
-    pad_to_max_length: bool = field(
-        default=True,
-        metadata={
-            "help": (
-                "Whether to pad all samples to `max_seq_length`. "
-                "If False, will pad the samples dynamically when batching to the maximum length in the batch."
-            )
-        },
-    )
-    max_predict_samples: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "For debugging purposes or quicker training, truncate the number of prediction examples to this "
-                "value if set."
-            )
-        },
-    )
-    test_file: Optional[str] = field(default=None, metadata={"help": "A csv or a json file containing the test data."})
-
-    def __post_init__(self):
-        if self.dataset_name is not None:
-            pass
-        else:
-            test_extension = self.test_file.split(".")[-1]
-            assert test_extension in ["csv", "json"], "`test_file` should be a csv or a json file."
 
 
-@dataclass
-class ModelArguments:
-    """
-    Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
-    """
-    model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
-    )
-    config_name: Optional[str] = field(
-        default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
-    )
-    tokenizer_name: Optional[str] = field(
-        default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
-    )
-    cache_dir: Optional[str] = field(
-        default=None,
-        metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
-    )
-    use_fast_tokenizer: bool = field(
-        default=True,
-        metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
-    )
-    model_revision: str = field(
-        default="main",
-        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
-    )
-    use_auth_token: bool = field(
-        default=False,
-        metadata={
-            "help": (
-                "Will use the token generated when running `huggingface-cli login` (necessary to use this script "
-                "with private models)."
-            )
-        },
-    )
-    ignore_mismatched_sizes: bool = field(
-        default=False,
-        metadata={"help": "Will enable to load a pretrained model whose head dimensions are different."},
-    )
-    training_objective: str = field(
-        default="CLS",
-        metadata={"help": "The training objective of bloom to use (CLS or CLM) for finetuning downstream model."}
-    )
-    lm_loss_weight: float = field(
-        default=0.0,
-        metadata={
-            "help": "If greater than 0.0, CLM loss will be computed on all positions, otherwise only on the last position."},
-    )
-    template_config: str = field(
-        default="template_pool.json",
-        metadata={"help": "Where to load the predefined template."}
-    )
-    template_name: str = field(
-        default="template_1",
-        metadata={"help": "Which template to use."}
-    )
-    template: str = field(
-        default="Does the query \"{}\" match the keyword \"{}\"? Answer:",
-        metadata={"help": "The template (prompt) to tune downstream QK task using CLM objective."}
-    )
-    truncate_in_pairs: bool = field(
-        default=False,
-        metadata={"help": "Whether to truncate in pairs before combination with prompt, only work for CLM mode."},
-    )
-    use_features: bool = field(
-        default=True,
-        metadata={"help": "Whether to use data features or not."},
-    )
-    feature_separator: str = field(
-        default=" ##! ",
-        metadata={"help": "Customize separator for concatenating features."}
-    )
-    positive_token: int = field(
-        default=31559,
-        metadata={"help": "The id of positive token, default 'Yes'."},
-    )
-    negative_token: int = field(
-        default=4309,
-        metadata={"help": "The id of negative token, default 'No'."},
-    )
-    cls_head_tunable: bool = field(
-        default=True,
-        metadata={"help": "Whether to tune the classifier head."},
-    )
-    cls_head_bias: bool = field(
-        default=False,
-        metadata={"help": "Whether to add bias for classifier head."}
-    )
-    use_lora: bool = field(
-        default=False,
-        metadata={"help": "Whether to use LoRA or not."},
-    )
-    save_lora_with_prefix: bool = field(
-        default=False,
-        metadata={"help": "Whether to keep the prefix ('transformer') when saving lora weights."},
-    )
-    lora_rank: int = field(
-        default=8,
-        metadata={"help": "The rank of LoRA."},
-    )
-    lora_train_bias: str = field(
-        default="none",
-        metadata={"help": "Whether to train bias, choices: none, lora_only and all."},
-    )
-    lora_alpha: float = field(
-        default=1.0,
-        metadata={"help": "The alpha of LoRA when adding the LoRA parameters to the origin ones."},
-    )
-    lora_param: str = field(
-        default="Q.V",
-        metadata={
-            "help": "The parameter groups to apply LoRA, including E (embeddings), Q (attn query), K (attn key), "
-                    "V (attn value), O (attn output) and F (feedforward), splitted by dot, e.g. Q.V means applying "
-                    "LoRA to Q and V."
-        }
-    )
-    lora_ckpt: str = field(
-        default=None,
-        metadata={"help": "The checkpoint path of LoRA checkpoint."},
-    )
-    lora_ckpt_old_format: bool = field(
-        default=False,
-        metadata={"help": "Whether the LoRA checkpoint is in old format."},
-    )
-    lora_layers: int = field(
-        default=-1,
-        metadata={"help": "The number of top layers to apply LoRA. Set to -1 to apply LoRA to all layers."},
-    )
-    random_init: bool = field(
-        default=False,
-        metadata={"help": "If true, do not load the pretained weights and initialize the model with random weights."},
-    )
+
+def reduce_dimension(features, n_components):
+    # features: 节点表征矩阵，大小为 (num_nodes, 4096)
+    # n_components: 降维后的维度数
+
+    # 创建PCA模型
+    pca = PCA(n_components=n_components)
+
+    # 对节点表征进行降维
+    reduced_features = pca.fit_transform(features)
+
+    return reduced_features
 
 
 def main():
@@ -304,14 +134,24 @@ def main():
             cls_emb = trainer.predict(dataset)
             # 保存CLS(首个字符的表示)表示为NPY文件
             np.save(output_file + "_cls.npy", cls_emb.predictions)
+
+            if cls_emb.predictions.shape[1] > 768:
+                pca_emb = reduce_dimension(cls_emb.predictions, 768)
+                np.save(output_file + "_PCA_mean.npy", pca_emb)
         else:
             print('Existing saved CLS')
 
     if not os.path.exists(output_file + "_mean.npy"):
         trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
         mean_emb = trainer.predict(dataset)
+
         # 保存平均特征表示为NPY文件
         np.save(output_file + "_mean.npy", mean_emb.predictions)
+
+        # PCA 降维
+        if mean_emb.predictions.shape[1] > 768:
+            pca_emb = reduce_dimension(mean_emb.predictions, 768)
+            np.save(output_file + "_PCA_mean.npy", pca_emb)
     else:
         print('Existing saved MEAN')
 
