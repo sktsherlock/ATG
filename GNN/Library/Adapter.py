@@ -15,7 +15,7 @@ from GCN import GCN
 from GraphSAGE import GraphSAGE
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate, _contrastive_loss
+from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate, ncontrast
 from GraphData import load_data, set_seed
 
 
@@ -59,6 +59,31 @@ def get_preds(
 
     return pred
 
+
+def get_batch(embedding, graph, batch_size):
+    """
+    get a batch of feature & adjacency matrix
+    """
+    rand_indx = np.random.choice(np.arange(graph.num_nodes()), batch_size)
+    embedding_batch = embedding[rand_indx]
+    sub_graph = graph.subgraph(rand_indx)
+
+    return embedding_batch, sub_graph
+
+
+def get_feature_dis(x, device):
+    """
+    x :           batch_size x nhid
+    x_dis(i,j):   item means the similarity between x(i) and x(j).
+    """
+    x_dis = x @ x.T
+    mask = th.eye(x_dis.shape[0]).to(device)
+    x_sum = th.sum(x ** 2, 1).reshape(-1, 1)
+    x_sum = th.sqrt(x_sum).reshape(-1, 1)
+    x_sum = x_sum @ x_sum.T
+    x_dis = x_dis * (x_sum ** (-1))
+    x_dis = (1 - mask) * x_dis
+    return x_dis
 
 
 def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx, test_idx, model_path):
@@ -155,7 +180,7 @@ def teacher_training(args, teacher_model, graph, feat, label, train_idx, val_idx
 
 
 def student_training(
-        args, student_model, feat, labels, train_idx, val_idx, test_idx, GAdapter_file, Classifer_file, n_running, teacher_graph_preds):
+        args, student_model, feat, labels, train_idx, val_idx, test_idx, GAdapter_file, Classifer_file, n_running, teacher_graph_preds, device, graph):
 
     if args.early_stop_patience is not None:
         stopper = EarlyStopping(patience=args.early_stop_patience)
@@ -190,13 +215,17 @@ def student_training(
         #     teacher_graph_preds = teacher_model(graph, feat)
 
         # student model forward
-        student_preds = student_model.forward(feat)
+        student_preds, res_Graph_embedding = student_model.forward(feat)
 
         student_loss = cross_entropy(student_preds[train_idx], labels[train_idx])
 
         distillation_loss = kl_loss_fn(F.log_softmax(student_preds, dim=-1), F.softmax(teacher_graph_preds, dim=-1))
 
-        loss = args.alpha * student_loss + (1 - args.alpha) * distillation_loss
+        embedding_batch, sub_graph = get_batch(res_Graph_embedding, graph, batch_size=args.batch_size)
+        x_dis = get_feature_dis(embedding_batch, device)
+        loss_Ncontrast = ncontrast(x_dis, sub_graph, device, tau=args.tau)
+
+        loss = args.alpha * student_loss + (1 - args.alpha) * distillation_loss + args.beta * loss_Ncontrast
 
         student_optimizer.zero_grad()
         loss.backward()  # 反向传播
@@ -261,9 +290,9 @@ class Classifier(nn.Module):
     def forward(self, feat):
         # Extract outputs from the model
         outputs, feat = self.Adapter(feat)
-        outputs = outputs + feat
-        logits = self.classifier(outputs)
-        return logits
+        cls_outputs = outputs + feat
+        logits = self.classifier(cls_outputs)
+        return logits, outputs
 
 
 class MLP(nn.Module):
@@ -369,7 +398,10 @@ def args_init():
         "--label-smoothing", type=float, default=0.1, help="the smoothing factor"
     )
     argparser.add_argument(
-        "--alpha", type=float, default=0.5, help="learning rate"
+        "--alpha", type=float, default=0.5, help="Control the Pseudolabel ratio"
+    )
+    argparser.add_argument(
+        "--beta", type=float, default=2.0, help="Control the NContrasting"
     )
     argparser.add_argument("--wd", type=float, default=0, help="weight decay")
     # ! default
@@ -518,7 +550,7 @@ def main():
     if args.save:
         student_save_path = os.path.join(args.save_path, args.data_name, args.teacher_name, feature_prefix)
         os.makedirs(student_save_path, exist_ok=True)
-        student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}_a_{args.alpha}_e_{args.n_epochs}"
+        student_file_prefix = f"lr_{args.lr}_h_{args.n_hidden}_l_{args.n_layers}_d_{args.dropout}_a_{args.alpha}_b_{args.beta}_e_{args.n_epochs}"
         GAdapter_filename = os.path.join(student_save_path, f"GraphAdapter_{student_file_prefix}.pkl")
         Classifier_filename = os.path.join(student_save_path, f"Classifier_{student_file_prefix}.pkl")
         print(f'The GAdapter be saved in the following:{GAdapter_filename}')
@@ -560,7 +592,8 @@ def main():
         for run in range(args.n_runs):
             student_model.reset_parameters()
             val_result, test_result = student_training(args, student_model, feat, labels, train_idx,
-                                                       val_idx, test_idx, GAdapter_filename, Classifier_filename, run+1, teacher_graph_preds)
+                                                       val_idx, test_idx, GAdapter_filename, Classifier_filename, run+1, teacher_graph_preds, device,
+                                                       graph)
             wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
             val_results.append(val_result)
             test_results.append(test_result)
