@@ -221,9 +221,9 @@ def student_training(
 
         distillation_loss = kl_loss_fn(F.log_softmax(student_preds, dim=-1), F.softmax(teacher_graph_preds, dim=-1))
 
-        embedding_batch, sub_graph = get_batch(res_Graph_embedding, graph, batch_size=args.batch_size)
-        x_dis = get_feature_dis(embedding_batch, device)
-        loss_Ncontrast = ncontrast(x_dis, sub_graph, device, tau=args.tau)
+        # embedding_batch, sub_graph = get_batch(res_Graph_embedding, graph, batch_size=args.batch_size)
+        x_dis = get_feature_dis(res_Graph_embedding, device)
+        loss_Ncontrast = ncontrast(x_dis, graph, device, tau=args.tau)
 
         loss = args.alpha * student_loss + args.gnn_ratio * distillation_loss + args.beta * loss_Ncontrast
 
