@@ -135,9 +135,6 @@ def main():
             # 保存CLS(首个字符的表示)表示为NPY文件
             np.save(output_file + "_cls.npy", cls_emb.predictions)
 
-            if cls_emb.predictions.shape[1] > 768:
-                pca_emb = reduce_dimension(cls_emb.predictions, 768)
-                np.save(output_file + "_PCA_mean.npy", pca_emb)
         else:
             print('Existing saved CLS')
 
@@ -148,10 +145,6 @@ def main():
         # 保存平均特征表示为NPY文件
         np.save(output_file + "_mean.npy", mean_emb.predictions)
 
-        # PCA 降维
-        if mean_emb.predictions.shape[1] > 768:
-            pca_emb = reduce_dimension(mean_emb.predictions, 768)
-            np.save(output_file + "_PCA_mean.npy", pca_emb)
     else:
         print('Existing saved MEAN')
 
