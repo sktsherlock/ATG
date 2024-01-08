@@ -71,18 +71,31 @@ def get_batch(embedding, graph, batch_size):
     return embedding_batch, sub_graph
 
 
-def get_feature_dis(x, device):
+def get_feature_dis(x, device, batch_size=4096):
     """
     x :           batch_size x nhid
     x_dis(i,j):   item means the similarity between x(i) and x(j).
     """
-    x_dis = x @ x.T
-    mask = th.eye(x_dis.shape[0]).to(device)
-    x_sum = th.sum(x ** 2, 1).reshape(-1, 1)
-    x_sum = th.sqrt(x_sum).reshape(-1, 1)
-    x_sum = x_sum @ x_sum.T
-    x_dis = x_dis * (x_sum ** (-1))
-    x_dis = (1 - mask) * x_dis
+    n = x.shape[0]
+    x_dis = []
+    for i in range(0, n, batch_size):
+        start = i
+        end = min(i + batch_size, n)
+
+        batch_x = x[start:end]
+        batch_dis = batch_x @ x.T
+
+        mask = th.eye(batch_dis.shape[0]).to(device)
+        batch_x_sum = th.sum(batch_x ** 2, 1).reshape(-1, 1)
+        batch_x_sum = th.sqrt(batch_x_sum).reshape(-1, 1)
+        batch_x_sum = batch_x_sum @ batch_x_sum.T
+
+        batch_dis = batch_dis * (batch_x_sum ** (-1))
+        batch_dis = (1 - mask) * batch_dis
+
+        x_dis.append(batch_dis)
+
+    x_dis = th.cat(x_dis, dim=0)
     return x_dis
 
 
