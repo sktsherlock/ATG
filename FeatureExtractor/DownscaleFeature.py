@@ -17,7 +17,7 @@ def main():
     # 解析命令行参数
     parser = argparse.ArgumentParser(description='PCA Dimension Reduction')
     parser.add_argument('input_file', type=str, help='Input .npy file')
-    parser.add_argument('n_components', type=int, help='Number of components for dimension reduction')
+    parser.add_argument('n_components', type=int, default=768, help='Number of components for dimension reduction')
     args = parser.parse_args()
 
     # 读取输入文件
