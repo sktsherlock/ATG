@@ -233,7 +233,7 @@ def student_training(
 
         student_model.eval()
         with th.no_grad():
-            pred = student_model(feat)
+            pred, _ = student_model(feat)
         val_loss = cross_entropy(pred[val_idx], labels[val_idx])
         test_loss = cross_entropy(pred[test_idx], labels[test_idx])
 
