@@ -218,6 +218,7 @@ def main():
     name = args.name
     max_length = args.max_length
     batch_size = args.batch_size
+    access_token = "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"
 
     tokenizer_name = args.tokenizer_name
 
@@ -269,9 +270,9 @@ def main():
 
     # 加载模型和分词器
     if tokenizer_name:
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True, token=access_token,  trust_remote_code=True)
     else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, token=access_token,  trust_remote_code=True)
 
     # 编码文本数据并转为数据集
     if tokenizer.pad_token is None:
@@ -279,7 +280,7 @@ def main():
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(encoded_inputs)
 
-    model = AutoModel.from_pretrained(model_name,  trust_remote_code=True)
+    model = AutoModel.from_pretrained(model_name,  trust_remote_code=True, token=access_token)
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mean_Features_Extractor = MeanEmbInfModel(model)
