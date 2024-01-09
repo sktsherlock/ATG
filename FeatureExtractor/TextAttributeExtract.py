@@ -30,7 +30,7 @@ def main():
         description='Process text data and save the overall representation as an NPY file.')
     parser.add_argument('--csv_file', type=str, help='Path to the CSV file')
     parser.add_argument('--text_column', type=str, default='text', help='Name of the column containing text data')
-    parser.add_argument('--model_name', type=str, default='prajjwal1/bert-tiny',
+    parser.add_argument('--model_name', type=str, default='prajjwal1/bert-tiny', required=True,
                         help='Name or path of the Huggingface model')
     parser.add_argument('--tokenizer_name', type=str, default=None)
     parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
