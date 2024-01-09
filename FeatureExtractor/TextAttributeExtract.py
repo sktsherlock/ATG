@@ -65,7 +65,10 @@ def main():
     if not os.path.exists(cache_path):
         os.makedirs(cache_path)
 
-    output_file = Feature_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
+    if args.pretrain_path is not None:
+        output_file = Feature_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length) + '_' + 'Tuned'
+    else:
+        output_file = Feature_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
 
     class CLSEmbInfModel(PreTrainedModel):
         def __init__(self, model):
