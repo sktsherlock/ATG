@@ -606,7 +606,7 @@ def main():
             os.makedirs(save_path)
             logger.info(f"Created directory: {save_path}")
 
-        encoder.save_pretrained(model_args.save_path)
+        encoder.save_pretrained(save_path)
         logger.info("*** PLM Saved successfully ***")
 
     shutil.rmtree(training_args.output_dir)
