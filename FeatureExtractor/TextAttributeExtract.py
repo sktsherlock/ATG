@@ -111,7 +111,12 @@ def main():
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(encoded_inputs)
 
-    model = AutoModel.from_pretrained(model_name,  trust_remote_code=True, token=access_token) if args.pretrain_path is None else AutoModel.from_pretrained(f'{args.pretrain_path}')
+    if args.pretrain_path is not None:
+        model = AutoModel.from_pretrained(f'{args.pretrain_path}')
+        print('Loading model from the path: {}'.format(args.pretrain_path))
+    else:
+        model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mean_Features_Extractor = MeanEmbInfModel(model)
