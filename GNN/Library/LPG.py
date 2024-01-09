@@ -323,6 +323,7 @@ def main():
     test_results = []
 
     # Model implementation
+    print(f"Selecting the {args.gnn}")
     if args.gnn == 'RevGAT':
         GNN = RevGAT(PLM_feat.shape[1], n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu,
                      dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False,
