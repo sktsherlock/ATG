@@ -601,8 +601,12 @@ def main():
         trainer.save_metrics("test", metrics)
 
     if model_args.save_path is not None:
+        if not os.path.exists(model_args.save_path):
+            os.makedirs(model_args.save_path)
+            logger.info(f"Created directory: {model_args.save_path}")
+
         encoder.save_pretrained(model_args.save_path)
-        logger.info("*** PLM Saved successfuly ***")
+        logger.info("*** PLM Saved successfully ***")
 
     shutil.rmtree(training_args.output_dir)
 
