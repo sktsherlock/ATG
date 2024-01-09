@@ -35,7 +35,7 @@ def main():
     parser.add_argument('--tokenizer_name', type=str, default=None)
     parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
     parser.add_argument('--path', type=str, default='./', help='Path to the NPY File')
-    parser.add_argument('--pretrain_path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Model/PLM/', help='Path to the NPY File')
+    parser.add_argument('--pretrain_path', type=str, default=None, help='Path to the NPY File')
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
