@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import torch
 import os
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, TruncatedSVD
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
     AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
@@ -35,6 +35,7 @@ def main():
     parser.add_argument('--tokenizer_name', type=str, default=None)
     parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
     parser.add_argument('--path', type=str, default='./', help='Path to the NPY File')
+    parser.add_argument('--pretrain_path', type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Model/PLM/', help='Path to the NPY File')
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
@@ -110,7 +111,7 @@ def main():
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(encoded_inputs)
 
-    model = AutoModel.from_pretrained(model_name,  trust_remote_code=True, token=access_token)
+    model = AutoModel.from_pretrained(model_name,  trust_remote_code=True, token=access_token) if args.pretrain_path is None else AutoModel.from_pretrained(f'{args.pretrain_path}')
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mean_Features_Extractor = MeanEmbInfModel(model)
