@@ -8,12 +8,9 @@ import numpy as np
 import torch.nn.functional as F
 import os
 from RevGAT.model import RevGAT
-from GCN import GCN
-from GraphSAGE import GraphSAGE
-from MLP import MLP
 import time
+from datetime import datetime
 import torch.optim as optim
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
 from GraphData import load_data, set_seed
@@ -21,12 +18,11 @@ from GraphData import load_data, set_seed
 
 @th.no_grad()
 def evaluate(
-        model, graph, LLM_feat, PLM_feat, labels, train_idx, val_idx, test_idx, metric='accuracy', label_smoothing=0.1,
-        average=None
+    model, graph, feat, labels, train_idx, val_idx, test_idx, metric='accuracy', label_smoothing=0.1, average=None
 ):
     model.eval()
     with th.no_grad():
-        pred = model(graph, LLM_feat, PLM_feat)
+        pred = model(graph, feat)
     val_loss = cross_entropy(pred[val_idx], labels[val_idx], label_smoothing)
     test_loss = cross_entropy(pred[test_idx], labels[test_idx], label_smoothing)
 
@@ -37,11 +33,21 @@ def evaluate(
     return train_results, val_results, test_results, val_loss, test_loss
 
 
-def train(model, graph, LLM_feat, PLM_feat, labels, train_idx, optimizer, label_smoothing):
+@th.no_grad()
+def get_preds(model, graph, feat):
+    model.eval()
+    with th.no_grad():
+        pred = model(graph, feat)
+    # Get prediction results
+
+    return pred
+
+
+def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
     model.train()
 
     optimizer.zero_grad()
-    pred = model(graph, LLM_feat, PLM_feat)
+    pred = model(graph, feat)
     loss = cross_entropy(pred[train_idx], labels[train_idx], label_smoothing=label_smoothing)
     loss.backward()
     optimizer.step()
@@ -50,7 +56,7 @@ def train(model, graph, LLM_feat, PLM_feat, labels, train_idx, optimizer, label_
 
 
 def classification(
-        args, graph, model, PLM_feat, LLM_feat, labels, train_idx, val_idx, test_idx, n_running):
+        args, graph, model, feat, labels, train_idx, val_idx, test_idx, n_running, model_path):
     if args.early_stop_patience is not None:
         stopper = EarlyStopping(patience=args.early_stop_patience)
     optimizer = optim.AdamW(
@@ -75,9 +81,8 @@ def classification(
         if args.warmup_epochs is not None:
             adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
 
-        train_loss, pred = train(model, graph, LLM_feat, PLM_feat, labels, train_idx, optimizer,
-                                 label_smoothing=args.label_smoothing
-                                 )
+        train_loss, pred = train(model, graph, feat, labels, train_idx, optimizer, label_smoothing=args.label_smoothing
+        )
         if epoch % args.eval_steps == 0:
             (
                 train_result,
@@ -88,8 +93,7 @@ def classification(
             ) = evaluate(
                 model,
                 graph,
-                LLM_feat,
-                PLM_feat,
+                feat,
                 labels,
                 train_idx,
                 val_idx,
@@ -98,9 +102,7 @@ def classification(
                 args.label_smoothing,
                 args.average
             )
-            wandb.log(
-                {'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss, 'Train_result': train_result,
-                 'Val_result': val_result, 'Test_result': test_result})
+            wandb.log({'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss, 'Train_result': train_result, 'Val_result': val_result, 'Test_result': test_result})
             lr_scheduler.step(train_loss)
 
             toc = time.time()
@@ -110,6 +112,8 @@ def classification(
                 best_val_loss = val_loss
                 best_val_result = val_result
                 final_test_result = test_result
+                th.save(model.state_dict(), model_path)
+
 
             if args.early_stop_patience is not None:
                 if stopper.step(val_loss):
@@ -127,30 +131,12 @@ def classification(
     print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
     print("*" * 50)
 
-    return best_val_result, final_test_result
+    model.load_state_dict(th.load(model_path))
+    model.eval()
+    preds = get_preds(model, graph, feat)
 
+    return preds
 
-class LPGNN(nn.Module):
-    def __init__(self, model, LLM_in_feats, PLM_in_feats, alpha=0.5):
-        super().__init__()
-        self.GNN = model
-        self.decomposition = nn.Linear(LLM_in_feats, PLM_in_feats)
-        self.alpha = alpha
-
-    def reset_parameters(self):
-        self.GNN.reset_parameters()
-
-        self.decomposition.reset_parameters()
-
-    def forward(self, graph, LLM_feat, PLM_feat):  #
-        # Decomposition the LLM features
-        LLM_feat = self.decomposition(LLM_feat)
-        # Trade off the LLM_feat and the PLM_feat
-        feat = self.alpha * LLM_feat + (1 - self.alpha) * PLM_feat
-        # Extract outputs from the model
-        preds = self.GNN(graph, feat)
-
-        return preds
 
 
 def args_init():
@@ -175,9 +161,6 @@ def args_init():
         "--n-hidden", type=int, default=256, help="number of hidden units"
     )
     argparser.add_argument(
-        "--aggregator", type=str, default="mean", choices=["mean", "gcn", "pool", "lstm"], help="Specify the aggregator option of SAGE"
-    )
-    argparser.add_argument(
         "--no-attn-dst", type=bool, default=True, help="Don't use attn_dst."
     )
     argparser.add_argument(
@@ -199,9 +182,6 @@ def args_init():
         "--weight", type=bool, default=True, help="if False, no W."
     )
     argparser.add_argument(
-        "--gnn", type=str, default="RevGAT", choices=["RevGAT", "GCN", "SAGE"], help="Specify the GNN"
-    )
-    argparser.add_argument(
         "--bias", type=bool, default=True, help="if False, no last layer bias."
     )
     argparser.add_argument(
@@ -219,8 +199,7 @@ def args_init():
         "--eval_steps", type=int, default=1, help="eval in every epochs"
     )
     argparser.add_argument(
-        "--early_stop_patience", type=int, default=None,
-        help="when to stop the  training loop to be aviod of the overfiting"
+        "--early_stop_patience", type=int, default=None, help="when to stop the  training loop to be aviod of the overfiting"
     )
     argparser.add_argument(
         "--warmup_epochs", type=int, default=None, help="The warmup epochs"
@@ -240,6 +219,9 @@ def args_init():
     )
     argparser.add_argument(
         "--graph_path", type=str, default=None, help="The datasets to be implemented."
+    )
+    argparser.add_argument(
+        "--temp_path", type=str, default='/dataintent/local/user/v-haoyan1/Data/OGB/tmp/', help="The datasets to be implemented."
     )
     argparser.add_argument(
         "--undirected", type=bool, default=True, help="Whether to undirect the graph."
@@ -302,9 +284,8 @@ def main():
 
     PLM_feat = th.from_numpy(np.load(args.PLM_feature).astype(np.float32)).to(device)
     LLM_feat = th.from_numpy(np.load(args.LLM_feature).astype(np.float32)).to(device)
-    n_classes = (labels.max() + 1).item()
-    print(
-        f"Number of classes {n_classes}, Number of PLM features {PLM_feat.shape[1]}, Number of LLM features {LLM_feat.shape[1]}")
+    n_classes = (labels.max()+1).item()
+    print(f"Number of classes {n_classes}, Number of PLM features {PLM_feat.shape[1]}, Number of LLM features {LLM_feat.shape[1]}")
 
     graph.create_formats_()
 
@@ -322,34 +303,41 @@ def main():
     val_results = []
     test_results = []
 
-    # Model implementation
-    if args.gnn == 'RevGAT':
-        GNN = RevGAT(PLM_feat.shape[1], n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu,
-                     dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False,
-                     use_symmetric_norm=True).to(device)
-    elif args.gnn == 'GCN':
-        GNN = GCN(PLM_feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu,
-                  dropout=args.dropout).to(device)
-    elif args.gnn == 'SAGE':
-        GNN = GraphSAGE(PLM_feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu,
-                        dropout=args.dropout, aggregator_type=args.aggregator).to(device)
-    else:
-        raise ValueError
+    # directory
 
-    # GNN = RevGAT(PLM_feat.shape[1], n_classes, args.n_hidden,  args.n_layers, args.n_heads, F.relu, dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False, use_symmetric_norm=True).to(device)
-    model = LPGNN(GNN, LLM_feat.shape[1], PLM_feat.shape[1], args.alpha).to(device)
+    if not os.path.exists(args.temp_path):
+        os.makedirs(args.temp_path)
+
+    # Model implementation
+    GNN_PLM = RevGAT(PLM_feat.shape[1], n_classes, args.n_hidden,  args.n_layers, args.n_heads, F.relu, dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False, use_symmetric_norm=True).to(device)
+
+    GNN_LLM = RevGAT(LLM_feat.shape[1], n_classes, args.n_hidden,  args.n_layers, args.n_heads, F.relu, dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False, use_symmetric_norm=True).to(device)
+
     TRAIN_NUMBERS = sum(
-        [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
+        [np.prod(p.size()) for p in GNN_LLM.parameters() if p.requires_grad]
     )
-    print(f"Number of the all RevGAT model params: {TRAIN_NUMBERS}")
+    print(f"Number of the all LLM RevGAT model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
         set_seed(args.seed)
-        model.reset_parameters()
-        val_result, test_result = classification(
-            args, graph, model, PLM_feat, LLM_feat, labels, train_idx, val_idx, test_idx, run + 1
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        model_path = os.path.join(args.temp_path, f"temp_{timestamp}")
+        GNN_PLM.reset_parameters()
+        PLM_preds = classification(
+            args, graph, GNN_PLM, PLM_feat, labels, train_idx, val_idx, test_idx, run+1, model_path
         )
-        wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        model_path = os.path.join(args.temp_path, f"temp_{timestamp}")
+        GNN_LLM.reset_parameters()
+        LLM_preds = classification(
+            args, graph, GNN_LLM, LLM_feat, labels, train_idx, val_idx, test_idx, run+1, model_path
+        )
+        # Ensemble
+        Preds = PLM_preds + LLM_preds
+        val_result = get_metric(th.argmax(Preds[val_idx], dim=1), labels[val_idx], args.metric, average=args.average)
+        test_result = get_metric(th.argmax(Preds[test_idx], dim=1), labels[test_idx], args.metric, average=args.average)
+        wandb.log({f'Ensemble_Val_{args.metric}': val_result, f'Ensemble_Test_{args.metric}': test_result})
         val_results.append(val_result)
         test_results.append(test_result)
 
