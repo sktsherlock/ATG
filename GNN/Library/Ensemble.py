@@ -311,7 +311,7 @@ def main():
     # Model implementation
     GNN_PLM = RevGAT(PLM_feat.shape[1], n_classes, args.n_hidden,  args.n_layers, args.n_heads, F.relu, dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False, use_symmetric_norm=True).to(device)
 
-    GNN_LLM = RevGAT(LLM_feat.shape[1], n_classes, args.n_hidden,  args.n_layers, args.n_heads, F.relu, dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False, use_symmetric_norm=True).to(device)
+    GNN_LLM = RevGAT(LLM_feat.shape[1], n_classes, 256,  4, 3, F.relu, 0.5, 0, 0.25, use_attn_dst=False, use_symmetric_norm=True).to(device)
 
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in GNN_LLM.parameters() if p.requires_grad]
