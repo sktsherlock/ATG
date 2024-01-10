@@ -334,7 +334,7 @@ def main():
             args, graph, GNN_LLM, LLM_feat, labels, train_idx, val_idx, test_idx, run+1, model_path
         )
         # Ensemble
-        Preds = PLM_preds + LLM_preds
+        Preds = (1 - args.alpha) * PLM_preds + args.alpha * LLM_preds
         val_result = get_metric(th.argmax(Preds[val_idx], dim=1), labels[val_idx], args.metric, average=args.average)
         test_result = get_metric(th.argmax(Preds[test_idx], dim=1), labels[test_idx], args.metric, average=args.average)
         wandb.log({f'Ensemble_Val_{args.metric}': val_result, f'Ensemble_Test_{args.metric}': test_result})
