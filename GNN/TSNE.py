@@ -38,8 +38,8 @@ tsne = TSNE(n_components=2, random_state=42)
 tsne_result = tsne.fit_transform(features)
 
 # 绘制 t-SNE 可视化结果
-plt.scatter(tsne_result[:sample_size, 0], tsne_result[:sample_size, 1], c=PLM_labels_sample, cmap='viridis', label='PLM')
-plt.scatter(tsne_result[sample_size:, 0], tsne_result[sample_size:, 1], c=LLM_labels_sample, cmap='viridis', label='LLM')
+plt.scatter(tsne_result[:sample_size, 0], tsne_result[:sample_size, 1], cmap='viridis', label='PLM')
+plt.scatter(tsne_result[sample_size:, 0], tsne_result[sample_size:, 1], cmap='viridis', label='LLM')
 plt.xlabel('t-SNE Dimension 1')
 plt.ylabel('t-SNE Dimension 2')
 plt.title('Combined t-SNE Visualization')
