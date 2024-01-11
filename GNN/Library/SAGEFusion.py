@@ -133,9 +133,6 @@ def args_init():
         "--weight", type=bool, default=True, help="if False, no W."
     )
     argparser.add_argument(
-        "--gnn", type=str, default="RevGAT", choices=["RevGAT", "GCN", "SAGE"], help="Specify the GNN"
-    )
-    argparser.add_argument(
         "--bias", type=bool, default=True, help="if False, no last layer bias."
     )
     argparser.add_argument(
@@ -258,7 +255,7 @@ def main():
     test_results = []
 
     # Model implementation
-    print(f"Selecting the {args.gnn}")
+
     GNN = LPSAGE(LLM_feat.shape[1], PLM_feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu,
                  dropout=args.dropout, aggregator_type=args.aggregator).to(device)
 
