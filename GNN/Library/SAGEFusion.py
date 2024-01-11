@@ -81,7 +81,7 @@ class LPSAGE(nn.Module):
                 h = self.activation(h)
                 h = self.dropout(h)
 
-            if i == 1:
+            if i == 0:
                 h = h + PLM_feat
         return h
 
