@@ -17,31 +17,30 @@ LLM_features = '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/Arxiv_Ll
 PLM_feat = th.from_numpy(np.load(PLM_features).astype(np.float32))
 LLM_feat = th.from_numpy(np.load(LLM_features).astype(np.float32))
 
-sample_size = 2000
+sample_size = 1000
 
-# 对 PLM_feat 进行采样
+# 对 PLM_feat 进行采样和获取标签
 PLM_feat_sample = PLM_feat[:sample_size]
+PLM_labels_sample = labels[:sample_size]  # 假设你从训练集中采样了样本
 
-# 对 LLM_feat 进行采样
+# 对 LLM_feat 进行采样和获取标签
 LLM_feat_sample = LLM_feat[:sample_size]
+LLM_labels_sample = labels[:sample_size]  # 假设你从训练集中采样了样本
 
-# 创建TSNE对象并进行降维
+# 合并特征矩阵和标签
+features = np.vstack((PLM_feat_sample, LLM_feat_sample))
+labels = np.concatenate((PLM_labels_sample, LLM_labels_sample))
+
+# 创建 TSNE 对象并进行降维
 tsne = TSNE(n_components=2, random_state=42)
-PLM_tsne = tsne.fit_transform(PLM_feat_sample)
-LLM_tsne = tsne.fit_transform(LLM_feat_sample)
+tsne_result = tsne.fit_transform(features)
 
-# 绘制 PLM_feat 的 t-SNE 结果
-plt.scatter(PLM_tsne[:, 0], PLM_tsne[:, 1])
+# 绘制 t-SNE 可视化结果
+plt.scatter(tsne_result[:sample_size, 0], tsne_result[:sample_size, 1], c=PLM_labels_sample, cmap='viridis', label='PLM')
+plt.scatter(tsne_result[sample_size:, 0], tsne_result[sample_size:, 1], c=LLM_labels_sample, cmap='viridis', label='LLM')
 plt.xlabel('t-SNE Dimension 1')
 plt.ylabel('t-SNE Dimension 2')
-plt.title('PLM_feat t-SNE Visualization')
-plt.savefig('PLM_feat_tsne.pdf')
-plt.close()
-
-# 绘制 LLM_feat 的 t-SNE 结果
-plt.scatter(LLM_tsne[:, 0], LLM_tsne[:, 1])
-plt.xlabel('t-SNE Dimension 1')
-plt.ylabel('t-SNE Dimension 2')
-plt.title('LLM_feat t-SNE Visualization')
-plt.savefig('LLM_feat_tsne.pdf')
-plt.close()
+plt.title('Combined t-SNE Visualization')
+plt.legend()
+plt.savefig('combined_tsne.pdf')
+plt.show()
