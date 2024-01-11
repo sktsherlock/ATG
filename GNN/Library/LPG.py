@@ -130,10 +130,14 @@ def classification(
 
 
 class LPGNN(nn.Module):
-    def __init__(self, model, LLM_in_feats, PLM_in_feats, alpha=0.5):
+    def __init__(self, model, LLM_in_feats, PLM_in_feats, alpha=0.5, conv='SAGE'):
         super().__init__()
         self.GNN = model
-        self.decomposition = nn.Linear(LLM_in_feats, PLM_in_feats)
+        self.conv = conv
+        if conv == 'SAGE':
+            self.decomposition = dglnn.SAGEConv(LLM_in_feats, PLM_in_feats, 'mean')
+        else:
+            self.decomposition = nn.Linear(LLM_in_feats, PLM_in_feats)
         self.alpha = alpha
 
     def reset_parameters(self):
@@ -143,7 +147,7 @@ class LPGNN(nn.Module):
 
     def forward(self, graph, LLM_feat, PLM_feat):  #
         # Decomposition the LLM features
-        LLM_feat = self.decomposition(LLM_feat)
+        LLM_feat = self.decomposition(graph, LLM_feat) if self.conv == 'SAGE' else self.decomposition(LLM_feat)
         # Trade off the LLM_feat and the PLM_feat
         feat = self.alpha * LLM_feat + (1 - self.alpha) * PLM_feat
         # Extract outputs from the model
