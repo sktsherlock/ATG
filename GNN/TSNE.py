@@ -26,9 +26,11 @@ PLM_labels_sample = labels[:sample_size]  # 假设你从训练集中采样了样
 # 对 LLM_feat 进行采样和获取标签
 LLM_feat_sample = LLM_feat[:sample_size]
 LLM_labels_sample = labels[:sample_size]  # 假设你从训练集中采样了样本
+pca = PCA(n_components=768)  # 保持与 PLM_feat 相同的维度
+LLM_feat_sample_pca = pca.fit_transform(LLM_feat_sample)
 
 # 合并特征矩阵和标签
-features = np.vstack((PLM_feat_sample, LLM_feat_sample))
+features = np.vstack((PLM_feat_sample, LLM_feat_sample_pca))
 labels = np.concatenate((PLM_labels_sample, LLM_labels_sample))
 
 # 创建 TSNE 对象并进行降维
