@@ -245,6 +245,9 @@ def args_init():
         "--graph_path", type=str, default=None, help="The datasets to be implemented."
     )
     argparser.add_argument(
+        "--conv_type", type=str, default='SAGE', help="Use PLM embedding as feature"
+    )
+    argparser.add_argument(
         "--undirected", type=bool, default=True, help="Whether to undirect the graph."
     )
     argparser.add_argument(
@@ -341,7 +344,7 @@ def main():
         raise ValueError
 
     # GNN = RevGAT(PLM_feat.shape[1], n_classes, args.n_hidden,  args.n_layers, args.n_heads, F.relu, dropout=args.dropout, attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False, use_symmetric_norm=True).to(device)
-    model = LPGNN(GNN, LLM_feat.shape[1], PLM_feat.shape[1], args.alpha).to(device)
+    model = LPGNN(GNN, LLM_feat.shape[1], PLM_feat.shape[1], args.alpha, args.conv_type).to(device)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
