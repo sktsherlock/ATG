@@ -106,13 +106,12 @@ def classification(
             toc = time.time()
             total_time += toc - tic
 
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
+            if val_result > best_val_result:
                 best_val_result = val_result
                 final_test_result = test_result
 
             if args.early_stop_patience is not None:
-                if stopper.step(val_loss):
+                if stopper.step(val_result):
                     break
 
             if epoch % args.log_every == 0:
