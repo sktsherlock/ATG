@@ -4,6 +4,7 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 from GraphData import load_data
 import torch as th
+
 # 假设你有一个数据集X，其中每一行代表一个样本
 gpu = 0
 device = th.device("cuda:%d" % gpu if th.cuda.is_available() else 'cpu')
@@ -16,12 +17,18 @@ LLM_features = '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/Arxiv_Ll
 PLM_feat = th.from_numpy(np.load(PLM_features).astype(np.float32))
 LLM_feat = th.from_numpy(np.load(LLM_features).astype(np.float32))
 
+sample_size = 2000
 
+# 对 PLM_feat 进行采样
+PLM_feat_sample = PLM_feat[:sample_size]
+
+# 对 LLM_feat 进行采样
+LLM_feat_sample = LLM_feat[:sample_size]
 
 # 创建TSNE对象并进行降维
 tsne = TSNE(n_components=2, random_state=42)
-PLM_tsne = tsne.fit_transform(PLM_feat)
-LLM_tsne = tsne.fit_transform(LLM_feat)
+PLM_tsne = tsne.fit_transform(PLM_feat_sample)
+LLM_tsne = tsne.fit_transform(LLM_feat_sample)
 
 # 绘制 PLM_feat 的 t-SNE 结果
 plt.scatter(PLM_tsne[:, 0], PLM_tsne[:, 1])
