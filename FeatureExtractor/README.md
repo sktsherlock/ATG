@@ -63,6 +63,9 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '/dataint
 
 
 
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv' --model_name 'meta-llama/Llama-2-13b-hf' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 256 --batch_size 10 --text_column 'TA'   
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv' --model_name 'meta-llama/Llama-2-70b-hf' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 128 --batch_size 5 --text_column 'TA'   
+
 ```
 
 # Image Attribute -> Feature 

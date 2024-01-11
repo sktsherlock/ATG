@@ -601,7 +601,7 @@ def main():
         trainer.save_metrics("test", metrics)
 
     if model_args.save_path is not None:
-        save_path = model_args.save_path + model_args.model_name_or_path.split('/')[-1].replace("-", "_") + '/'
+        save_path = model_args.save_path + model_args.model_name_or_path.split('/')[-1].replace("-", "_") + '/' + f't_{data_args.train_ratio}_v_{data_args.val_ratio}_d_{model_args.drop_out}_w_{training_args.warmup_ratio}_lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}_u{model_args.unfreeze_layers}'
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             logger.info(f"Created directory: {save_path}")
