@@ -7,16 +7,23 @@ import torch as th
 import numpy as np
 import torch.nn.functional as F
 import os
+from RevGAT.model import RevGAT
+from GCN import GCN
+from GraphSAGE import GraphSAGE
+from MLP import MLP
+import time
+import torch.optim as optim
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from GraphData import load_data
+from GraphData import load_data, set_seed
 from NodeClassification import classification
+from LPG import classification
 
 
-class GraphSAGE(nn.Module):
+class LPSAGE(nn.Module):
     def __init__(self,
-                 in_feats,
+                 in_LLM_feats,
+                 in_PLM_feats,
                  n_hidden,
                  n_classes,
                  n_layers,
@@ -24,7 +31,7 @@ class GraphSAGE(nn.Module):
                  dropout,
                  aggregator_type,
                  ):
-        super(GraphSAGE, self).__init__()
+        super(LPSAGE, self).__init__()
         self.n_layers = n_layers
         self.n_hidden = n_hidden
         self.n_classes = n_classes
@@ -34,8 +41,19 @@ class GraphSAGE(nn.Module):
 
         # input layer
         for i in range(n_layers):
-            in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden if i < n_layers - 1 else n_classes
+            if i == 0:
+                in_hidden = in_LLM_feats
+            elif i == 1:
+                in_hidden = in_PLM_feats
+            else:
+                in_hidden = n_hidden
+
+            if i == n_layers - 1:
+                out_hidden = n_classes
+            elif i == 0:
+                out_hidden = in_PLM_feats
+            else:
+                out_hidden = n_hidden
 
             self.convs.append(dglnn.SAGEConv(in_hidden, out_hidden, aggregator_type))
             if i < n_layers - 1:
@@ -51,8 +69,8 @@ class GraphSAGE(nn.Module):
         for norm in self.norms:
             norm.reset_parameters()
 
-    def forward(self, graph, feat):
-        h = feat
+    def forward(self, graph, LLM_feat, PLM_feat):
+        h = LLM_feat
 
         for i in range(self.n_layers):
             conv = self.convs[i](graph, h)
@@ -63,12 +81,14 @@ class GraphSAGE(nn.Module):
                 h = self.activation(h)
                 h = self.dropout(h)
 
+            if i == 1:
+                h = h + PLM_feat
         return h
 
 
 def args_init():
     argparser = argparse.ArgumentParser(
-        "GrahSAGE Config",
+        "RevGAT Config",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     argparser.add_argument("--gpu", type=int, default=0, help="GPU device ID.")
@@ -88,10 +108,35 @@ def args_init():
         "--n-hidden", type=int, default=256, help="number of hidden units"
     )
     argparser.add_argument(
+        "--aggregator", type=str, default="mean", choices=["mean", "gcn", "pool", "lstm"],
+        help="Specify the aggregator option of SAGE"
+    )
+    argparser.add_argument(
+        "--no-attn-dst", type=bool, default=True, help="Don't use attn_dst."
+    )
+    argparser.add_argument(
+        "--n-heads", type=int, default=3, help="number of heads"
+    )
+    argparser.add_argument(
+        "--attn-drop", type=float, default=0.0, help="attention drop rate"
+    )
+    argparser.add_argument(
+        "--edge-drop", type=float, default=0.0, help="edge drop rate"
+    )
+    argparser.add_argument(
+        "--alpha", type=float, default=0.5, help="Tradeoff the LLM and the PLM"
+    )
+    argparser.add_argument(
         "--dropout", type=float, default=0.5, help="dropout rate"
     )
     argparser.add_argument(
-        "--aggregator", type=str, default="mean", choices=["mean", "gcn", "pool", "lstm"], help="Specify the aggregator option"
+        "--weight", type=bool, default=True, help="if False, no W."
+    )
+    argparser.add_argument(
+        "--gnn", type=str, default="RevGAT", choices=["RevGAT", "GCN", "SAGE"], help="Specify the GNN"
+    )
+    argparser.add_argument(
+        "--bias", type=bool, default=True, help="if False, no last layer bias."
     )
     argparser.add_argument(
         "--min-lr", type=float, default=0.0001, help="the min learning rate"
@@ -108,7 +153,8 @@ def args_init():
         "--eval_steps", type=int, default=1, help="eval in every epochs"
     )
     argparser.add_argument(
-        "--early_stop_patience", type=int, default=None, help="when to stop the  training loop to be aviod of the overfiting"
+        "--early_stop_patience", type=int, default=None,
+        help="when to stop the  training loop to be aviod of the overfiting"
     )
     argparser.add_argument(
         "--warmup_epochs", type=int, default=None, help="The warmup epochs"
@@ -121,7 +167,10 @@ def args_init():
         "--data_name", type=str, default=None, help="The dataset name.",
     )
     argparser.add_argument(
-        "--feature", type=str, default=None, help="Use LM embedding as feature"
+        "--PLM_feature", type=str, default=None, help="Use PLM embedding as feature"
+    )
+    argparser.add_argument(
+        "--LLM_feature", type=str, default=None, help="Use LLM embedding as feature"
     )
     argparser.add_argument(
         "--graph_path", type=str, default=None, help="The datasets to be implemented."
@@ -185,9 +234,12 @@ def main():
         graph = graph.remove_self_loop().add_self_loop()
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
-    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
-    n_classes = (labels.max()+1).item()
-    print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
+    PLM_feat = th.from_numpy(np.load(args.PLM_feature).astype(np.float32)).to(device)
+    LLM_feat = th.from_numpy(np.load(args.LLM_feature).astype(np.float32)).to(device)
+
+    n_classes = (labels.max() + 1).item()
+    print(
+        f"Number of classes {n_classes}, Number of PLM features {PLM_feat.shape[1]}, Number of LLM features {LLM_feat.shape[1]}")
 
     graph.create_formats_()
 
@@ -206,16 +258,20 @@ def main():
     test_results = []
 
     # Model implementation
-    model = GraphSAGE(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout, aggregator_type=args.aggregator).to(device)
+    print(f"Selecting the {args.gnn}")
+    GNN = LPSAGE(LLM_feat.shape[1], PLM_feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu,
+                 dropout=args.dropout, aggregator_type=args.aggregator).to(device)
+
     TRAIN_NUMBERS = sum(
-        [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
+        [np.prod(p.size()) for p in GNN.parameters() if p.requires_grad]
     )
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
-        model.reset_parameters()
+        set_seed(args.seed)
+        GNN.reset_parameters()
         val_result, test_result = classification(
-            args, graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
+            args, graph, GNN, PLM_feat, LLM_feat, labels, train_idx, val_idx, test_idx, run + 1
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
