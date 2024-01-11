@@ -171,7 +171,7 @@ def main():
     LLM_feat = th.from_numpy(np.load(args.LLM_feature).astype(np.float32)).to(device)
 
     # 拼接特征张量
-    concatenated_feat = th.cat((PLM_feat, LLM_feat), dim=1)
+    concatenated_feat = th.cat((LLM_feat, PLM_feat), dim=1)
 
     n_classes = (labels.max() + 1).item()
     print(
