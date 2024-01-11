@@ -78,11 +78,11 @@ class LPSAGE(nn.Module):
 
             if i < self.n_layers - 1:
                 h = self.norms[i](h)
+                if i == 0:
+                    h = h + self.norms[i](PLM_feat)
                 h = self.activation(h)
                 h = self.dropout(h)
 
-            if i == 0:
-                h = h + PLM_feat
         return h
 
 
