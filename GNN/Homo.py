@@ -30,22 +30,18 @@ node_labels = labels
 # 创建同质性计数器
 homophily_counter = Counter()
 
-# 遍历图中的每个节点
-for node_id in range(graph.number_of_nodes()):
-    # 获取节点的标签
-    node_label = node_labels[node_id].item()
+# 计算标签相同的邻居节点边的数量
+num_homophily_edges = 0
+total_edges = graph.number_of_edges()
 
-    # 获取节点的邻居
-    neighbors = graph.successors(node_id)
-    neighbor_labels = node_labels[neighbors].tolist()
+for edge in range(total_edges):
+    src, dst = graph.find_edges(edge)
+    src_label = labels[src]
+    dst_label = labels[dst]
+    if src_label == dst_label:
+        num_homophily_edges += 1
 
-    # 统计节点与邻居的标签情况
-    neighbor_label_counts = Counter(neighbor_labels)
+# 计算同质性比率
+homophily_ratio = num_homophily_edges / total_edges
 
-    # 更新同质性计数器
-    homophily_counter.update({node_label: neighbor_label_counts[node_label]})
-
-# 打印同质性情况
-print("Homophily Counter:")
-for label, count in homophily_counter.items():
-    print(f"Label {label}: {count} neighbors with the same label")
+print("Homophily Ratio:", homophily_ratio)
