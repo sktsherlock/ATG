@@ -1,4 +1,4 @@
-import dgl
+from tqdm import  tqdm
 from GraphData import load_data
 from collections import Counter
 import argparse
@@ -22,7 +22,8 @@ argparser.add_argument(
 args = argparser.parse_args()
 
 # 假设已加载了图数据集，存储在变量graph中
-graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio, val_ratio=args.val_ratio, name=args.data_name)
+graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
+                                                        val_ratio=args.val_ratio, name=args.data_name)
 
 # 获取节点标签
 node_labels = labels
@@ -34,7 +35,7 @@ homophily_counter = Counter()
 num_homophily_edges = 0
 total_edges = graph.number_of_edges()
 
-for edge in range(total_edges):
+for edge in tqdm(range(total_edges)):
     src, dst = graph.find_edges(edge)
     src_label = labels[src]
     dst_label = labels[dst]
