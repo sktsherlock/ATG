@@ -26,4 +26,4 @@ sweep_configuration = {
     "program": "GNN/Library/LPG.py",
 }
 
-sweep_id = wandb.sweep(sweep=sweep_configuration, project="LGP")
+sweep_id = wandb.sweep(sweep=sweep_configuration, project="LPG")
