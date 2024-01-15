@@ -20,7 +20,8 @@ sweep_configuration = {
         "n-hidden": {"values": [256, 128]},
         "n-layers": {"values": [5]},
         "n-runs": {"value": 5},
-        "warmup_epochs": {"value": 1}
+        "warmup_epochs": {"value": 1},
+        "data_name": {"value": "ogbn-arxiv"},
     },
     "program": "GNN/Library/LPG.py",
 }
