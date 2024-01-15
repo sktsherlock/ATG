@@ -59,13 +59,14 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '/dataint
 CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv' --model_name 'meta-llama/Llama-2-7b-hf' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 256 --batch_size 50 --text_column 'TA'             [OK]
 CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/Movies/Movies.csv' --model_name 'meta-llama/Llama-2-7b-hf' --name 'Movies' --path '/dataintent/local/user/v-haoyan1/Data/Movies/Feature/' --max_length 256 --batch_size 50 --text_column 'text'   [OK]
 CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/Books/Children/Children.csv' --model_name 'meta-llama/Llama-2-7b-hf' --name 'Children' --path '/dataintent/local/user/v-haoyan1/Data/Books/Children/Feature/' --max_length 256 --batch_size 50 --text_column 'text'  [OK]
-CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/Books/History/History.csv' --model_name 'meta-llama/Llama-2-7b-hf' --name 'History' --path '/dataintent/local/user/v-haoyan1/Data/Books/History/Feature/' --max_length 256 --batch_size 50 --text_column 'text'
+CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/Books/History/History.csv' --model_name 'meta-llama/Llama-2-7b-hf' --name 'History' --path '/dataintent/local/user/v-haoyan1/Data/Books/History/Feature/' --max_length 256 --batch_size 50 --text_column 'text' 
 
 
 
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv' --model_name 'meta-llama/Llama-2-13b-hf' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 256 --batch_size 10 --text_column 'TA'   
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv' --model_name 'meta-llama/Llama-2-70b-hf' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 128 --batch_size 5 --text_column 'TA'   
-
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/OGBN_ARXIV.csv' --model_name 'meta-llama/Llama-2-13b-hf' --name 'Arxiv' --path '/dataintent/local/user/v-haoyan1/Data/OGB/Arxiv/Feature/' --max_length 256 --batch_size 10 --text_column 'TA'     [OK]
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/Movies/Movies.csv' --model_name 'meta-llama/Llama-2-13b-hf' --name 'Movies' --path '/dataintent/local/user/v-yinju/haoyan/Data/Movies/Feature/' --max_length 256 --batch_size 10 --text_column 'text'  [OK]
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/Books/Children/Children.csv' --model_name 'meta-llama/Llama-2-13b-hf' --name 'Children' --path '/dataintent/local/user/v-yinju/haoyan/Data/Books/Children/Feature/' --max_length 256 --batch_size 10 --text_column 'text' [OK]  
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6 python TextAttributeExtract.py --csv_file '/dataintent/local/user/v-haoyan1/Data/Books/History/History.csv' --model_name 'meta-llama/Llama-2-13b-hf' --name 'History' --path '/dataintent/local/user/v-yinju/haoyan/Data/Books/History/Feature/' --max_length 256 --batch_size 10 --text_column 'text'   [OK]  
 ```
 
 # Image Attribute -> Feature 
