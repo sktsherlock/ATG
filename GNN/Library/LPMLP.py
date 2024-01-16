@@ -317,7 +317,7 @@ def main():
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
-    print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
+    print(f"Number of the  model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
         set_seed(args.seed)
