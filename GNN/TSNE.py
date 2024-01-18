@@ -25,7 +25,7 @@ argparser.add_argument(
 )
 argparser.add_argument(
     "--feat2", type=str,
-    default='/dataintent/local/user/v-yinju/haoyan/Data/OGB/Arxiv/Feature/Arxiv_deberta_base_512_Tuned_cls.npy',
+    default='/dataintent/local/user/v-yinju/haoyan/Data/OGB/Arxiv/Feature/Arxiv_roberta_base_512_Tuned_cls.npy',
     help="The datasets to be implemented."
 )
 argparser.add_argument(
@@ -57,8 +57,8 @@ def visualize(feat1, feat2, path, label, sample_size=100, label1='PLM', label2='
     tsne_feat2 = TSNE(n_components=2).fit_transform(feat2_sample)
 
     # 绘制 t-SNE 可视化结果
-    plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label='feat1', cmap='viridis')
-    plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='o', label='feat2', cmap='plasma')
+    plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
+    plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='o', label=label2, cmap='viridis')
 
     # plt.scatter(tsne_result[:sample_size, 0], tsne_result[:sample_size, 1], cmap='viridis', label=label1)
     # plt.scatter(tsne_result[sample_size:, 0], tsne_result[sample_size:, 1], cmap='viridis', label=label2)
