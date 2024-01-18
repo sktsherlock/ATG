@@ -44,7 +44,7 @@ gpu = 0
 device = th.device("cuda:%d" % gpu if th.cuda.is_available() else 'cpu')
 
 graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=None, name='ogbn-arxiv')
-
+print(labels.shape)
 
 def visualize(feat1, feat2, path, labels_list, random_idx, label1='PLM', label2='LLM'):
     # 对 PLM_feat 进行采样和获取标签
