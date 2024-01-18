@@ -20,7 +20,7 @@ argparser.add_argument(
 )
 argparser.add_argument(
     "--feat1", type=str,
-    default='/dataintent/local/user/v-yinju/haoyan/Data/OGB/Arxiv/Feature/Arxiv_Llama_2_13b_hf_256_mean.npy.npy',
+    default='/dataintent/local/user/v-yinju/haoyan/Data/OGB/Arxiv/Feature/Arxiv_Llama_2_13b_hf_256_mean.npy',
     help="The datasets to be implemented."
 )
 argparser.add_argument(
