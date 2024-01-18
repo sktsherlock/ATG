@@ -129,25 +129,26 @@ Feature2 = th.from_numpy(np.load(args.feat2).astype(np.float32))
 
 
 
-# 创建一个字典来存储每个标签对应的样本索引
-label_indices = defaultdict(list)
+# 将张量类型的标签转换为普通的Python列表
+labels = [label.item() if isinstance(label, th.Tensor) else label for label in labels]
 
-# 遍历整个标签列表，记录每个标签对应的样本索引
+# 初始化字典来存储每个标签对应的样本索引
+label_indices = {}
+
+# 遍历标签列表，将每个标签与其对应的样本索引关联起来
 for idx, label in enumerate(labels):
+    if label not in label_indices:
+        label_indices[label] = []
     label_indices[label].append(idx)
 
-
-label_counts = {label: len(indices) for label, indices in label_indices.items()}
-print(label_counts)
-
-# 从所有标签中随机选择5个标签
-selected_labels = [0, 1, 2, 3, 4]
-
-# 从选定的标签对应的样本索引中随机选择50个样本的索引
+# 从每个标签对应的样本索引中随机选择50个样本的索引
 random_indices = []
-for label in selected_labels:
-    indices = label_indices[label]
-    random_indices.extend(random.sample(indices, 50))
+for label, indices in label_indices.items():
+    if len(indices) >= 50:
+        sample_indices = random.sample(indices, 50)
+    else:
+        sample_indices = indices
+    random_indices.extend(sample_indices)
 
 
 visualize(Feature1, Feature2, args.save_path, labels, random_indices, label1=args.label1, label2=args.label2)
