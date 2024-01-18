@@ -97,8 +97,8 @@ def visualize(feat1, feat2, path, label, sample_size=2500, label1='PLM', label2=
     feat2_sample = feat2[:sample_size]
     label_list = label[:sample_size]
     if feat2.shape[1] != feat1.shape[1]:
-        pca = TSNE(n_components=feat1.shape[1])  # 保持与 PLM_feat 相同的维度
-        feat2_sample = pca.fit_transform(feat2_sample)
+        tsne = TSNE(n_components=feat1.shape[1], random_state=42)  # 保持与 PLM_feat 相同的维度
+        feat2_sample = tsne.fit_transform(feat2_sample)
 
     # 合并特征矩阵和标签
     features = np.vstack((feat1_sample, feat2_sample))
