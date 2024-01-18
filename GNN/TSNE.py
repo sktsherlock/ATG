@@ -43,7 +43,7 @@ device = th.device("cuda:%d" % gpu if th.cuda.is_available() else 'cpu')
 graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=None, name='ogbn-arxiv')
 
 
-def visualize(feat1, feat2, path, label, sample_size=100, label1='PLM', label2='LLM'):
+def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM'):
     # 对 PLM_feat 进行采样和获取标签
     feat1_sample = feat1[:sample_size]
     # 对 LLM_feat 进行采样和获取标签
@@ -55,6 +55,25 @@ def visualize(feat1, feat2, path, label, sample_size=100, label1='PLM', label2='
 
     # 对 feat2 进行 TSNE 降维
     tsne_feat2 = TSNE(n_components=2).fit_transform(feat2_sample)
+
+
+
+    # 绘制 t-SNE 可视化结果并保存
+    plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
+    plt.title(f'T-SNE Visualization for {label1}')
+    plt.legend()
+    save_path_feat1 = os.path.join(path, f'{label1}_tsne.pdf')
+    plt.savefig(save_path_feat1)
+    plt.close()
+
+    plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='o', label=label2, cmap='viridis')
+    plt.title(f'T-SNE Visualization for {label2}')
+    plt.legend()
+    save_path_feat2 = os.path.join(path, f'{label2}_tsne.pdf')
+    plt.savefig(save_path_feat2)
+    plt.close()
+
+
 
     # 绘制 t-SNE 可视化结果
     plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
