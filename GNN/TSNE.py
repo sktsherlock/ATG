@@ -51,7 +51,8 @@ def visualize(feat1, feat2, path, labels_list, random_idx, label1='PLM', label2=
     feat1_sample = feat1[random_idx]
     # 对 LLM_feat 进行采样和获取标签
     feat2_sample = feat2[random_idx]
-    Label = labels_list[random_idx]
+    # Label = labels_list[random_idx]
+    Label = [labels_list[id] for id in random_indices]
 
     # 对 feat1 进行 TSNE 降维
     tsne_feat1 = TSNE(n_components=2).fit_transform(feat1_sample)
