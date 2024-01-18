@@ -127,12 +127,18 @@ Feature1 = th.from_numpy(np.load(args.feat1).astype(np.float32))
 Feature2 = th.from_numpy(np.load(args.feat2).astype(np.float32))
 
 
+
+
 # 创建一个字典来存储每个标签对应的样本索引
 label_indices = defaultdict(list)
 
 # 遍历整个标签列表，记录每个标签对应的样本索引
 for idx, label in enumerate(labels):
     label_indices[label].append(idx)
+
+
+label_counts = {label: len(indices) for label, indices in label_indices.items()}
+print(label_counts)
 
 # 从所有标签中随机选择5个标签
 selected_labels = [0, 1, 2, 3, 4]
