@@ -135,7 +135,7 @@ for idx, label in enumerate(labels):
     label_indices[label].append(idx)
 
 # 从所有标签中随机选择5个标签
-selected_labels = random.sample(list(label_indices.keys()), 5)
+selected_labels = [0, 1, 2, 3, 4]
 
 # 从选定的标签对应的样本索引中随机选择50个样本的索引
 random_indices = []
