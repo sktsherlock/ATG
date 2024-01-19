@@ -7,6 +7,7 @@ import dgl
 import torch.nn as nn
 import torch.nn.functional as F
 from types import SimpleNamespace as SN
+from ogb.nodeproppred import DglNodePropPredDataset
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
     AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
@@ -45,7 +46,7 @@ class CLModel(PreTrainedModel):
             nn.ReLU(inplace=True),
             nn.Linear(hidden_dim, cl_dim))
 
-    def forward(self, input_ids, attention_mask): # , nb_input_ids, nb_attention_mask
+    def forward(self, input_ids, attention_mask, nb_input_ids, nb_attention_mask): # , nb_input_ids, nb_attention_mask
         # Getting Center Node text features and its neighbours feature
         center_node_outputs = self.text_encoder(
             input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True
@@ -53,7 +54,7 @@ class CLModel(PreTrainedModel):
         center_node_emb = self.dropout(center_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
 
         toplogy_node_outputs = self.text_encoder(
-            input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True
+            input_ids=nb_input_ids, attention_mask=nb_attention_mask, output_hidden_states=True
         )
 
         toplogy_emb = self.dropout(toplogy_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
@@ -154,6 +155,8 @@ def main():
             self.n_nodes = 16672
             self.max_length = 512
             self.link = False
+            self.data_name = 'Movies'
+            self.graph_path = "/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt"
             self._token_folder = '/dataintent/local/user/v-yinju/haoyan/Token/Movies/'
             self.info = {
                 'input_ids': SN(shape=(self.n_nodes, self.max_length), type=np.uint16),
@@ -163,11 +166,26 @@ def main():
             for k, info in self.info.items():
                 info.path = f'{self._token_folder}{k}.npy'
 
+
         def init(self):
             self._load_data_fields()
+            self.neighbours = self.get_neighbours()
             if self.link:
                 pass #self.edge_index = self.get_train_edge()
             return self
+
+        def get_neighbours(self):
+            if self.data_name == 'ogbn-arxiv':
+                dataset = DglNodePropPredDataset('ogbn-arxiv', root='/dataintent/local/user/v-yinju/haoyan/Data/OGB/')
+                g, _ = dataset[0]
+                g = dgl.to_bidirected(g)
+
+            else:
+                g = dgl.load_graphs(self.graph_path)[0][0]
+                g = dgl.to_bidirected(g)
+
+            neighbours = list(g.adjacency_matrix_scipy().tolil().rows)
+            return neighbours
 
         def _load_data_fields(self):
             for k in self.info:
@@ -184,6 +202,13 @@ def main():
             item['input_ids'] = torch.IntTensor(np.array(self['input_ids'][node_id]).astype(np.int32))
             return item
 
+
+        def get_nb_tokens(self, item, node_id):
+            _load = lambda k: torch.IntTensor(np.array(self.ndata[k][node_id]))
+            item['nb_attention_mask'] = _load('attention_mask')
+            item['nb_input_ids'] = torch.IntTensor(np.array(self['input_ids'][node_id]).astype(np.int32))
+            return item
+
         def __getitem__(self, k):
             return self.ndata[k]
 
@@ -195,10 +220,9 @@ def main():
 
         def __getitem__(self, node_id):
             item = self.d.get_tokens(node_id)
-            # neighbors = self.neighbours[node_id]
-            # k = np.random.choice(neighbors, 1)[0]
-            # item['nb_input_ids'] = self.dataset['input_ids'][node_id]
-            # item['nb_attention_mask'] = self.dataset['attention_mask'][node_id]
+            neighbours = self.d.neighbours[node_id]
+            k = np.random.choice(neighbours, 1)[0]
+            item = self.d.get_nb_tokens(item, k)
             return item
 
         def __len__(self):
