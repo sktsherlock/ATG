@@ -158,10 +158,10 @@ def main():
 
 
     if args.pretrain_path is not None:
-        model = AutoModel.from_pretrained(f'{args.pretrain_path}')
+        model = AutoModel.from_pretrained(f'{args.pretrain_path}').to(device)
         print('Loading model from the path: {}'.format(args.pretrain_path))
     else:
-        model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+        model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token).to(device)
 
 
     train_data = TopologyDataset(dataset, neighbours).to(device)
