@@ -89,6 +89,7 @@ def main():
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
     parser.add_argument('--unfreeze_layers', type=int, default=2, help='Maximum length of the text for language models')
+    parser.add_argument("--gpu", type=int, default=0, help="GPU device ID.")
     parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt", help="The datasets to be implemented.")
     # 解析命令行参数
     args = parser.parse_args()
@@ -114,9 +115,10 @@ def main():
     if not os.path.exists(cache_path):
         os.makedirs(cache_path)
 
+    device = torch.device("cuda:%d" % args.gpu if torch.cuda.is_available() else 'cpu')
 
-    graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
-    graph = dgl.to_bidirected(graph)
+    graph = dgl.load_graphs(f'{args.graph_path}')[0][0].to(device)
+    graph = dgl.to_bidirected(graph).to(device)
 
     neighbours = list(graph.adjacency_matrix_scipy().tolil().rows)
 
@@ -162,7 +164,7 @@ def main():
         model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
 
 
-    train_data = TopologyDataset(dataset, neighbours)
+    train_data = TopologyDataset(dataset, neighbours).to(device)
 
 
     training_args = TrainingArguments(
