@@ -46,7 +46,7 @@ class CLModel(PreTrainedModel):
             nn.ReLU(inplace=True),
             nn.Linear(hidden_dim, cl_dim))
 
-    def forward(self, input_ids, attention_mask, nb_input_ids, nb_attention_mask): # , nb_input_ids, nb_attention_mask
+    def forward(self, input_ids=None, attention_mask=None, nb_input_ids=None, nb_attention_mask=None): # , nb_input_ids, nb_attention_mask
         # Getting Center Node text features and its neighbours feature
         center_node_outputs = self.text_encoder(
             input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True
@@ -58,7 +58,7 @@ class CLModel(PreTrainedModel):
         )
 
         toplogy_emb = self.dropout(toplogy_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
-
+        print(toplogy_emb)
         center_contrast_embeddings = self.project(center_node_emb)
         toplogy_contrast_embeddings = self.project(toplogy_emb)
 
