@@ -177,15 +177,24 @@ def main():
                 except:
                     raise ValueError(f'Shape not match {i.shape}')
 
+        def get_tokens(self, node_id):
+            _load = lambda k: torch.IntTensor(np.array(self.ndata[k][node_id]))
+            item = {}
+            item['attention_mask'] = _load('attention_mask')
+            item['input_ids'] = torch.IntTensor(np.array(self['input_ids'][node_id]).astype(np.int32))
+            return item
+
+        def __getitem__(self, k):
+            return self.ndata[k]
 
     class TopologyDataset(torch.utils.data.Dataset):
-        def __init__(self, data): #neighbours
+        def __init__(self, data: Sequence): #neighbours
             super().__init__()
-            self.dataset = data  # 存储传入的dataset
+            self.d = data  # 存储传入的dataset
             # self.neighbours = neighbours
 
         def __getitem__(self, node_id):
-            item = self.dataset[node_id]
+            item = self.d.get_tokens(node_id)
             # neighbors = self.neighbours[node_id]
             # k = np.random.choice(neighbors, 1)[0]
             # item['nb_input_ids'] = self.dataset['input_ids'][node_id]
