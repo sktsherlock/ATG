@@ -44,7 +44,7 @@ class CLModel(PreTrainedModel):
             nn.ReLU(inplace=True),
             nn.Linear(hidden_dim, cl_dim))
 
-    def forward(self, input_ids, attention_mask, nb_input_ids, nb_attention_mask):
+    def forward(self, input_ids, attention_mask): # , nb_input_ids, nb_attention_mask
         # Getting Center Node text features and its neighbours feature
         center_node_outputs = self.text_encoder(
             input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True
@@ -52,7 +52,7 @@ class CLModel(PreTrainedModel):
         center_node_emb = self.dropout(center_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
 
         toplogy_node_outputs = self.text_encoder(
-            input_ids=nb_input_ids, attention_mask=nb_attention_mask, output_hidden_states=True
+            input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True
         )
 
         toplogy_emb = self.dropout(toplogy_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
@@ -133,8 +133,8 @@ def main():
             item = self.dataset[node_id]
             # neighbors = self.neighbours[node_id]
             # k = np.random.choice(neighbors, 1)[0]
-            item['nb_input_ids'] = self.dataset['input_ids'][node_id]
-            item['nb_attention_mask'] = self.dataset['attention_mask'][node_id]
+            # item['nb_input_ids'] = self.dataset['input_ids'][node_id]
+            # item['nb_attention_mask'] = self.dataset['attention_mask'][node_id]
             return item
 
         def __len__(self):
