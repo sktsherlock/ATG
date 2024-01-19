@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 
 from torch_sparse import SparseTensor
 from torch_geometric.nn import GCNConv, SAGEConv
-
+from ogb.nodeproppred import DglNodePropPredDataset
 from GraphData import Evaluator, split_edge, Logger
 import dgl
 import numpy as np
@@ -228,7 +228,11 @@ def main():
     device = f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
 
-    graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
+    if args.graph_path == 'ogbn-arxiv':
+        data = DglNodePropPredDataset(name=args.graph_path)
+        graph, _ = data[0]
+    else:
+        graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
 
 
     edge_split = split_edge(graph, test_ratio=0.08, val_ratio=0.02, path=args.path, neg_len=args.neg_len)
