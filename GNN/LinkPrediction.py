@@ -211,7 +211,7 @@ def main():
     parser.add_argument('--test_ratio', type=float, default=0.08)
     parser.add_argument('--val_ratio', type=float, default=0.02)
     parser.add_argument('--neg_len', type=str, default='2000')
-    parser.add_argument("--feature", type=str, default=None, help="Use LM embedding as feature",)
+    parser.add_argument("--feature", type=str, default='/dataintent/local/user/v-yinju/haoyan/Data/Movies/Feature/Movies_Llama_2_13b_hf_256_mean.npy', help="Use LM embedding as feature",)
     parser.add_argument("--path", type=str, default="/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies/",
                         help="Path to save splitting")
     parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt",
