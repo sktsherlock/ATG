@@ -154,7 +154,7 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
-    dataset = Dataset.from_dict(encoded_inputs).to(device)
+    dataset = Dataset.from_dict(encoded_inputs)
 
 
     if args.pretrain_path is not None:
