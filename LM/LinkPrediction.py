@@ -70,7 +70,7 @@ class CustomTrainer(Trainer):
         # forward pass
         print(inputs)
         center_contrast_embeddings, toplogy_contrast_embeddings = model(**inputs)
-        print(center_contrast_embeddings)
+        print(model(**inputs))
         # compute
         loss = infonce(center_contrast_embeddings, toplogy_contrast_embeddings)
         return loss
