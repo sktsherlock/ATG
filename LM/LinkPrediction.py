@@ -153,7 +153,7 @@ def main():
     # 编码文本数据并转为数据集
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
+    encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt').data
     # dataset = Dataset.from_dict(encoded_inputs)
 
 
