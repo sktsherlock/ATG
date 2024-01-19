@@ -202,7 +202,7 @@ def main():
             return item
 
         def __len__(self):
-            return len(self.dataset)  # 返回dataset的长度
+            return self.d.n_nodes
 
     # 读取CSV文件
     df = pd.read_csv(os.path.join(base_dir, csv_file))
