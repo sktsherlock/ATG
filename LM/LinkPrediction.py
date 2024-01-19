@@ -69,6 +69,7 @@ class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs):
         # forward pass
         center_contrast_embeddings, toplogy_contrast_embeddings = model(**inputs)
+        print(center_contrast_embeddings)
         # compute
         loss = infonce(center_contrast_embeddings, toplogy_contrast_embeddings)
         return loss
@@ -146,7 +147,6 @@ def main():
     graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
     graph = dgl.to_bidirected(graph).to(device)
 
-    neighbours = list(graph.adjacency_matrix_scipy().tolil().rows)
 
 
     class Sequence():
