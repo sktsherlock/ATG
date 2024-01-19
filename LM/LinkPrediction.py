@@ -117,7 +117,7 @@ def main():
 
     device = torch.device("cuda:%d" % args.gpu if torch.cuda.is_available() else 'cpu')
 
-    graph = dgl.load_graphs(f'{args.graph_path}')[0][0].to(device)
+    graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
     graph = dgl.to_bidirected(graph).to(device)
 
     neighbours = list(graph.adjacency_matrix_scipy().tolil().rows)
