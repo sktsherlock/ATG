@@ -212,7 +212,7 @@ def main():
     parser.add_argument('--val_ratio', type=float, default=0.02)
     parser.add_argument('--neg_len', type=str, default='2000')
     parser.add_argument("--feature", type=str, default=None, help="Use LM embedding as feature",)
-    parser.add_argument("--path", type=str, default="/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies",
+    parser.add_argument("--path", type=str, default="/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies/",
                         help="Path to save splitting")
     parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt",
                         help="Path to load the graph")
