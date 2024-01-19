@@ -144,8 +144,6 @@ def main():
 
     device = torch.device("cuda:%d" % args.gpu if torch.cuda.is_available() else 'cpu')
 
-    graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
-    graph = dgl.to_bidirected(graph).to(device)
 
 
 
@@ -223,6 +221,7 @@ def main():
             neighbours = self.d.neighbours[node_id]
             k = np.random.choice(neighbours, 1)[0]
             item = self.d.get_nb_tokens(item, k)
+            print(item)
             return item
 
         def __len__(self):
