@@ -52,7 +52,7 @@ class CLModel(PreTrainedModel):
             input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True
         )
         center_node_emb = self.dropout(center_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
-
+        print(center_node_emb)
         toplogy_node_outputs = self.text_encoder(
             input_ids=nb_input_ids, attention_mask=nb_attention_mask, output_hidden_states=True
         )
