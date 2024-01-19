@@ -68,9 +68,7 @@ class CLModel(PreTrainedModel):
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs):
         # forward pass
-        print(inputs)
         center_contrast_embeddings, toplogy_contrast_embeddings = model(**inputs)
-        print(model(**inputs))
         # compute
         loss = infonce(center_contrast_embeddings, toplogy_contrast_embeddings)
         return loss
