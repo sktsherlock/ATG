@@ -116,6 +116,7 @@ def main():
 
 
     graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
+    graph = dgl.to_bidirected(graph)
 
     neighbours = list(graph.adjacency_matrix_scipy().tolil().rows)
 
