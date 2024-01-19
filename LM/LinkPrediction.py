@@ -6,6 +6,7 @@ import os
 import dgl
 import torch.nn as nn
 import torch.nn.functional as F
+from types import SimpleNamespace as SN
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
     AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
@@ -72,6 +73,30 @@ class CustomTrainer(Trainer):
         return loss
 
 
+def mkdir_p(path, log=True):
+    """Create a directory for the specified path.
+    Parameters
+    ----------
+    path : str
+        Path name
+    log : bool
+        Whether to print result for directory creation
+    """
+    import errno
+    if os.path.exists(path): return
+    # print(path)
+    # path = path.replace('\ ',' ')
+    # print(path)
+    try:
+        os.makedirs(path)
+        if log:
+            print('Created directory {}'.format(path))
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path) and log:
+            print('Directory {} already exists.'.format(path))
+        else:
+            raise
+
 def main():
     # 定义命令行参数
     parser = argparse.ArgumentParser(
@@ -123,6 +148,36 @@ def main():
     neighbours = list(graph.adjacency_matrix_scipy().tolil().rows)
 
 
+    class Sequence():
+        def __init__(self):
+            self.ndata = {}
+            self.n_nodes = 16672
+            self.max_length = 512
+            self.link = False
+            self._token_folder = '/dataintent/local/user/v-yinju/haoyan/Token/Movies/'
+            self.info = {
+                'input_ids': SN(shape=(self.n_nodes, self.max_length), type=np.uint16),
+                'attention_mask': SN(shape=(self.n_nodes, self.max_length), type=bool),
+                'token_type_ids': SN(shape=(self.n_nodes, self.max_length), type=bool)
+            }
+            for k, info in self.info.items():
+                info.path = f'{self._token_folder}{k}.npy'
+
+        def init(self):
+            self._load_data_fields()
+            if self.link:
+                pass #self.edge_index = self.get_train_edge()
+            return self
+
+        def _load_data_fields(self):
+            for k in self.info:
+                i = self.info[k]
+                try:
+                    self.ndata[k] = np.load(i.path, allow_pickle=True)  # np.memmap(i.path, mode='r', dtype=i.type, shape=i.shape)
+                except:
+                    raise ValueError(f'Shape not match {i.shape}')
+
+
     class TopologyDataset(torch.utils.data.Dataset):
         def __init__(self, data): #neighbours
             super().__init__()
@@ -153,7 +208,15 @@ def main():
     # 编码文本数据并转为数据集
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt').data
+    tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt').data
+    token_folder = '/dataintent/local/user/v-yinju/haoyan/Token/Movies/'
+    mkdir_p(token_folder)
+    for k in tokenized:
+        with open(os.path.join(token_folder, f'{k}.npy'), 'wb') as f:
+            np.save(f, tokenized[k])
+
+    d = Sequence().init()
+    train_data = TopologyDataset(d)
     # dataset = Dataset.from_dict(encoded_inputs)
 
 
@@ -163,8 +226,6 @@ def main():
     else:
         model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
 
-
-    train_data = TopologyDataset(encoded_inputs) # neighbours
 
     training_args = TrainingArguments(
         output_dir=cache_path,
