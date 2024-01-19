@@ -1,13 +1,10 @@
 import argparse
-
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from torch_sparse import SparseTensor
-import torch_geometric.transforms as T
-from torch_geometric.nn import GCNConv, SAGEConv, GATConv
-from torch_geometric.utils import to_undirected
+from torch_geometric.nn import GCNConv, SAGEConv
 
 from GraphData import Evaluator, split_edge, Logger
 import dgl
@@ -202,7 +199,6 @@ def main():
     parser = argparse.ArgumentParser(description='Link-Prediction for GNN')
     parser.add_argument('--device', type=int, default=0)
     parser.add_argument('--log_steps', type=int, default=1)
-    parser.add_argument('--use_node_embedding', action='store_true')
     parser.add_argument('--num_layers', type=int, default=3)
     parser.add_argument('--hidden_channels', type=int, default=256)
     parser.add_argument('--dropout', type=float, default=0.0)
@@ -210,7 +206,6 @@ def main():
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--gnn_model', type=str, help='GNN MOdel', default='GCN')
-    parser.add_argument('--heads', type=int, default=4)
     parser.add_argument('--eval_steps', type=int, default=1)
     parser.add_argument('--runs', type=int, default=5)
     parser.add_argument('--test_ratio', type=float, default=0.08)
