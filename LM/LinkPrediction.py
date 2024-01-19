@@ -124,17 +124,17 @@ def main():
 
 
     class TopologyDataset(torch.utils.data.Dataset):
-        def __init__(self, data, neighbours):
+        def __init__(self, data): #neighbours
             super().__init__()
             self.dataset = data  # 存储传入的dataset
-            self.neighbours = neighbours
+            # self.neighbours = neighbours
 
         def __getitem__(self, node_id):
             item = self.dataset[node_id]
-            neighbors = self.neighbours[node_id]
-            k = np.random.choice(neighbors, 1)[0]
-            item['nb_input_ids'] = self.dataset['input_ids'][k]
-            item['nb_attention_mask'] = self.dataset['attention_mask'][k]
+            # neighbors = self.neighbours[node_id]
+            # k = np.random.choice(neighbors, 1)[0]
+            item['nb_input_ids'] = self.dataset['input_ids'][node_id]
+            item['nb_attention_mask'] = self.dataset['attention_mask'][node_id]
             return item
 
         def __len__(self):
@@ -164,7 +164,7 @@ def main():
         model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
 
 
-    train_data = TopologyDataset(dataset, neighbours)
+    train_data = TopologyDataset(dataset) # neighbours
 
     training_args = TrainingArguments(
         output_dir=cache_path,
