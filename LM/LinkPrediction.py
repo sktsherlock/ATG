@@ -132,6 +132,7 @@ def main():
             k = np.random.choice(neighbors, 1)[0]
             item['nb_input_ids'] = self.dataset['input_ids'][k]
             item['nb_attention_mask'] = self.dataset['attention_mask'][k]
+            print(item)
             return item
 
         def __len__(self):
