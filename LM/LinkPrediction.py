@@ -68,6 +68,7 @@ class CLModel(PreTrainedModel):
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs):
         # forward pass
+        print(inputs)
         center_contrast_embeddings, toplogy_contrast_embeddings = model(**inputs)
         print(center_contrast_embeddings)
         # compute
@@ -221,7 +222,6 @@ def main():
             neighbours = self.d.neighbours[node_id]
             k = np.random.choice(neighbours, 1)[0]
             item = self.d.get_nb_tokens(item, k)
-            print(item)
             return item
 
         def __len__(self):
