@@ -52,13 +52,13 @@ class CLModel(PreTrainedModel):
             input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True
         )
         center_node_emb = self.dropout(center_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
-        print(center_node_emb)
+
         toplogy_node_outputs = self.text_encoder(
             input_ids=nb_input_ids, attention_mask=nb_attention_mask, output_hidden_states=True
         )
 
         toplogy_emb = self.dropout(toplogy_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
-        print(toplogy_emb)
+
         center_contrast_embeddings = self.project(center_node_emb)
         toplogy_contrast_embeddings = self.project(toplogy_emb)
 
@@ -252,12 +252,17 @@ def main():
     # dataset = Dataset.from_dict(encoded_inputs)
 
 
+
     if args.pretrain_path is not None:
-        model = AutoModel.from_pretrained(f'{args.pretrain_path}')
+        encoder = AutoModel.from_pretrained(f'{args.pretrain_path}')
         print('Loading model from the path: {}'.format(args.pretrain_path))
     else:
-        model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+        encoder = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
 
+    model = CLModel(
+        encoder,
+        dropout=0.5,
+    )
 
     training_args = TrainingArguments(
         output_dir=cache_path,
@@ -283,7 +288,7 @@ def main():
             os.makedirs(save_path)
             print(f"Created directory: {save_path}")
 
-        model.save_pretrained(save_path)
+        encoder.save_pretrained(save_path)
 
 
 
