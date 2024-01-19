@@ -76,7 +76,7 @@ def main():
     # 定义命令行参数
     parser = argparse.ArgumentParser(
         description='Process text data and save the overall representation as an NPY file.')
-    parser.add_argument('--csv_file', type=str, help='Path to the CSV file')
+    parser.add_argument('--csv_file', type=str, help='Path to the CSV file', default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/Movies.csv")
     parser.add_argument('--text_column', type=str, default='text', help='Name of the column containing text data')
     parser.add_argument('--model_name', type=str, default='prajjwal1/bert-tiny', required=True,
                         help='Name or path of the Huggingface model')
@@ -89,7 +89,7 @@ def main():
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
     parser.add_argument('--unfreeze_layers', type=int, default=2, help='Maximum length of the text for language models')
-    parser.add_argument("--graph_path", type=str, default=None, help="The datasets to be implemented.")
+    parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt", help="The datasets to be implemented.")
     # 解析命令行参数
     args = parser.parse_args()
     csv_file = args.csv_file
