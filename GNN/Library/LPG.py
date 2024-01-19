@@ -129,6 +129,18 @@ def classification(
     return best_val_result, final_test_result
 
 
+class FeatureGRU(nn.Module):
+    def __init__(self, input_dim, hidden_dim):
+        super(FeatureGRU, self).__init__()
+        self.gru = nn.GRU(input_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, 1)
+
+    def forward(self, x):
+        _, h = self.gru(x)  # 使用 GRU 模型获取最后一个隐藏状态
+        weights = th.sigmoid(self.fc(h[-1]))  # 使用全连接层获取特征权重
+        return weights
+
+
 class LPGNN(nn.Module):
     def __init__(self, model, LLM_in_feats, PLM_in_feats, alpha=0.5, conv='SAGE'):
         super().__init__()
@@ -148,8 +160,12 @@ class LPGNN(nn.Module):
     def forward(self, graph, LLM_feat, PLM_feat):  #
         # Decomposition the LLM features
         LLM_feat = self.decomposition(graph, LLM_feat) if self.conv == 'SAGE' else self.decomposition(LLM_feat)
+        mixed_features = th.cat([LLM_feat, PLM_feat], dim=2)
+        gru_model = FeatureGRU(LLM_feat.shape[1] + PLM_feat.shape[1], 128)
+        weights = gru_model(mixed_features)
         # Trade off the LLM_feat and the PLM_feat
-        feat = self.alpha * LLM_feat + (1 - self.alpha) * PLM_feat
+        feat = LLM_feat * weights + PLM_feat * (1 - weights)
+        # feat = self.alpha * LLM_feat + (1 - self.alpha) * PLM_feat
         # Extract outputs from the model
         preds = self.GNN(graph, feat)
 
