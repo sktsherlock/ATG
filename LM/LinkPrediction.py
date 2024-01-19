@@ -154,7 +154,7 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
-    dataset = Dataset.from_dict(encoded_inputs)
+    # dataset = Dataset.from_dict(encoded_inputs)
 
 
     if args.pretrain_path is not None:
@@ -164,7 +164,7 @@ def main():
         model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
 
 
-    train_data = TopologyDataset(dataset) # neighbours
+    train_data = TopologyDataset(encoded_inputs) # neighbours
 
     training_args = TrainingArguments(
         output_dir=cache_path,
