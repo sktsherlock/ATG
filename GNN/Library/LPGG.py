@@ -160,11 +160,11 @@ class LPGNN(nn.Module):
     def forward(self, graph, LLM_feat, PLM_feat):  #
         # Decomposition the LLM features
         LLM_feat = self.decomposition(graph, LLM_feat) if self.conv == 'SAGE' else self.decomposition(LLM_feat)
-
+        mixed_features = th.cat([LLM_feat, PLM_feat], dim=2)
+        gru_model = FeatureGRU(LLM_feat.shape[1] + PLM_feat.shape[1], 128)
+        weights = gru_model(mixed_features)
         # Trade off the LLM_feat and the PLM_feat
-
-        feat = self.alpha * LLM_feat + (1 - self.alpha) * PLM_feat
-        # Extract outputs from the model
+        feat = LLM_feat * weights + PLM_feat * (1 - weights)
         preds = self.GNN(graph, feat)
 
         return preds
