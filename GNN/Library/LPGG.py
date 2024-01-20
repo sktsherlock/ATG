@@ -150,6 +150,7 @@ class LPGNN(nn.Module):
             self.decomposition = dglnn.SAGEConv(LLM_in_feats, PLM_in_feats, 'mean')
         else:
             self.decomposition = nn.Linear(LLM_in_feats, PLM_in_feats)
+        self.gru_model = FeatureGRU(2 * PLM_in_feats, 128)
         self.alpha = alpha
 
     def reset_parameters(self):
@@ -161,8 +162,7 @@ class LPGNN(nn.Module):
         # Decomposition the LLM features
         LLM_feat = self.decomposition(graph, LLM_feat) if self.conv == 'SAGE' else self.decomposition(LLM_feat)
         mixed_features = th.cat([LLM_feat, PLM_feat], dim=1)
-        gru_model = FeatureGRU(LLM_feat.shape[1] + PLM_feat.shape[1], 128)
-        weights = gru_model(mixed_features)
+        weights = self.gru_model(mixed_features)
         # Trade off the LLM_feat and the PLM_feat
         feat = LLM_feat * weights + PLM_feat * (1 - weights)
         preds = self.GNN(graph, feat)
