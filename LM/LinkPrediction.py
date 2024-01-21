@@ -7,6 +7,7 @@ import dgl
 import torch.nn as nn
 import torch.nn.functional as F
 from types import SimpleNamespace as SN
+from torch_sparse import SparseTensor
 from ogb.nodeproppred import DglNodePropPredDataset
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
     AutoConfig
@@ -51,13 +52,13 @@ class CLModel(PreTrainedModel):
         center_node_outputs = self.text_encoder(
             input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True
         )
-        center_node_emb = self.dropout(center_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
+        center_node_emb = self.dropout(torch.mean(center_node_outputs.last_hidden_state, dim=1))
 
         toplogy_node_outputs = self.text_encoder(
             input_ids=nb_input_ids, attention_mask=nb_attention_mask, output_hidden_states=True
         )
 
-        toplogy_emb = self.dropout(toplogy_node_outputs['hidden_states'][-1]).permute(1, 0, 2)[0]
+        toplogy_emb = self.dropout(torch.mean(toplogy_node_outputs.last_hidden_state, dim=1))
 
         center_contrast_embeddings = self.project(center_node_emb)
         toplogy_contrast_embeddings = self.project(toplogy_emb)
@@ -97,6 +98,7 @@ def mkdir_p(path, log=True):
             print('Directory {} already exists.'.format(path))
         else:
             raise
+
 
 def main():
     # 定义命令行参数
@@ -141,7 +143,7 @@ def main():
     if not os.path.exists(cache_path):
         os.makedirs(cache_path)
 
-    device = torch.device("cuda:%d" % args.gpu if torch.cuda.is_available() else 'cpu')
+
 
 
 
@@ -153,7 +155,7 @@ def main():
             self.max_length = 512
             self.link = False
             self.data_name = 'Movies'
-            self.graph_path = "/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt"
+            self.graph_path = "/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies/20000/edge_split.pt"
             self._token_folder = '/dataintent/local/user/v-yinju/haoyan/Token/Movies/'
             self.info = {
                 'input_ids': SN(shape=(self.n_nodes, self.max_length), type=np.uint16),
@@ -166,22 +168,18 @@ def main():
 
         def init(self):
             self._load_data_fields()
-            self.neighbours = self.get_neighbours()
+            self.neighbours = self.get_train_neighbours()
             if self.link:
                 pass #self.edge_index = self.get_train_edge()
             return self
 
-        def get_neighbours(self):
-            if self.data_name == 'ogbn-arxiv':
-                dataset = DglNodePropPredDataset('ogbn-arxiv', root='/dataintent/local/user/v-yinju/haoyan/Data/OGB/')
-                g, _ = dataset[0]
-                g = dgl.to_bidirected(g)
-
-            else:
-                g = dgl.load_graphs(self.graph_path)[0][0]
-                g = dgl.to_bidirected(g)
-
-            neighbours = list(g.adjacency_matrix_scipy().tolil().rows)
+        def get_train_neighbours(self):
+            edge_split = torch.load(self.graph_path)
+            edge_index = edge_split['train']['edge'].t()
+            train_g = SparseTensor.from_edge_index(edge_index).t()
+            train_g = train_g.to_symmetric()
+            train_g = dgl.graph((train_g.coo()[0], train_g.coo()[1]))
+            neighbours = list(train_g.adjacency_matrix_scipy().tolil().rows)
             return neighbours
 
         def _load_data_fields(self):
