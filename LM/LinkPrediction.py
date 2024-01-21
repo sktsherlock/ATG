@@ -112,6 +112,7 @@ def main():
     parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
     parser.add_argument('--path', type=str, default='./', help='Path to the NPY File')
     parser.add_argument('--pretrain_path', type=str, default=None, help='Path to the NPY File')
+    parser.add_argument('--save_path', type=str, default=None, help='Path to the NPY File')
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
@@ -259,6 +260,23 @@ def main():
         print('Loading model from the path: {}'.format(args.pretrain_path))
     else:
         encoder = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+
+
+    if args.unfreeze_layers is not None:
+        for param in encoder.parameters():
+            param.requires_grad = False
+
+        trainable_params = sum(
+                p.numel() for p in encoder.parameters() if p.requires_grad
+            )
+        assert trainable_params == 0
+        for param in encoder.encoder.layer[-args.unfreeze_layers:].parameters():
+            param.requires_grad = True
+
+        trainable_params = sum(
+                p.numel() for p in encoder.parameters() if p.requires_grad
+        )
+        print(f" Pass the freeze layer, the LM Encoder  parameters are {trainable_params}")
 
     model = CLModel(
         encoder,
