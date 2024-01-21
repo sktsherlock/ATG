@@ -216,8 +216,13 @@ def main():
         def __getitem__(self, node_id):
             item = self.d.get_tokens(node_id)
             neighbours = self.d.neighbours[node_id]
-            k = np.random.choice(neighbours, 1)[0]
-            item = self.d.get_nb_tokens(item, k)
+            if neighbours != []:
+                k = np.random.choice(neighbours, 1)[0]
+                item = self.d.get_nb_tokens(item, k)
+            else:
+                # Do the self contrastive learning
+                k = node_id
+                item = self.d.get_nb_tokens(item, k)
             return item
 
         def __len__(self):
