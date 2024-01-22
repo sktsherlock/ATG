@@ -16,6 +16,20 @@ from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 
 
+class MeanEmbInfModel(PreTrainedModel):
+    def __init__(self, model):
+        super().__init__(model.config)
+        self.encoder = model
+
+    @torch.no_grad()
+    def forward(self, input_ids, attention_mask):
+        # Extract outputs from the model
+        outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
+        # Use Mean Emb as sentence emb.
+        node_mean_emb = torch.mean(outputs.last_hidden_state, dim=1)
+        return TokenClassifierOutput(logits=node_mean_emb)
+
+
 def _similarity(h1: torch.Tensor, h2: torch.Tensor):
     h1 = F.normalize(h1)
     h2 = F.normalize(h2)
@@ -114,8 +128,8 @@ def main():
     parser.add_argument('--path', type=str, default='./', help='Path to the NPY File')
     parser.add_argument('--pretrain_path', type=str, default=None, help='Path to the NPY File')
     parser.add_argument('--save_path', type=str, default=None, help='Path to the NPY File')
-    parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
-    parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
+    parser.add_argument('--max_length', type=int, default=512, help='Maximum length of the text for language models')
+    parser.add_argument('--batch_size', type=int, default=60, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
     parser.add_argument('--unfreeze_layers', type=int, default=2, help='Maximum length of the text for language models')
@@ -144,6 +158,8 @@ def main():
         os.makedirs(Feature_path)
     if not os.path.exists(cache_path):
         os.makedirs(cache_path)
+
+    output_file = Feature_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
 
 
 
@@ -243,12 +259,13 @@ def main():
     # 编码文本数据并转为数据集
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt').data
+    tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
+    dataset = Dataset.from_dict(tokenized)
     token_folder = '/dataintent/local/user/v-yinju/haoyan/Token/Movies/'
     mkdir_p(token_folder)
-    for k in tokenized:
+    for k in tokenized.data:
         with open(os.path.join(token_folder, f'{k}.npy'), 'wb') as f:
-            np.save(f, tokenized[k])
+            np.save(f, tokenized.data[k])
 
     d = Sequence().init()
     train_data = TopologyDataset(d)
@@ -314,6 +331,28 @@ def main():
             print(f"Created directory: {save_path}")
 
         encoder.save_pretrained(save_path)
+
+    print('Inference the trained model')
+    Mean_Features_Extractor = MeanEmbInfModel(encoder)
+    Mean_Features_Extractor.eval()
+
+    inference_args = TrainingArguments(
+        output_dir=cache_path,
+        do_train=False,
+        do_predict=True,
+        per_device_eval_batch_size=batch_size,
+        dataloader_drop_last=False,
+        dataloader_num_workers=1,
+        fp16_full_eval=args.fp16,
+    )
+
+    trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
+    mean_emb = trainer.predict(dataset)
+
+    # 保存平均特征表示为NPY文件
+    np.save(output_file + "_mean_Link.npy", mean_emb.predictions)
+    print('Existing saved to the {}'.format(output_file))
+
 
     shutil.rmtree(cache_path)
 
