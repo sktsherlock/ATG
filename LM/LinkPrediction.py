@@ -308,7 +308,7 @@ def main():
 
 
     if args.save_path is not None:
-        save_path = args.save_path + args.model_name_or_path.split('/')[-1].replace("-", "_") + '/' + f'lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}_u{args.unfreeze_layers}'
+        save_path = args.save_path + args.model_name.split('/')[-1].replace("-", "_") + '/' + f'lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}_u{args.unfreeze_layers}'
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             print(f"Created directory: {save_path}")
