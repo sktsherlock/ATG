@@ -119,14 +119,15 @@ def main():
     # 定义命令行参数
     parser = argparse.ArgumentParser(
         description='Process text data and save the overall representation as an NPY file.')
-    parser.add_argument('--csv_file', type=str, help='Path to the CSV file', default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/Movies.csv")
+    parser.add_argument('--csv_file', type=str, help='Path to the CSV file', default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/Movies.csv", required=True)
     parser.add_argument('--text_column', type=str, default='text', help='Name of the column containing text data')
     parser.add_argument('--model_name', type=str, default='prajjwal1/bert-tiny', required=True,
                         help='Name or path of the Huggingface model')
     parser.add_argument('--tokenizer_name', type=str, default=None)
-    parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file')
-    parser.add_argument('--path', type=str, default='./', help='Path to the NPY File')
+    parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file', required=True)
+    parser.add_argument('--path', type=str, default='./', help='Path to the NPY File', required=True)
     parser.add_argument('--pretrain_path', type=str, default=None, help='Path to the NPY File')
+    parser.add_argument('--token_folder', type=str, default='/dataintent/local/user/v-yinju/haoyan/Token/Movies/', help='Path to the NPY File', required=True)
     parser.add_argument('--save_path', type=str, default=None, help='Path to the NPY File')
     parser.add_argument('--max_length', type=int, default=512, help='Maximum length of the text for language models')
     parser.add_argument('--batch_size', type=int, default=60, help='Number of batch size for inference')
@@ -134,7 +135,7 @@ def main():
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
     parser.add_argument('--unfreeze_layers', type=int, default=2, help='Maximum length of the text for language models')
     parser.add_argument("--gpu", type=int, default=0, help="GPU device ID.")
-    parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt", help="The datasets to be implemented.")
+    parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies/20000/edge_split.pt", help="The datasets to be implemented.", required=True)
     # 解析命令行参数
     args = parser.parse_args()
     csv_file = args.csv_file
@@ -167,21 +168,20 @@ def main():
 
 
     class Sequence():
-        def __init__(self):
+        def __init__(self, cf):
             self.ndata = {}
-            self.n_nodes = 16672
-            self.max_length = 512
+            self.n_nodes = cf.n_nodes
+            self.max_length = cf.max_length
             self.link = False
-            self.data_name = 'Movies'
-            self.graph_path = "/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies/20000/edge_split.pt"
-            self._token_folder = '/dataintent/local/user/v-yinju/haoyan/Token/Movies/'
+            self.graph_path = cf.graph_path
+            self.token_folder = cf.token_folder
             self.info = {
                 'input_ids': SN(shape=(self.n_nodes, self.max_length), type=np.uint16),
                 'attention_mask': SN(shape=(self.n_nodes, self.max_length), type=bool),
                 'token_type_ids': SN(shape=(self.n_nodes, self.max_length), type=bool)
             }
             for k, info in self.info.items():
-                info.path = f'{self._token_folder}{k}.npy'
+                info.path = f'{self.token_folder}{k}.npy'
 
 
         def init(self):
@@ -261,13 +261,15 @@ def main():
         tokenizer.pad_token = tokenizer.eos_token
     tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(tokenized)
-    token_folder = '/dataintent/local/user/v-yinju/haoyan/Token/Movies/'
+    token_folder = args.token_folder
     mkdir_p(token_folder)
     for k in tokenized.data:
         with open(os.path.join(token_folder, f'{k}.npy'), 'wb') as f:
             np.save(f, tokenized.data[k])
 
-    d = Sequence().init()
+    cf = {'n_nodes': len(df), 'max_length': args.max_length, 'graph_path': args.graph_path, 'token_folder': token_folder}
+
+    d = Sequence(cf).init()
     train_data = TopologyDataset(d)
     # dataset = Dataset.from_dict(encoded_inputs)
 
