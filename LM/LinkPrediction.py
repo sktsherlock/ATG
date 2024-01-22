@@ -261,6 +261,7 @@ def main():
         tokenizer.pad_token = tokenizer.eos_token
     tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(tokenized)
+    print(dataset)
     token_folder = args.token_folder
     mkdir_p(token_folder)
     for k in tokenized.data:
