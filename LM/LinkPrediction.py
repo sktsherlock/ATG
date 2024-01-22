@@ -289,6 +289,7 @@ def main():
         dataloader_drop_last=False,
         dataloader_num_workers=1,
         fp16=args.fp16,
+        save_total_limit=None,
         per_device_train_batch_size=args.batch_size,
         num_train_epochs=10,
         warmup_ratio=0.1,
