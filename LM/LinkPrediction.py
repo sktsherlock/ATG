@@ -178,7 +178,6 @@ def main():
             self.info = {
                 'input_ids': SN(shape=(self.n_nodes, self.max_length), type=np.uint16),
                 'attention_mask': SN(shape=(self.n_nodes, self.max_length), type=bool),
-                'token_type_ids': SN(shape=(self.n_nodes, self.max_length), type=bool)
             }
             for k, info in self.info.items():
                 info.path = f'{self.token_folder}{k}.npy'
