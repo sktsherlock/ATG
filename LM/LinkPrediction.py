@@ -170,11 +170,11 @@ def main():
     class Sequence():
         def __init__(self, cf):
             self.ndata = {}
-            self.n_nodes = cf.n_nodes
-            self.max_length = cf.max_length
+            self.n_nodes = cf['n_nodes']
+            self.max_length = cf['max_length']
             self.link = False
-            self.graph_path = cf.graph_path
-            self.token_folder = cf.token_folder
+            self.graph_path = cf['graph_path']
+            self.token_folder = cf['token_folder']
             self.info = {
                 'input_ids': SN(shape=(self.n_nodes, self.max_length), type=np.uint16),
                 'attention_mask': SN(shape=(self.n_nodes, self.max_length), type=bool),
@@ -268,7 +268,7 @@ def main():
             np.save(f, tokenized.data[k])
 
     cf = {'n_nodes': len(df), 'max_length': args.max_length, 'graph_path': args.graph_path, 'token_folder': token_folder}
-    print(cf.n_nodes, cf.max_length)
+
     d = Sequence(cf).init()
     train_data = TopologyDataset(d)
     # dataset = Dataset.from_dict(encoded_inputs)
