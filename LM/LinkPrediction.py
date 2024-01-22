@@ -290,7 +290,10 @@ def main():
         dataloader_num_workers=1,
         fp16=args.fp16,
         per_device_train_batch_size=args.batch_size,
-        num_train_epochs = 10
+        num_train_epochs=10,
+        warmup_ratio=0.1,
+        per_device_eval_batch_size=args.batch_size * 10,
+        learning_rate=2e-05
     )
 
     trainer = CustomTrainer(
@@ -308,6 +311,7 @@ def main():
             print(f"Created directory: {save_path}")
 
         encoder.save_pretrained(save_path)
+
 
 
 
