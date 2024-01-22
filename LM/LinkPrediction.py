@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from types import SimpleNamespace as SN
 from torch_sparse import SparseTensor
+import shutil
 from ogb.nodeproppred import DglNodePropPredDataset
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
     AutoConfig
@@ -313,6 +314,7 @@ def main():
 
         encoder.save_pretrained(save_path)
 
+    shutil.rmtree(cache_path)
 
 
 
