@@ -296,6 +296,7 @@ def main():
         warmup_ratio=0.1,
         per_device_eval_batch_size=args.batch_size * 10,
         learning_rate=2e-05,
+        save_strategy='epoch',
     )
 
     trainer = CustomTrainer(
