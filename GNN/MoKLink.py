@@ -30,7 +30,7 @@ class LPGNN(torch.nn.Module):
 
         self.decomposition.reset_parameters()
 
-    def forward(self, adj_t, LLM_feat, PLM_feat):  #
+    def forward(self, PLM_feat, LLM_feat, adj_t):  #
         # Decomposition the LLM features
         LLM_feat = self.decomposition(LLM_feat, adj_t) if self.conv == 'SAGE' else self.decomposition(LLM_feat)
 
@@ -43,18 +43,18 @@ class LPGNN(torch.nn.Module):
         return h
 
 
-def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
+def train(model, predictor, PLM_feat, LLM_feat, adj_t, edge_split, optimizer, batch_size):
     model.train()
     predictor.train()
 
-    pos_train_edge = edge_split['train']['edge'].to(x.device)
+    pos_train_edge = edge_split['train']['edge'].to(PLM_feat.device)
 
     total_loss = total_examples = 0
     for perm in DataLoader(range(pos_train_edge.size(0)), batch_size,
                            shuffle=True):
         optimizer.zero_grad()
 
-        h = model(x, adj_t)
+        h = model(PLM_feat, LLM_feat, adj_t)
 
         edge = pos_train_edge[perm].t()
 
@@ -62,7 +62,7 @@ def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
         pos_loss = -torch.log(pos_out + 1e-15).mean()
 
         # Just do some trivial random sampling.
-        edge = torch.randint(0, x.size(0), edge.size(), dtype=torch.long,
+        edge = torch.randint(0, PLM_feat.size(0), edge.size(), dtype=torch.long,
                              device=h.device)
         neg_out = predictor(h[edge[0]], h[edge[1]])
         neg_loss = -torch.log(1 - neg_out + 1e-15).mean()
@@ -80,11 +80,11 @@ def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
 
 
 @torch.no_grad()
-def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size):
+def test(model, predictor, PLM_feat, LLM_feat, adj_t, edge_split, evaluator, batch_size):
     model.eval()
     predictor.eval()
 
-    h = model(x, adj_t)
+    h = model(PLM_feat, LLM_feat, adj_t)
 
     pos_train_edge = edge_split['train']['edge'].to(h.device)
     pos_valid_edge = edge_split['valid']['edge'].to(h.device)
@@ -110,7 +110,7 @@ def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size):
         neg_valid_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
     neg_valid_pred = torch.cat(neg_valid_preds, dim=0)
 
-    h = model(x, adj_t)
+    h = model(PLM_feat, LLM_feat, adj_t)
 
     pos_test_preds = []
     for perm in DataLoader(range(pos_test_edge.size(0)), batch_size):
@@ -233,11 +233,11 @@ def main():
             lr=args.lr)
 
         for epoch in range(1, 1 + args.epochs):
-            loss = train(model, predictor, x, adj_t, edge_split, optimizer,
+            loss = train(model, predictor, PLM_feat, LLM_feat, adj_t, edge_split, optimizer,
                          args.batch_size)
 
             if epoch % args.eval_steps == 0:
-                results = test(model, predictor, x, adj_t, edge_split, evaluator,
+                results = test(model, predictor, PLM_feat, LLM_feat, adj_t, edge_split, evaluator,
                                args.batch_size)
                 for key, result in results.items():
                     loggers[key].add_result(run, result)
