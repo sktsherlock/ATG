@@ -18,7 +18,7 @@ argparser.add_argument(
     "--graph_path", type=str, default=None, help="The datasets to be implemented."
 )
 argparser.add_argument(
-    "--save_path", type=str, default='/dataintent/local/user/v-haoyan1/TSNE/OGB/',
+    "--save_path", type=str, default='/dataintent/local/user/v-yinju/haoyan/TSNE/OGB/',
     help="The datasets to be implemented."
 )
 argparser.add_argument(
