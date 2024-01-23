@@ -31,6 +31,17 @@ def compute_accuracy_overlap(preds1, preds2, labels):
     return overlap_rate
 
 
+def compute_overlap_rate(preds1, preds2):
+    total_samples = len(preds1)
+    overlap_count = 0
+
+    for i in range(total_samples):
+        if preds1[i] == preds2[i]:
+            overlap_count += 1
+
+    overlap_rate = overlap_count / total_samples
+    return overlap_rate
+
 def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
     model.train()
 
@@ -366,9 +377,12 @@ def main():
     )
     wandb.log({f'Feat2_Val_{args.metric}': val_result, f'Feat2_Test_{args.metric}': test_result})
 
-    overlap = compute_accuracy_overlap(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1), labels[test_idx])
-    print("Overlap Rate: {:.2f}".format(overlap))
+    acc_overlap = compute_accuracy_overlap(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1), labels[test_idx])
+    print("Overlap Rate: {:.2f}".format(acc_overlap))
+    wandb.log({f'Acc_overlap': acc_overlap})
+    overlap = compute_overlap_rate(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1))
     wandb.log({f'Overlap': overlap})
+
 
 
 if __name__ == "__main__":
