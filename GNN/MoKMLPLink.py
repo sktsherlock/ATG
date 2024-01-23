@@ -14,10 +14,58 @@ import os
 from LinkPrediction import SAGE, GCN, LinkPredictor
 
 
+class MLP(torch.nn.Module):
+    def __init__(
+            self,
+            in_feats,
+            n_classes,
+            n_layers,
+            n_hidden,
+            activation,
+            dropout=0.0,
+    ):
+        super().__init__()
+        self.n_layers = n_layers
+        self.n_hidden = n_hidden
+        self.n_classes = n_classes
+
+        self.linears = torch.nn.ModuleList()
+        self.norms = torch.nn.ModuleList()
+
+        for i in range(n_layers):
+            in_hidden = n_hidden if i > 0 else in_feats
+            out_hidden = n_hidden if i < n_layers - 1 else n_classes
+
+            self.linears.append(torch.nn.Linear(in_hidden, out_hidden))
+
+            if i < n_layers - 1:
+                self.norms.append(torch.nn.BatchNorm1d(out_hidden))
+
+        self.activation = activation
+        self.dropout = torch.nn.Dropout(dropout)
+
+    def reset_parameters(self):
+        for linear in self.linears:
+            linear.reset_parameters()
+
+        for norm in self.norms:
+            norm.reset_parameters()
+
+    def forward(self, feat):
+        h = feat
+
+        for i in range(self.n_layers - 1):
+            h = F.relu(self.norms[i](self.linears[i](h)))
+            h = self.dropout(h)
+
+        return self.linears[-1](h)
+
+
 class LPGNN(torch.nn.Module):
-    def __init__(self, LLM_in_feats, PLM_in_feats, alpha=0.5, conv='SAGE'):
+    def __init__(self, model, LLM_in_feats, PLM_in_feats, alpha=0.5, conv='SAGE'):
         super().__init__()
         self.conv = conv
+        self.MLP = model
         if conv == 'SAGE':
             self.decomposition = SAGEConv(LLM_in_feats, PLM_in_feats, 'mean')
         else:
@@ -35,8 +83,8 @@ class LPGNN(torch.nn.Module):
 
         feat = self.alpha * LLM_feat + (1 - self.alpha) * PLM_feat
         # Extract outputs from the model
-
-        return feat
+        h = self.MLP(feat)
+        return h
 
 
 def train(model, predictor, PLM_feat, LLM_feat, adj_t, edge_split, optimizer, batch_size):
@@ -163,17 +211,17 @@ def main():
     parser.add_argument(
         "--conv_type", type=str, default='SAGE', help="Use PLM embedding as feature"
     )
-    parser.add_argument("--PLM_feature", type=str, default=None, help="Use LM embedding as feature",)
+    parser.add_argument("--PLM_feature", type=str, default=None, help="Use LM embedding as feature", )
     parser.add_argument("--LLM_feature", type=str, default=None, help="Use LLM embedding as feature")
     parser.add_argument("--path", type=str, default="/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies/",
                         help="Path to save splitting")
-    parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt",
+    parser.add_argument("--graph_path", type=str,
+                        default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt",
                         help="Path to load the graph")
     args = parser.parse_args()
     wandb.config = args
     wandb.init(config=args, reinit=True)
     print(args)
-
 
     if not os.path.exists(f'{args.path}{args.neg_len}/'):
         os.makedirs(f'{args.path}{args.neg_len}/')
@@ -187,19 +235,17 @@ def main():
     else:
         graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
 
-
     edge_split = split_edge(graph, test_ratio=0.08, val_ratio=0.02, path=args.path, neg_len=args.neg_len)
 
     PLM_feat = torch.from_numpy(np.load(args.PLM_feature).astype(np.float32)).to(device)
     LLM_feat = torch.from_numpy(np.load(args.LLM_feature).astype(np.float32)).to(device)
 
-
     edge_index = edge_split['train']['edge'].t()
     adj_t = SparseTensor.from_edge_index(edge_index).t()
     adj_t = adj_t.to_symmetric().to(device)
 
-
-    model = LPGNN(LLM_feat.shape[1], PLM_feat.shape[1], args.alpha, args.conv_type).to(device)
+    encoder = MLP(PLM_feat.size(1), args.hidden_channels,  args.num_layers, args.hidden_channels, activation=F.relu, dropout=args.dropout).to(device)
+    model = LPGNN(encoder, LLM_feat.shape[1], PLM_feat.shape[1], args.alpha, args.conv_type).to(device)
 
     predictor = LinkPredictor(args.hidden_channels, args.hidden_channels, 1,
                               args.num_layers, args.dropout).to(device)
