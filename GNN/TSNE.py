@@ -68,7 +68,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2=
     plt.savefig(save_path_feat1)
     plt.close()
 
-    plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='o', label=label2, cmap='viridis')
+    plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap='viridis')
     plt.title(f'T-SNE Visualization for {label2}')
     plt.legend()
     save_path_feat2 = os.path.join(path, f'{label2}_tsne.pdf')
