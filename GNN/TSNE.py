@@ -47,7 +47,7 @@ graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=None, name='o
 print(labels.shape)
 
 
-def visualize(feat1, feat2, path, label, sample_size=300, label1='PLM', label2='LLM'):
+def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM'):
     # 对 PLM_feat 进行采样和获取标签
     feat1_sample = feat1[:sample_size]
     # 对 LLM_feat 进行采样和获取标签
