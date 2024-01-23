@@ -16,6 +16,18 @@ from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learni
 from GraphData import load_data
 
 
+def compute_fusion_accuracy_overlap(preds1, preds2, labels):
+    total_samples = len(labels)
+    overlap_count = 0
+
+    for i in range(total_samples):
+        if preds1[i] == labels[i] or preds2[i] == labels[i]:
+            overlap_count += 1
+
+
+    overlap_rate = overlap_count / total_samples
+
+    return overlap_rate
 
 def compute_accuracy_overlap(preds1, preds2, labels):
     total_samples = len(labels)
@@ -382,6 +394,9 @@ def main():
     wandb.log({f'Acc_overlap': acc_overlap})
     overlap = compute_overlap_rate(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1))
     wandb.log({f'Overlap': overlap})
+    acc_fusion = compute_fusion_accuracy_overlap(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1), labels[test_idx])
+    print("Fusion Acc Rate: {:.2f}".format(acc_fusion))
+    wandb.log({f'Acc_fusion': acc_fusion})
 
 
 
