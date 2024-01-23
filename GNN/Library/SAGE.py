@@ -390,12 +390,13 @@ def main():
     wandb.log({f'Feat2_Val_{args.metric}': val_result, f'Feat2_Test_{args.metric}': test_result})
 
     acc_overlap = compute_accuracy_overlap(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1), labels[test_idx])
-    print("Overlap Rate: {:.2f}".format(acc_overlap))
+    print("Acc_overlap Rate: {:.5f}".format(acc_overlap))
     wandb.log({f'Acc_overlap': acc_overlap})
     overlap = compute_overlap_rate(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1))
+    print("Overlap Rate: {:.5f}".format(overlap))
     wandb.log({f'Overlap': overlap})
     acc_fusion = compute_fusion_accuracy_overlap(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1), labels[test_idx])
-    print("Fusion Acc Rate: {:.2f}".format(acc_fusion))
+    print("Fusion Acc Rate:  {:.5f}".format(acc_fusion))
     wandb.log({f'Acc_fusion': acc_fusion})
 
 
