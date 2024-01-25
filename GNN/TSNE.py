@@ -35,7 +35,7 @@ argparser.add_argument(
     "--label1", type=str, default='LLM', help="The datasets to be implemented."
 )
 argparser.add_argument(
-    "--label2", type=str, default='PLM', help="The datasets to be implemented."
+    "--label2", type=str, default='TLM', help="The datasets to be implemented."
 )
 args = argparser.parse_args()
 
