@@ -43,7 +43,7 @@ args = argparser.parse_args()
 gpu = 0
 device = th.device("cuda:%d" % gpu if th.cuda.is_available() else 'cpu')
 
-graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=None, name='ogbn-arxiv')
+graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=None, name=args.graph_path)
 print(labels.shape)
 
 
