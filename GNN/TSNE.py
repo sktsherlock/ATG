@@ -22,6 +22,10 @@ argparser.add_argument(
     help="The datasets to be implemented."
 )
 argparser.add_argument(
+    "--dataname", type=str, default='History',
+    help="The datasets name."
+)
+argparser.add_argument(
     "--feat1", type=str,
     default='/dataintent/local/user/v-yinju/haoyan/Data/OGB/Arxiv/Feature/Arxiv_Llama_2_13b_hf_256_mean.npy',
     help="The datasets to be implemented."
@@ -47,7 +51,7 @@ graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=args.graph_pa
 print(labels.shape)
 
 
-def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM'):
+def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM', dataname=None):
     # 对 PLM_feat 进行采样和获取标签
     feat1_sample = feat1[:sample_size]
     # 对 LLM_feat 进行采样和获取标签
@@ -62,7 +66,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2=
 
     # 绘制 t-SNE 可视化结果并保存
     plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
-    plt.title(f'T-SNE Visualization for {label1}')
+    plt.title(f'T-SNE for {label1} on {dataname}')
     plt.legend()
     save_path_feat1 = os.path.join(path, f'{label1}_tsne.pdf')
     plt.savefig(save_path_feat1)
@@ -153,5 +157,5 @@ Feature2 = th.from_numpy(np.load(args.feat2).astype(np.float32))
 #     random_indices.extend(sample_indices)
 
 
-visualize(Feature1, Feature2, args.save_path, labels, label1=args.label1, label2=args.label2)
+visualize(Feature1, Feature2, args.save_path, labels, label1=args.label1, label2=args.label2, dataname=args.dataname)
 print('Finished TSNE')
