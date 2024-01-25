@@ -66,15 +66,15 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2=
 
     # 绘制 t-SNE 可视化结果并保存
     plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
-    plt.title(f'T-SNE for {label1} on {dataname}')
-    plt.legend()
+    # plt.title(f'T-SNE for {label1} on {dataname}')
+    plt.legend(fontsize='large')
     save_path_feat1 = os.path.join(path, f'{label1}_tsne.pdf')
     plt.savefig(save_path_feat1)
     plt.close()
 
     plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap='viridis')
-    plt.title(f'T-SNE Visualization for {label2}')
-    plt.legend()
+    # plt.title(f'T-SNE Visualization for {label2}')
+    plt.legend(fontsize='large')
     save_path_feat2 = os.path.join(path, f'{label2}_tsne.pdf')
     plt.savefig(save_path_feat2)
     plt.close()
@@ -87,7 +87,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2=
     # plt.scatter(tsne_result[sample_size:, 0], tsne_result[sample_size:, 1], cmap='viridis', label=label2)
     # plt.xlabel('t-SNE Dimension 1')
     # plt.ylabel('t-SNE Dimension 2')
-    plt.title(f'T-SNE Visualization between {label1} and {label2}')
+    # plt.title(f'T-SNE Visualization between {label1} and {label2}')
     plt.legend()
     save_path = os.path.join(path, f'{label1}_{label2}_combined_tsne.pdf')
     plt.savefig(save_path)
