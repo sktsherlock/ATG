@@ -54,6 +54,20 @@ def compute_overlap_rate(preds1, preds2):
     overlap_rate = overlap_count / total_samples
     return overlap_rate
 
+
+def ensemble_acc(preds1, labels):
+    total_samples = len(labels)
+    overlap_count = 0
+
+    for i in range(total_samples):
+        if preds1[i] == labels[i]:
+            overlap_count += 1
+
+
+    ens_acc = overlap_count / total_samples
+
+    return ens_acc
+
 def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
     model.train()
 
@@ -398,6 +412,10 @@ def main():
     acc_fusion = compute_fusion_accuracy_overlap(th.argmax(prediction1[test_idx], dim=1), th.argmax(prediction2[test_idx], dim=1), labels[test_idx])
     print("Fusion Acc Rate:  {:.5f}".format(acc_fusion))
     wandb.log({f'Acc_fusion': acc_fusion})
+    ens_acc = ensemble_acc(th.argmax((prediction1[test_idx] + prediction2[test_idx])/2, dim=1), labels[test_idx])
+    print("Ensemble Acc Rate:  {:.5f}".format(ens_acc))
+    wandb.log({f'Ensemble_acc': ens_acc})
+
 
 
 
