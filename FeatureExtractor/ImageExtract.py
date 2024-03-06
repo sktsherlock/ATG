@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 import timm
 import timm.data
 import timm.loss
@@ -26,7 +25,9 @@ def create_datasets(image_size, data_mean, data_std, inference_path):
 
     return inference_dataset
 
-
+"""
+python ImageExtract.py --gpu 1 --data_dir /home/aiscuser/ATG/Data/Movies/MoviesImages/ --name Movies --path /home/aiscuser/ATG/Data/Movies/ImageFeature/ 
+"""
 def main():
     # 定义命令行参数
     parser = argparse.ArgumentParser(description="Simple example of training script using timm.")
@@ -49,9 +50,10 @@ def main():
     name = args.name
     imagesize = args.size
 
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    base_dir = os.path.dirname(root_dir.rstrip('/'))
-    data_dir = base_dir + '/' + args.data_dir
+    # root_dir = os.path.dirname(os.path.abspath(__file__))
+    # base_dir = os.path.dirname(root_dir.rstrip('/'))
+    # data_dir = base_dir + '/' + args.data_dir
+    data_dir = args.data_dir
 
 
     if not os.path.exists(args.path):

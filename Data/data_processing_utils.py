@@ -171,6 +171,7 @@ def download_images(df, output_img_path):
             print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
     print('Successfully downloaded images')
 
+
 def construct_graph(input_csv_path, output_graph_path):
     import torch
     import dgl
