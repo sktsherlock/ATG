@@ -99,6 +99,8 @@ def main():
     print(f'Shape of the image feature{preds.shape}')
 
     output_file = base_dir + '/' + args.path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(imagesize) + '_' + str(preds.shape[1])
+    print(f'Base directory: {base_dir}')
+    print(f'Output file: {output_file}')
     np.save(output_file + ".npy", preds)
 
 
