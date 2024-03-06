@@ -50,10 +50,10 @@ def main():
     name = args.name
     imagesize = args.size
 
-    # root_dir = os.path.dirname(os.path.abspath(__file__))
-    # base_dir = os.path.dirname(root_dir.rstrip('/'))
-    # data_dir = base_dir + '/' + args.data_dir
-    data_dir = args.data_dir
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(root_dir.rstrip('/'))
+    data_dir = base_dir + '/' + args.data_dir
+
 
 
     if not os.path.exists(args.path):
