@@ -40,6 +40,8 @@ def main():
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
+    parser.add_argument('--nomask', action='store_true', help='whether do not use mask to claculate the mean pooling')
+
 
     # 解析命令行参数
     args = parser.parse_args()
@@ -98,6 +100,28 @@ def main():
             node_mean_emb = torch.mean(outputs.last_hidden_state, dim=1)
             return TokenClassifierOutput(logits=node_mean_emb)
 
+    class AttentionMeanEmbInfModel(PreTrainedModel):
+        def __init__(self, model):
+            super().__init__(model.config)
+            self.encoder = model
+
+        @torch.no_grad()
+        def mean_pooling(self, token_embeddings, attention_mask):
+            # Mask out padding tokens
+            input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size())
+            masked_token_embeddings = token_embeddings * input_mask_expanded
+            # Calculate mean pooling
+            mean_embeddings = masked_token_embeddings.sum(dim=1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+            return mean_embeddings
+
+        @torch.no_grad()
+        def forward(self, input_ids, attention_mask):
+            # Extract outputs from the model
+            outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
+            node_mean_emb = self.mean_pooling(outputs.last_hidden_state, attention_mask)
+            return TokenClassifierOutput(logits=node_mean_emb)
+
+
     # 读取CSV文件
     df = pd.read_csv(os.path.join(base_dir, csv_file))
     text_data = df[text_column].tolist()
@@ -123,8 +147,10 @@ def main():
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mean_Features_Extractor = MeanEmbInfModel(model)
+    Mask_Mean_Features_Extractor = AttentionMeanEmbInfModel(model)
     CLS_Feateres_Extractor.eval()
     Mean_Features_Extractor.eval()
+    Mask_Mean_Features_Extractor.eval()
 
     inference_args = TrainingArguments(
         output_dir=cache_path,
@@ -149,7 +175,7 @@ def main():
             print('Existing saved CLS')
 
     if not os.path.exists(output_file + "_mean.npy"):
-        trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
+        trainer = Trainer(model=Mask_Mean_Features_Extractor, args=inference_args)
         mean_emb = trainer.predict(dataset)
 
         # 保存平均特征表示为NPY文件
@@ -158,6 +184,21 @@ def main():
 
     else:
         print('Existing saved MEAN')
+
+    if args.nomask:
+        if not os.path.exists(output_file + "_nomask_mean.npy"):
+            trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
+            mean_emb = trainer.predict(dataset)
+
+            # 保存平均特征表示为NPY文件
+            np.save(output_file + "_nomask_mean.npy", mean_emb.predictions)
+            print('Existing saved to the {}'.format(output_file))
+
+        else:
+            print('Existing saved "no mask MEAN"')
+
+
+
 
 
 if __name__ == "__main__":
