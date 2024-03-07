@@ -27,8 +27,8 @@ def create_datasets(image_size, data_mean, data_std, inference_path):
 
 """
 python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ 
-python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 1024 --model_name google/vit-base-patch16-224-in21k
-python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 1024 --model_name google/bit-50 
+python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 1024 --model_name timm/vit_base_patch16_224.augreg2_in21k_ft_in1k
+python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 1024 --model_name timm/resnetv2_50x1_bit.goog_in21k
 python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 1024 --model_name openai/clip-vit-large-patch14 
 """
 def main():
