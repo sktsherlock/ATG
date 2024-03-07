@@ -7,88 +7,17 @@ import torch as th
 import numpy as np
 import torch.nn.functional as F
 import os
-from RevGAT.model import RevGAT
-from GCN import GCN
-from GraphSAGE import GraphSAGE
-from MLP import MLP
-import time
-import torch.optim as optim
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from dgl.nn.pytorch.conv import SGConv
 from GraphData import load_data, set_seed
 from NodeClassification import classification
-from LPG import classification
 
-
-class LPSAGE(nn.Module):
-    def __init__(self,
-                 in_LLM_feats,
-                 in_PLM_feats,
-                 n_hidden,
-                 n_classes,
-                 n_layers,
-                 activation,
-                 dropout,
-                 aggregator_type,
-                 ):
-        super(LPSAGE, self).__init__()
-        self.n_layers = n_layers
-        self.n_hidden = n_hidden
-        self.n_classes = n_classes
-
-        self.convs = nn.ModuleList()
-        self.norms = nn.ModuleList()
-
-        # input layer
-        for i in range(n_layers):
-            if i == 0:
-                in_hidden = in_LLM_feats
-            elif i == 1:
-                in_hidden = in_PLM_feats
-            else:
-                in_hidden = n_hidden
-
-            if i == n_layers - 1:
-                out_hidden = n_classes
-            elif i == 0:
-                out_hidden = in_PLM_feats
-            else:
-                out_hidden = n_hidden
-
-            self.convs.append(dglnn.SAGEConv(in_hidden, out_hidden, aggregator_type))
-            if i < n_layers - 1:
-                self.norms.append(nn.BatchNorm1d(out_hidden))
-
-        self.dropout = nn.Dropout(dropout)
-        self.activation = activation
-
-    def reset_parameters(self):
-        for conv in self.convs:
-            conv.reset_parameters()
-
-        for norm in self.norms:
-            norm.reset_parameters()
-
-    def forward(self, graph, LLM_feat, PLM_feat):
-        h = LLM_feat
-
-        for i in range(self.n_layers):
-            conv = self.convs[i](graph, h)
-            h = conv
-
-            if i < self.n_layers - 1:
-                h = self.norms[i](h)
-                if i == 0:
-                    h = h + self.norms[i](PLM_feat)
-                h = self.activation(h)
-                h = self.dropout(h)
-
-        return h
-
-
+# 参数定义模块
 def args_init():
     argparser = argparse.ArgumentParser(
-        "RevGAT Config",
+        "GCN Config",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     argparser.add_argument("--gpu", type=int, default=0, help="GPU device ID.")
@@ -102,38 +31,13 @@ def args_init():
         "--lr", type=float, default=0.005, help="learning rate"
     )
     argparser.add_argument(
-        "--n-layers", type=int, default=3, help="number of layers"
-    )
-    argparser.add_argument(
-        "--n-hidden", type=int, default=256, help="number of hidden units"
-    )
-    argparser.add_argument(
-        "--aggregator", type=str, default="mean", choices=["mean", "gcn", "pool", "lstm"],
-        help="Specify the aggregator option of SAGE"
-    )
-    argparser.add_argument(
-        "--no-attn-dst", type=bool, default=True, help="Don't use attn_dst."
-    )
-    argparser.add_argument(
-        "--n-heads", type=int, default=3, help="number of heads"
-    )
-    argparser.add_argument(
-        "--attn-drop", type=float, default=0.0, help="attention drop rate"
-    )
-    argparser.add_argument(
-        "--edge-drop", type=float, default=0.0, help="edge drop rate"
-    )
-    argparser.add_argument(
-        "--alpha", type=float, default=0.5, help="Tradeoff the LLM and the PLM"
-    )
-    argparser.add_argument(
-        "--dropout", type=float, default=0.5, help="dropout rate"
-    )
-    argparser.add_argument(
         "--weight", type=bool, default=True, help="if False, no W."
     )
     argparser.add_argument(
-        "--bias", type=bool, default=True, help="if False, no last layer bias."
+        "--bias", type=bool, default=True, help="control the SGC bias."
+    )
+    argparser.add_argument(
+        "--k", type=int, default=2, help="number of k"
     )
     argparser.add_argument(
         "--min-lr", type=float, default=0.0001, help="the min learning rate"
@@ -150,8 +54,7 @@ def args_init():
         "--eval_steps", type=int, default=1, help="eval in every epochs"
     )
     argparser.add_argument(
-        "--early_stop_patience", type=int, default=None,
-        help="when to stop the  training loop to be aviod of the overfiting"
+        "--early_stop_patience", type=int, default=None, help="when to stop the  training loop to be aviod of the overfiting"
     )
     argparser.add_argument(
         "--warmup_epochs", type=int, default=None, help="The warmup epochs"
@@ -164,10 +67,7 @@ def args_init():
         "--data_name", type=str, default=None, help="The dataset name.",
     )
     argparser.add_argument(
-        "--PLM_feature", type=str, default=None, help="Use PLM embedding as feature"
-    )
-    argparser.add_argument(
-        "--LLM_feature", type=str, default=None, help="Use LLM embedding as feature"
+        "--feature", type=str, default=None, help="Use LM embedding as feature",
     )
     argparser.add_argument(
         "--graph_path", type=str, default=None, help="The datasets to be implemented."
@@ -209,6 +109,7 @@ def main():
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
                                                             val_ratio=args.val_ratio, name=args.data_name)
 
+
     if args.inductive:
         # 构造Inductive Learning 实验条件
         isolated_nodes = th.cat((val_idx, test_idx))
@@ -231,12 +132,9 @@ def main():
         graph = graph.remove_self_loop().add_self_loop()
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
-    PLM_feat = th.from_numpy(np.load(args.PLM_feature).astype(np.float32)).to(device)
-    LLM_feat = th.from_numpy(np.load(args.LLM_feature).astype(np.float32)).to(device)
-
-    n_classes = (labels.max() + 1).item()
-    print(
-        f"Number of classes {n_classes}, Number of PLM features {PLM_feat.shape[1]}, Number of LLM features {LLM_feat.shape[1]}")
+    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
+    n_classes = (labels.max()+1).item()
+    print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
 
     graph.create_formats_()
 
@@ -255,20 +153,18 @@ def main():
     test_results = []
 
     # Model implementation
-
-    GNN = LPSAGE(LLM_feat.shape[1], PLM_feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu,
-                 dropout=args.dropout, aggregator_type=args.aggregator).to(device)
-
+    model = SGConv(feat.shape[1], n_classes, args.k, cached=True, bias=args.bias).to(device)
+    print(model)
     TRAIN_NUMBERS = sum(
-        [np.prod(p.size()) for p in GNN.parameters() if p.requires_grad]
+        [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
         set_seed(args.seed)
-        GNN.reset_parameters()
+        model.reset_parameters()
         val_result, test_result = classification(
-            args, graph, GNN, PLM_feat, LLM_feat, labels, train_idx, val_idx, test_idx, run + 1
+            args, graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
