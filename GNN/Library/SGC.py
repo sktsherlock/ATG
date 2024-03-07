@@ -171,8 +171,8 @@ def main():
         test_results.append(test_result)
 
     print(f"Runned {args.n_runs} times")
-    print(f"Average val accuracy: {np.mean(val_results)} ± {np.std(val_results)}")
-    print(f"Average test accuracy: {np.mean(test_results)} ± {np.std(test_results)}")
+    print(f"Average val {args.metric}: {np.mean(val_results)} ± {np.std(val_results)}")
+    print(f"Average test {args.metric}: {np.mean(test_results)} ± {np.std(test_results)}")
     wandb.log({f'Mean_Val_{args.metric}': np.mean(val_results), f'Mean_Test_{args.metric}': np.mean(test_results)})
 
 
