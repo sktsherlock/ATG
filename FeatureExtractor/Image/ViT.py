@@ -12,4 +12,6 @@ print(model)
 inputs = processor(images=image, return_tensors="pt")
 outputs = model(**inputs)
 print(outputs)
+
 last_hidden_state = outputs.last_hidden_state
+print(last_hidden_state.shape)
