@@ -227,7 +227,7 @@ def main():
     test_results = []
 
     # Model implementation
-    model = APPNP(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
+    model = APPNP(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.input_dropout, args.edge_drop, args.alpha, args.k).to(device)
     print(model)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
