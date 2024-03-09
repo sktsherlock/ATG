@@ -362,6 +362,10 @@ def set_peft_config(modeling_args):
             config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj"],
                       'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
                       'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+        elif modeling_args.model_name_or_path in {"meta-llama/Llama-2-7b-hf", "meta-llama/Llama-2-13b-hf"}:
+            config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj", "k_proj", "o_proj"],
+                      'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+                      'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
         else:
             config = {'peft_type': modeling_args.peft_type, 'target_modules': ["query", "key"],
                       'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
