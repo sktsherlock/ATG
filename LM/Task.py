@@ -32,10 +32,20 @@ class MEANClassifier(PreTrainedModel):
         hidden_dim = model.config.hidden_size
         self.classifier = nn.Linear(hidden_dim, n_labels)
 
+
+    def mean_pooling(self, token_embeddings, attention_mask):
+        # Mask out padding tokens
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size())
+        masked_token_embeddings = token_embeddings * input_mask_expanded
+        # Calculate mean pooling
+        mean_embeddings = masked_token_embeddings.sum(dim=1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+        return mean_embeddings
+
     def forward(self, input_ids, attention_mask, labels):
         # Extract outputs from the model
         outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
-        mean_emb = self.dropout(torch.mean(outputs.last_hidden_state, dim=1))
+        mean_emb = self.dropout(self.mean_pooling(outputs.last_hidden_state, attention_mask))
+        # mean_emb = self.dropout(torch.mean(outputs.last_hidden_state, dim=1))
         logits = self.classifier(mean_emb)
         if labels.shape[-1] == 1:
             labels = labels.squeeze()

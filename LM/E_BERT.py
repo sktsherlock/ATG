@@ -164,6 +164,10 @@ class ModelArguments:
         default=None,
         metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
     )
+    save_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "Where do you want to store the tuning language models"},
+    )
     filename: Optional[str] = field(
         default=None,
         metadata={"help": "Where you save the adapter model"},
@@ -288,26 +292,6 @@ class MLP(nn.Module):
             h = self.dropout(h)
 
         return self.linears[-1](h), feat
-
-
-class Classifier(nn.Module):
-    def __init__(self, model, in_feats, n_labels):
-        super().__init__()
-        self.Adapter = model
-        hidden_dim = in_feats
-        self.classifier = nn.Linear(hidden_dim, n_labels)
-
-    def reset_parameters(self):
-        self.Adapter.reset_parameters()
-
-        self.classifier.reset_parameters()
-
-    def forward(self, feat):
-        # Extract outputs from the model
-        outputs, feat = self.Adapter(feat)
-        outputs = outputs + feat
-        logits = self.classifier(outputs)
-        return logits
 
 
 def get_label_list(raw_dataset, split="train") -> List[int]:
@@ -498,8 +482,6 @@ def main():
     # download model & vocab.
     config = set_peft_config(model_args)
     config.cls_head_bias = model_args.cls_head_bias
-    config.problem_type = "single_label_classification"
-    logger.info("setting problem type to single label classification")
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
@@ -533,28 +515,6 @@ def main():
             peft_encoder, num_labels,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
-        )
-    elif model_args.training_objective == 'Adapter':
-
-        adapter = torch.load(model_args.filename)
-        if model_args.freeze:
-            for param in adapter.parameters():
-                param.requires_grad = False
-        model = AdapterClassifier(
-            peft_encoder, adapter=adapter,
-            dropout=model_args.drop_out,
-            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
-        )
-    elif model_args.training_objective == 'ResAdapter':
-
-        adapter = torch.load(model_args.filename)
-        GraphTuner = Classifier(adapter.Adapter, adapter.Adapter.out_hidden, num_labels, freeze_classifier=False)
-
-        model = ResAdapterClassifier(
-            peft_encoder, graphTuner=GraphTuner, n_labels=num_labels,
-            dropout=model_args.drop_out,
-            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
-            scale=model_args.scale
         )
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
@@ -701,9 +661,18 @@ def main():
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
-        metrics = trainer.predict(predict_dataset, metric_key_prefix="predict").metrics
+        metrics = trainer.evaluate(eval_dataset=predict_dataset, metric_key_prefix="test")
         trainer.log_metrics("test", metrics)
         trainer.save_metrics("test", metrics)
+
+    if model_args.save_path is not None:
+        save_path = model_args.save_path + model_args.model_name_or_path.split('/')[-1].replace("-", "_") + '/' + f't_{data_args.train_ratio}_v_{data_args.val_ratio}_d_{model_args.drop_out}_w_{training_args.warmup_ratio}_lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}_u{model_args.unfreeze_layers}'
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+            logger.info(f"Created directory: {save_path}")
+
+        encoder.save_pretrained(save_path)
+        logger.info("*** PLM Saved successfully ***")
 
     shutil.rmtree(training_args.output_dir)
 
