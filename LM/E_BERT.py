@@ -496,6 +496,8 @@ def main():
         trust_remote_code=model_args.trust_remote_code,
     )
 
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
     # 创建用于分类的模型
     # 加载PLM 作为Encoder
     encoder = AutoModel.from_pretrained(
