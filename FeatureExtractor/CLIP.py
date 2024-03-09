@@ -11,7 +11,7 @@ image = Image.open(requests.get(url, stream=True).raw)
 
 inputs = processor(text=["a magazine belonging to the 'Arts, Music & Photography'", "a magazine belonging to the 'Fashion & Style'"], images=image, return_tensors="pt", padding=True)
 
-inputs1 =processor(text="a magazine belonging to the:",images=image, return_tensors="pt", padding=True)
+inputs1 = processor(text="a magazine belonging to the:", images=image, return_tensors="pt", padding=True)
 
 outputs = model(**inputs)
 outputs1 = model(**inputs1)
