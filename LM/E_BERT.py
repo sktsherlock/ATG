@@ -14,6 +14,7 @@ import numpy as np
 from datasets import Value, load_dataset
 import torch
 from datasets import DatasetDict, Dataset
+from utils import split_dataset
 from peft import PeftModelForFeatureExtraction, get_peft_config
 
 import transformers
@@ -31,7 +32,7 @@ from transformers import (
     set_seed,
 )
 
-from Task import CLSClassifier, MEANClassifier, AdapterClassifier, ResAdapterClassifier
+from Task import CLSClassifier, MEANClassifier
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
 
@@ -145,6 +146,7 @@ class DataTrainingArguments:
     metric_name: Optional[str] = field(default=None, metadata={"help": "The metric to use for evaluation."})
 
 
+
 @dataclass
 class ModelArguments:
     """
@@ -164,13 +166,13 @@ class ModelArguments:
         default=None,
         metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
     )
-    save_path: Optional[str] = field(
-        default=None,
-        metadata={"help": "Where do you want to store the tuning language models"},
-    )
     filename: Optional[str] = field(
         default=None,
         metadata={"help": "Where you save the adapter model"},
+    )
+    save_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "Where do you want to store the tuning language models"},
     )
     use_fast_tokenizer: bool = field(
         default=True,
@@ -207,14 +209,6 @@ class ModelArguments:
         default=0.2,
         metadata={"help": "The drop out ratio"}
     )
-    scale: float = field(
-        default=1.0,
-        metadata={"help": "The scale to trade off the LLM outputs and GraphTuning outputs"}
-    )
-    freeze: bool = field(
-        default=True,
-        metadata={"help": "Whether to freeze the Graph Adapter."}
-    )
     label_smoothing: float = field(
         default=0.1,
         metadata={"help": "The label smoothing factor to use"}
@@ -246,52 +240,6 @@ class ModelArguments:
     )
 
 
-class MLP(nn.Module):
-    def __init__(
-            self,
-            in_feats,
-            n_layers,
-            n_hidden,
-            activation,
-            dropout=0.0,
-            input_drop=0.0,
-    ):
-        super().__init__()
-        self.n_layers = n_layers
-        self.n_hidden = n_hidden
-
-        self.linears = nn.ModuleList()
-        self.norms = nn.ModuleList()
-
-        for i in range(n_layers):
-            in_hidden = n_hidden if i > 0 else in_feats
-            out_hidden = n_hidden if i < n_layers - 1 else in_feats
-
-            self.linears.append(nn.Linear(in_hidden, out_hidden))
-
-            if i < n_layers - 1:
-                self.norms.append(nn.BatchNorm1d(out_hidden))
-
-        self.activation = activation
-        self.dropout = nn.Dropout(dropout)
-        self.input_drop = nn.Dropout(input_drop)
-
-    def reset_parameters(self):
-        for linear in self.linears:
-            linear.reset_parameters()
-
-        for norm in self.norms:
-            norm.reset_parameters()
-
-    def forward(self, feat):
-        h = feat
-        h = self.input_drop(h)
-
-        for i in range(self.n_layers - 1):
-            h = F.relu(self.norms[i](self.linears[i](h)))
-            h = self.dropout(h)
-
-        return self.linears[-1](h), feat
 
 
 def get_label_list(raw_dataset, split="train") -> List[int]:
@@ -312,33 +260,33 @@ def get_label_list(raw_dataset, split="train") -> List[int]:
     return label_list
 
 
-def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
-    if data_name == 'ogbn-arxiv':
-        data = DglNodePropPredDataset(name=data_name)
-        splitted_idx = data.get_idx_split()
-        train_idx, val_idx, test_idx = (
-            splitted_idx["train"],
-            splitted_idx["valid"],
-            splitted_idx["test"],
-        )
-        _, labels = data[0]
-        labels = labels[:, 0]
-    else:
-        np.random.seed(42)
-        indices = np.random.permutation(nodes_num)
-
-        train_size = int(nodes_num * train_ratio)
-        val_size = int(nodes_num * val_ratio)
-
-        train_idx = indices[:train_size]
-        val_idx = indices[train_size:train_size + val_size]
-        test_idx = indices[train_size + val_size:]
-        train_idx = torch.tensor(train_idx)
-        val_idx = torch.tensor(val_idx)
-        test_idx = torch.tensor(test_idx)
-        labels = None
-
-    return train_idx, val_idx, test_idx, labels
+# def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
+#     if data_name == 'ogbn-arxiv':
+#         data = DglNodePropPredDataset(name=data_name)
+#         splitted_idx = data.get_idx_split()
+#         train_idx, val_idx, test_idx = (
+#             splitted_idx["train"],
+#             splitted_idx["valid"],
+#             splitted_idx["test"],
+#         )
+#         _, labels = data[0]
+#         labels = labels[:, 0]
+#     else:
+#         np.random.seed(42)
+#         indices = np.random.permutation(nodes_num)
+#
+#         train_size = int(nodes_num * train_ratio)
+#         val_size = int(nodes_num * val_ratio)
+#
+#         train_idx = indices[:train_size]
+#         val_idx = indices[train_size:train_size + val_size]
+#         test_idx = indices[train_size + val_size:]
+#         train_idx = torch.tensor(train_idx)
+#         val_idx = torch.tensor(val_idx)
+#         test_idx = torch.tensor(test_idx)
+#         labels = None
+#
+#     return train_idx, val_idx, test_idx, labels
 
 
 def print_trainable_parameters(model):
@@ -435,8 +383,10 @@ def main():
     train_data = raw_data['train']
     nodes_num = len(raw_data['train'])
 
-    train_ids, val_ids, test_ids, labels = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio,
-                                                         data_name=data_args.data_name)
+    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio)
+
+    # train_ids, val_ids, test_ids, labels = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio,
+    #                                                      data_name=data_args.data_name)
     # 根据划分的索引创建划分后的数据集
     train_dataset = train_data.select(train_ids)
     val_dataset = train_data.select(val_ids)
@@ -458,6 +408,8 @@ def main():
     if data_args.label_column_name is not None and data_args.label_column_name != "label":
         for key in raw_datasets.keys():
             raw_datasets[key] = raw_datasets[key].rename_column(data_args.label_column_name, "label")
+
+
 
     label_list = get_label_list(raw_datasets, split="train")
     for split in ["validation", "test"]:
@@ -635,14 +587,6 @@ def main():
         data_collator=data_collator,
     )
 
-    if training_args.do_eval and model_args.training_objective in ['Adapter', 'ResAdapter']:
-        logger.info("*** First Evaluate ***")
-        metrics = trainer.evaluate(eval_dataset=eval_dataset)
-        max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
-        metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
-        trainer.log_metrics("First_eval", metrics)
-        trainer.save_metrics("First_eval", metrics)
-
     # Training
     if training_args.do_train:
         train_result = trainer.train()
@@ -681,6 +625,9 @@ def main():
         logger.info("*** PLM Saved successfully ***")
 
     shutil.rmtree(training_args.output_dir)
+
+
+
 
 
 if __name__ == "__main__":
