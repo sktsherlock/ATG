@@ -32,6 +32,7 @@ print(categories)
 
 for filename in os.listdir(picture_path):
     if filename.endswith(".jpg") or filename.endswith(".png"):
+        print(filename)
         image_path = os.path.join(picture_path, filename)
         image = Image.open(image_path)
 
