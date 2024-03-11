@@ -47,7 +47,6 @@ all_labels = []
 with tqdm(total=len(sorted_files)) as pbar:
     for i, filename in enumerate(sorted_files):
         if filename.endswith(".jpg") or filename.endswith(".png"):
-            print(filename)
             image_path = os.path.join(picture_path, filename)
             image = Image.open(image_path)
 
@@ -59,7 +58,7 @@ with tqdm(total=len(sorted_files)) as pbar:
             all_features[i] = feature.squeeze().detach().cpu().numpy()
 
             logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
-            probs = logits_per_image.softmax(dim=1).detach().numpy()
+            probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
             all_probs[i] = probs.squeeze()
             # 使用argmax获取预测的类别，并将其添加到类别列表中
             predicted_label = logits_per_image.argmax(dim=1).item()
