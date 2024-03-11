@@ -56,7 +56,7 @@ with tqdm(total=len(sorted_files)) as pbar:
             feature = outputs.image_embeds
 
             # 将当前图像的特征添加到特征矩阵中
-            all_features[i] = feature.squeeze().detach().numpy()
+            all_features[i] = feature.squeeze().detach().cpu().numpy()
 
             logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
             probs = logits_per_image.softmax(dim=1).detach().numpy()
