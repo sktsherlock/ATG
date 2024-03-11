@@ -44,25 +44,26 @@ all_features = np.zeros((len(sorted_files), args.feature_size))  # 这里的feat
 all_probs =  np.zeros((len(sorted_files), num_classes))
 all_labels = []
 
-with tqdm(total=len(sorted_files)) as pbar:
-    for i, filename in enumerate(sorted_files):
-        if filename.endswith(".jpg") or filename.endswith(".png"):
-            image_path = os.path.join(picture_path, filename)
-            image = Image.open(image_path)
 
-            inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt", padding=True).to(device)
-            outputs = model(**inputs)
-            feature = outputs.image_embeds
+for i, filename in enumerate(sorted_files):
+    if filename.endswith(".jpg") or filename.endswith(".png"):
+        print(filename)
+        image_path = os.path.join(picture_path, filename)
+        image = Image.open(image_path)
 
-            # 将当前图像的特征添加到特征矩阵中
-            all_features[i] = feature.squeeze().detach().cpu().numpy()
+        inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt", padding=True).to(device)
+        outputs = model(**inputs)
+        feature = outputs.image_embeds
 
-            logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
-            probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
-            all_probs[i] = probs.squeeze()
-            # 使用argmax获取预测的类别，并将其添加到类别列表中
-            predicted_label = logits_per_image.argmax(dim=1).item()
-            all_labels.append(predicted_label)
+        # 将当前图像的特征添加到特征矩阵中
+        all_features[i] = feature.squeeze().detach().cpu().numpy()
+
+        logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
+        probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
+        all_probs[i] = probs.squeeze()
+        # 使用argmax获取预测的类别，并将其添加到类别列表中
+        predicted_label = logits_per_image.argmax(dim=1).item()
+        all_labels.append(predicted_label)
 
 
 print("已从文件夹中的所有图像中提取特征.")
