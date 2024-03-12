@@ -30,7 +30,6 @@ parser.add_argument('--name', type=str, default='Movies', help='Prefix name for 
 parser.add_argument('--csv_path', type=str, default='./', help='Where save the picture')
 parser.add_argument('--path', type=str, default='./', help='Where save the picture')
 parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
-parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
 parser.add_argument('--feature_size', type=int, default=768, help='Number of batch size of CLIP image models')
 args = parser.parse_args()
 
@@ -59,8 +58,9 @@ clip_features = np.zeros((len(sorted_files), args.feature_size))  # 这里的fea
 clip_probs = np.zeros((len(sorted_files), num_classes))
 all_labels = []
 
-train_ids, val_ids, test_ids = split_data(len(sorted_files),train_ratio=0.6, val_ratio=0.2)
-
+train_ids, val_ids, test_ids = split_data(len(sorted_files), train_ratio=0.6, val_ratio=0.2)
+print(train_ids, val_ids)
+val_labels = labels[val_ids]
 
 for i, filename in enumerate(sorted_files):
     if filename.endswith(".jpg") or filename.endswith(".png"):
