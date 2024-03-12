@@ -109,7 +109,7 @@ def classification(
                 )
 
     print("*" * 50)
-    print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
+    print(f"Best val  {args.metric}: {best_val_result}, Final test  {args.metric}: {final_test_result}")
     print("*" * 50)
 
     return best_val_result, final_test_result
