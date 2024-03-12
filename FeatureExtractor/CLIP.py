@@ -59,8 +59,8 @@ clip_probs = np.zeros((len(sorted_files), num_classes))
 all_labels = []
 
 train_ids, val_ids, test_ids = split_data(len(sorted_files), train_ratio=0.6, val_ratio=0.2)
-print(train_ids, val_ids)
-val_labels = np.array(labels)[val_ids]
+# print(train_ids, val_ids)
+# val_labels = np.array(labels)[val_ids]
 
 for i, filename in enumerate(sorted_files):
     if filename.endswith(".jpg") or filename.endswith(".png"):
@@ -69,7 +69,7 @@ for i, filename in enumerate(sorted_files):
         image = Image.open(image_path)
 
         inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt", padding=True).to(device)
-        print(f"a {args.name} belonging to the '{category}'" for category in categories)
+        # print(f"a {args.name} belonging to the '{category}'" for category in categories)
         outputs = model(**inputs)
         feature = outputs.image_embeds
 
@@ -78,12 +78,12 @@ for i, filename in enumerate(sorted_files):
 
         logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
         probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
-        print(probs)
-        print('--------------------------------')
+        # print(probs)
+        # print('--------------------------------')
         clip_probs[i] = probs.squeeze()
         # 使用argmax获取预测的类别，并将其添加到类别列表中
         predicted_label = logits_per_image.argmax(dim=1).item()
-        print(predicted_label, '---------------')
+        # print(predicted_label, '---------------')
         all_labels.append(predicted_label)
 
 
@@ -98,10 +98,10 @@ np.save('clip_probs.npy', clip_probs)
 
 
 # 计算准确率和F1指标
-val_labels = labels[val_ids]
+val_labels =  np.array(labels)[val_ids]
 val_predictions = clip_labels[val_ids]
 
-test_labels = labels[test_ids]
+test_labels = np.array(labels)[test_ids]
 test_predictions = clip_labels[test_ids]
 
 
