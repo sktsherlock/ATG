@@ -88,13 +88,14 @@ for i, filename in enumerate(sorted_files):
 
 
 print("已从文件夹中的所有图像中提取特征.")
+# 保存特征矩阵和概率矩阵为npy文件
+np.save('clip_features.npy', clip_features)
+np.save('clip_probs.npy', clip_probs)
+
 # 将标签列表转换为NumPy数组并保存为npy文件
 clip_labels = np.array(all_labels)
 np.save('clip_labels.npy', clip_labels)
 
-# 保存特征矩阵和概率矩阵为npy文件
-np.save('clip_features.npy', clip_features)
-np.save('clip_probs.npy', clip_probs)
 
 
 # 计算准确率和F1指标

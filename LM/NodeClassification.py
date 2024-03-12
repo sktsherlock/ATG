@@ -560,6 +560,22 @@ def main():
         trainer.log_metrics("test", metrics)
         trainer.save_metrics("test", metrics)
 
+    if training_args.do_predict:
+        logger.info("*** Predict ***")
+        predictions = trainer.predict(predict_dataset)
+        predicted_labels = predictions.predictions.argmax(axis=-1)  # 获取预测的标签
+
+        # 创建 DataFrame 存储预测结果
+        import pandas as pd
+        df = pd.DataFrame({"True Label": predict_dataset['label'], "Predicted Label": predicted_labels})
+
+        # 保存预测结果到 CSV 文件
+        df.to_csv("predictions.csv", index=False)
+
+        metrics = trainer.evaluate(eval_dataset=predict_dataset, metric_key_prefix="test")
+        trainer.log_metrics("test", metrics)
+        trainer.save_metrics("test", metrics)
+
     if model_args.save_path is not None:
         save_path = model_args.save_path + model_args.model_name_or_path.split('/')[-1].replace("-",
                                                                                                 "_") + '/' + f't_{data_args.train_ratio}_v_{data_args.val_ratio}_d_{model_args.drop_out}_w_{training_args.warmup_ratio}_lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}_u{model_args.unfreeze_layers}'
