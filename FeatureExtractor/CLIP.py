@@ -60,7 +60,7 @@ all_labels = []
 
 train_ids, val_ids, test_ids = split_data(len(sorted_files), train_ratio=0.6, val_ratio=0.2)
 print(train_ids, val_ids)
-val_labels = labels[val_ids]
+val_labels = np.array(labels)[val_ids]
 
 for i, filename in enumerate(sorted_files):
     if filename.endswith(".jpg") or filename.endswith(".png"):
