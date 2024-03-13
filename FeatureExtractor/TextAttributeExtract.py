@@ -2,12 +2,14 @@ import argparse
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn.functional as F
 import os
 from sklearn.decomposition import PCA, TruncatedSVD
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
     AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
+
 
 
 
@@ -41,6 +43,7 @@ def main():
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
     parser.add_argument('--nomask', action='store_true', help='whether do not use mask to claculate the mean pooling')
+    parser.add_argument('--norm', type=bool, default=False, help='nomic use True')
 
 
     # 解析命令行参数
@@ -101,9 +104,10 @@ def main():
             return TokenClassifierOutput(logits=node_mean_emb)
 
     class AttentionMeanEmbInfModel(PreTrainedModel):
-        def __init__(self, model):
+        def __init__(self, model, norm=False):
             super().__init__(model.config)
             self.encoder = model
+            self.norm = norm
 
         @torch.no_grad()
         def mean_pooling(self, token_embeddings, attention_mask):
@@ -119,6 +123,7 @@ def main():
             # Extract outputs from the model
             outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
             node_mean_emb = self.mean_pooling(outputs.last_hidden_state, attention_mask)
+            node_mean_emb = F.normalize(node_mean_emb, p=2, dim=1) if self.norm is True else node_mean_emb
             return TokenClassifierOutput(logits=node_mean_emb)
 
 
@@ -147,7 +152,7 @@ def main():
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mean_Features_Extractor = MeanEmbInfModel(model)
-    Mask_Mean_Features_Extractor = AttentionMeanEmbInfModel(model)
+    Mask_Mean_Features_Extractor = AttentionMeanEmbInfModel(model, norm=args.norm)
     CLS_Feateres_Extractor.eval()
     Mean_Features_Extractor.eval()
     Mask_Mean_Features_Extractor.eval()
