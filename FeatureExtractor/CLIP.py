@@ -38,9 +38,9 @@ device = th.device("cuda" if th.cuda.is_available() else "cpu")
 model = CLIPModel.from_pretrained(args.model_name).to(device)
 processor = CLIPProcessor.from_pretrained(args.model_name)
 
-root_dir = os.path.dirname(os.path.abspath(__file__))
-base_dir = os.path.dirname(root_dir.rstrip('/'))
-picture_path = os.path.join(base_dir, args.path)
+# root_dir = os.path.dirname(os.path.abspath(__file__))
+# base_dir = os.path.dirname(root_dir.rstrip('/'))
+picture_path = args.path
 
 df = pd.read_csv(args.csv_path)
 labels = df['label'].tolist()
