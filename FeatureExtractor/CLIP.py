@@ -62,44 +62,49 @@ train_ids, val_ids, test_ids = split_data(len(sorted_files), train_ratio=0.6, va
 # print(train_ids, val_ids)
 # val_labels = np.array(labels)[val_ids]
 
-for i, filename in enumerate(sorted_files):
-    if filename.endswith(".jpg") or filename.endswith(".png"):
-        print(filename)
-        image_path = os.path.join(picture_path, filename)
-        image = Image.open(image_path)
+if not os.path.exists('clip_features.npy'):
+    for i, filename in enumerate(sorted_files):
+        if filename.endswith(".jpg") or filename.endswith(".png"):
+            print(filename)
+            image_path = os.path.join(picture_path, filename)
+            image = Image.open(image_path)
 
-        inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt", padding=True).to(device)
-        # print(f"a {args.name} belonging to the '{category}'" for category in categories)
-        outputs = model(**inputs)
-        feature = outputs.image_embeds
+            inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt", padding=True).to(device)
+            # print(f"a {args.name} belonging to the '{category}'" for category in categories)
+            outputs = model(**inputs)
+            feature = outputs.image_embeds
 
-        # 将当前图像的特征添加到特征矩阵中
-        clip_features[i] = feature.squeeze().detach().cpu().numpy()
+            # 将当前图像的特征添加到特征矩阵中
+            clip_features[i] = feature.squeeze().detach().cpu().numpy()
 
-        logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
-        probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
-        # print(probs)
-        # print('--------------------------------')
-        clip_probs[i] = probs.squeeze()
-        # 使用argmax获取预测的类别，并将其添加到类别列表中
-        predicted_label = logits_per_image.argmax(dim=1).item()
-        # print(predicted_label, '---------------')
-        all_labels.append(predicted_label)
+            logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
+            probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
+            # print(probs)
+            # print('--------------------------------')
+            clip_probs[i] = probs.squeeze()
+            # 使用argmax获取预测的类别，并将其添加到类别列表中
+            predicted_label = logits_per_image.argmax(dim=1).item()
+            # print(predicted_label, '---------------')
+            all_labels.append(predicted_label)
 
+    print("已从文件夹中的所有图像中提取特征.")
+    # 保存特征矩阵和概率矩阵为npy文件
+    np.save('clip_features.npy', clip_features)
+    np.save('clip_probs.npy', clip_probs)
 
-print("已从文件夹中的所有图像中提取特征.")
-# 保存特征矩阵和概率矩阵为npy文件
-np.save('clip_features.npy', clip_features)
-np.save('clip_probs.npy', clip_probs)
+    # 将标签列表转换为NumPy数组并保存为npy文件
+    clip_labels = np.array(all_labels)
+    np.save('clip_labels.npy', clip_labels)
+else:
+    print('Existing features, please load!')
+    clip_features = np.load('clip_features.npy')
+    clip_labels = np.load('clip_labels.npy')
 
-# 将标签列表转换为NumPy数组并保存为npy文件
-clip_labels = np.array(all_labels)
-np.save('clip_labels.npy', clip_labels)
 
 
 
 # 计算准确率和F1指标
-val_labels =  np.array(labels)[val_ids]
+val_labels = np.array(labels)[val_ids]
 val_predictions = clip_labels[val_ids]
 
 test_labels = np.array(labels)[test_ids]
@@ -107,16 +112,22 @@ test_predictions = clip_labels[test_ids]
 
 
 val_accuracy = accuracy_score(val_labels, val_predictions)
-val_f1 = f1_score(val_labels, val_predictions)
+val_micro_f1 = f1_score(val_labels, val_predictions,  average='micro')
+val_macro_f1 = f1_score(val_labels, val_predictions,  average='macro')
 
 test_accuracy = accuracy_score(test_labels, test_predictions)
-test_f1 = f1_score(test_labels, test_predictions)
+test_micro_f1 = f1_score(test_labels, test_predictions, average='micro')
+test_macro_f1 = f1_score(test_labels, test_predictions, average='macro')
+
 
 # 打印结果
 print("验证集上的准确率和F1指标：")
 print("准确率：", val_accuracy)
-print("F1指标：", val_f1)
+print("micro F1指标：", val_micro_f1)
+print("macro F1指标：", val_macro_f1)
+
 
 print("测试集上的准确率和F1指标：")
 print("准确率：", test_accuracy)
-print("F1指标：", test_f1)
+print("micro F1指标：", test_micro_f1)
+print("macro F1指标：", test_macro_f1)
