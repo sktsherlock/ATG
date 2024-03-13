@@ -90,18 +90,6 @@ def main():
             node_cls_emb = outputs.last_hidden_state[:, 0, :]  # Last layer
             return TokenClassifierOutput(logits=node_cls_emb)
 
-    class MeanEmbInfModel(PreTrainedModel):
-        def __init__(self, model):
-            super().__init__(model.config)
-            self.encoder = model
-
-        @torch.no_grad()
-        def forward(self, input_ids, attention_mask):
-            # Extract outputs from the model
-            outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
-            # Use Mean Emb as sentence emb.
-            node_mean_emb = torch.mean(outputs.last_hidden_state, dim=1)
-            return TokenClassifierOutput(logits=node_mean_emb)
 
     class AttentionMeanEmbInfModel(PreTrainedModel):
         def __init__(self, model, norm=False):
@@ -121,10 +109,14 @@ def main():
         @torch.no_grad()
         def forward(self, input_ids, attention_mask):
             # Extract outputs from the model
-            outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
+            outputs = self.encoder(input_ids, attention_mask) if self._name_or_path in {'nomic-ai/nomic-embed-text-v1'} else self.encoder(input_ids, attention_mask, output_hidden_states=True)
             node_mean_emb = self.mean_pooling(outputs.last_hidden_state, attention_mask)
             node_mean_emb = F.normalize(node_mean_emb, p=2, dim=1) if self.norm is True else node_mean_emb
             return TokenClassifierOutput(logits=node_mean_emb)
+
+
+
+
 
 
     # 读取CSV文件
@@ -151,10 +143,8 @@ def main():
 
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
-    Mean_Features_Extractor = MeanEmbInfModel(model)
     Mask_Mean_Features_Extractor = AttentionMeanEmbInfModel(model, norm=args.norm)
     CLS_Feateres_Extractor.eval()
-    Mean_Features_Extractor.eval()
     Mask_Mean_Features_Extractor.eval()
 
     inference_args = TrainingArguments(
