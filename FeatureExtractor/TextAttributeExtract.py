@@ -180,17 +180,6 @@ def main():
     else:
         print('Existing saved MEAN')
 
-    if args.nomask:
-        if not os.path.exists(output_file + "_nomask_mean.npy"):
-            trainer = Trainer(model=Mean_Features_Extractor, args=inference_args)
-            mean_emb = trainer.predict(dataset)
-
-            # 保存平均特征表示为NPY文件
-            np.save(output_file + "_nomask_mean.npy", mean_emb.predictions)
-            print('Existing saved to the {}'.format(output_file))
-
-        else:
-            print('Existing saved "no mask MEAN"')
 
 
 
