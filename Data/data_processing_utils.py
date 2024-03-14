@@ -5,6 +5,7 @@ import re
 import pandas as pd
 import requests
 import argparse
+from requests.exceptions import Timeout, RequestException, ConnectionError
 # 读取 json 文件并将其转换为 DataFrame 并返回
 def parse_json(data_path):
     # 读取 json 文件
@@ -148,6 +149,7 @@ def export_as_csv(df, output_csv_path):
 # 爬取 DataFrame 中的图片并保存
 def download_images(df, output_img_path):
     print('Downloading images...')
+    timeout_seconds = 10
 
     total = len(df)
     for index, row in df.iterrows():
@@ -158,8 +160,14 @@ def download_images(df, output_img_path):
                 image_path = os.path.join(output_img_path, image_name)
                 if not os.path.exists(output_img_path):
                     os.makedirs(output_img_path)
-                image_data = requests.get(image_url).content  # 获取图像数据
-
+                try:
+                    response = requests.get(image_url, timeout=timeout_seconds)
+                    response.raise_for_status()  # 检查是否有错误状态码
+                    image_data = response.content
+                except Timeout:
+                    print('Timeout occurred. Image download aborted:', image_url)
+                    image_data = 'Not Found'
+                # image_data = requests.get(image_url).content  # 获取图像数据
                 if not image_data.lower() == 'Not Found'.encode('utf-8').lower():  # 图像存在
                     need_deleted = False  # 不需要删除该商品
                     with open(image_path, 'wb') as f:
