@@ -153,7 +153,6 @@ def download_images(df, output_img_path):
     for index, row in df.iterrows():
         if row['imageURLHighRes']:
             need_deleted = True  # 是否需要删除该商品
-            print(df['second_category'])
             for image_url in row['imageURLHighRes']:
                 image_name = '{}.jpg'.format(index)  # 图像命名为 '商品id.jpg'
                 image_path = os.path.join(output_img_path, image_name)
@@ -168,7 +167,7 @@ def download_images(df, output_img_path):
                     break
             if need_deleted:
                 print('No.{} need to be deleted'.format(index))
-                print('The category needed to be added is:', df['second_category'])
+                print('The category needed to be added is:', df['third_category'])
         if (index + 1) % 500 == 0:
             print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
     print('Successfully downloaded images')
