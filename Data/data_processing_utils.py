@@ -149,25 +149,31 @@ def export_as_csv(df, output_csv_path):
 # 爬取 DataFrame 中的图片并保存
 def download_images(df, output_img_path):
     print('Downloading images...')
-    timeout_seconds = 10
 
     total = len(df)
+    downloaded_images = set()  # 已下载的图像编号集合
+
+    # 检查已下载的图像文件
+    for filename in os.listdir(output_img_path):
+        if filename.endswith('.jpg'):
+            image_id = int(filename.split('.')[0])
+            downloaded_images.add(image_id)
+
     for index, row in df.iterrows():
         if row['imageURLHighRes']:
             need_deleted = True  # 是否需要删除该商品
             for image_url in row['imageURLHighRes']:
                 image_name = '{}.jpg'.format(index)  # 图像命名为 '商品id.jpg'
                 image_path = os.path.join(output_img_path, image_name)
+
+                if index in downloaded_images:  # 图像已经下载过，跳过当前循环
+                    need_deleted = False
+                    break
+
                 if not os.path.exists(output_img_path):
                     os.makedirs(output_img_path)
-                try:
-                    response = requests.get(image_url, timeout=timeout_seconds)
-                    response.raise_for_status()  # 检查是否有错误状态码
-                    image_data = response.content
-                except Timeout:
-                    print('Timeout occurred. Image download aborted:', image_url)
-                    image_data = 'Not Found'
-                # image_data = requests.get(image_url).content  # 获取图像数据
+                image_data = requests.get(image_url).content  # 获取图像数据
+
                 if not image_data.lower() == 'Not Found'.encode('utf-8').lower():  # 图像存在
                     need_deleted = False  # 不需要删除该商品
                     with open(image_path, 'wb') as f:
@@ -176,7 +182,7 @@ def download_images(df, output_img_path):
             if need_deleted:
                 print('No.{} need to be deleted'.format(index))
                 print('The category needed to be added is:', df['third_category'][index])
-        if (index + 1) % 500 == 0:
+        if (index + 1) % 1000 == 0:
             print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
     print('Successfully downloaded images')
 
