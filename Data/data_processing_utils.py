@@ -247,9 +247,12 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter(parse_json(data_path), category_number=class_numbers)
-    count_data(df)
-    export_as_csv(df, output_csv_path)
+    if os.path.exists(output_csv_path):
+        df = pd.read_csv(output_csv_path)
+    else:
+        df = data_filter(parse_json(data_path), category_number=class_numbers)
+        count_data(df)
+        export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
     if args.download_image:

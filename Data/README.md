@@ -26,7 +26,8 @@ python data_processing_utils.py --data_path 'Magazines/meta_Magazine_Subscriptio
 mkdir ~/ATG/Data/Electronics/
 cd ~/ATG/Data/Electronics/
 wget --no-check-certificate https://jmcauley.ucsd.edu/data/amazon_v2/metaFiles2/meta_Electronics.json.gz
-gunzip meta_Electronics.json.gz 
+# wget --no-check-certificate https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/meta_categories/meta_Electronics.jsonl.gz   Amazon 2023
+gunzip meta_Electronics.json.gz   # gunzip meta_Electronics.jsonl.gz 
 cd ~/ATG/Data/
 python data_processing_utils_for_books.py --data_path 'Electronics/meta_Electronics.json'  --name 'Computers' --class_numbers 10 --second_category "Computers" 
 ```  
