@@ -142,12 +142,9 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    if os.path.exists(output_csv_path):
-        df = pd.read_csv(output_csv_path)
-    else:
-        df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers)
-        count_data(df)
-        export_as_csv(df, output_csv_path)
+    df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers)
+    count_data(df)
+    export_as_csv(df, output_csv_path)
     construct_graph(output_csv_path, output_graph_path)
     # 从本地读取处理后的CSV文件
     download_images(df, output_img_path)
