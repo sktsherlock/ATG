@@ -69,7 +69,7 @@ def main(raw_url, data_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_root', default='~/TAG/', type=str, help='Path to the data file')
+    parser.add_argument('--data_root', default='/home/aiscuser/TAG', type=str, help='Path to the data file')
     parser.add_argument('--save', default=False, type=bool,
                         help='Whether to save the csv file')
     # parser.add_argument('--max_length', type=int, default=1024, help='Few shot')
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     column_name = args.column_name
     data_root = args.data_root
-    output_csv_path = f'~/TAG/Arxiv/OGBN_ARXIV.csv'
+    output_csv_path = f'/home/aiscuser/TAG/Arxiv/OGBN_ARXIV.csv'
     raw_text_url = "https://snap.stanford.edu/ogb/data/misc/ogbn_arxiv/titleabs.tsv.gz"
 
     dataset = DglNodePropPredDataset('ogbn-arxiv', root=data_root)
