@@ -3,7 +3,7 @@ import shutil
 import pandas as pd
 
 # 读取CSV文件
-csv_file = 'magazines.csv'  # 替换为你的CSV文件路径
+csv_file = '../magazines.csv'  # 替换为你的CSV文件路径
 df = pd.read_csv(csv_file)
 
 # 创建新的数据集文件夹

@@ -1,5 +1,13 @@
 # Text Attribute -> Feature 
 
+# MAG
+```python
+CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file 'Data/Books/History/History.csv' --model_name 'meta-llama/Llama-2-7b-hf' --name 'History' --path '/dataintent/local/user/v-yinju/haoyan/Data/Books/History/Feature/' --max_length 256 --batch_size 50 --text_column 'text' 
+
+```
+
+
+
 ## Movies 
 ```python
 # BERT-related
