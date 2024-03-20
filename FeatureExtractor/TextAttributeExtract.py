@@ -11,6 +11,7 @@ from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 
 
+sentence_transformer = {'nomic-ai/nomic-embed-text-v1', 'sentence-transformers/all-MiniLM-L12-v2', 'BAAI/bge-reranker-large'}
 
 
 def reduce_dimension(features, n_components):
@@ -109,7 +110,7 @@ def main():
         @torch.no_grad()
         def forward(self, input_ids, attention_mask):
             # Extract outputs from the model
-            outputs = self.encoder(input_ids, attention_mask) if self.encoder.config._name_or_path in {'nomic-ai/nomic-embed-text-v1'} else self.encoder(input_ids, attention_mask, output_hidden_states=True)
+            outputs = self.encoder(input_ids, attention_mask) if self.encoder.config._name_or_path in sentence_transformer else self.encoder(input_ids, attention_mask, output_hidden_states=True)
             node_mean_emb = self.mean_pooling(outputs.last_hidden_state, attention_mask)
             node_mean_emb = F.normalize(node_mean_emb, p=2, dim=1) if self.norm is True else node_mean_emb
             return TokenClassifierOutput(logits=node_mean_emb)
