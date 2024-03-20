@@ -60,7 +60,7 @@ def main():
 
     root_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.dirname(root_dir.rstrip('/'))
-    Feature_path = os.path.join(base_dir, args.path)
+    Feature_path = args.path
     cache_path = f"{Feature_path}cache/"
     print(Feature_path)
     print(model_name)
@@ -120,7 +120,7 @@ def main():
 
 
     # 读取CSV文件
-    df = pd.read_csv(os.path.join(base_dir, csv_file))
+    df = pd.read_csv(csv_file)
     text_data = df[text_column].tolist()
 
     # 加载模型和分词器

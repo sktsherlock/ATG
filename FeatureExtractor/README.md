@@ -2,7 +2,8 @@
 
 # MAG
 ```python
-CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file 'Data/Books/History/History.csv' --model_name 'meta-llama/Llama-2-7b-hf' --name 'History' --path '/dataintent/local/user/v-yinju/haoyan/Data/Books/History/Feature/' --max_length 256 --batch_size 50 --text_column 'text' 
+CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '$datain/haoyan/MAG/Movies/Movies.csv' --model_name 'meta-llama/Llama-2-7b-hf' --name 'Movies' --path '$datain/haoyan/MAG/Movies/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' 
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file '$datain/haoyan/MAG/Movies/Movies.csv' --model_name 'mistralai/Mistral-7B-v0.1' --name 'Movies' --path '$datain/haoyan/MAG/Movies/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' 
 
 ```
 
