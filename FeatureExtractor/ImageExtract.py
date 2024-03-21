@@ -10,6 +10,7 @@ import numpy as np
 from timm.data.loader import create_loader
 from transformers.trainer import nested_concat, DistributedTensorGatherer, nested_numpify
 from typing import List, Union
+from tqdm import tqdm
 
 
 def create_datasets(image_size, data_mean, data_std, inference_path):
@@ -28,7 +29,7 @@ def create_datasets(image_size, data_mean, data_std, inference_path):
 """
 python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ 
 python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 1024 --model_name timm/vit_base_patch16_224.augreg2_in21k_ft_in1k
-python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 1024 --model_name timm/resnetv2_50x1_bit.goog_in21k
+python ImageExtract.py --gpu 1 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 
 """
 def main():
@@ -87,7 +88,7 @@ def main():
 
     model.eval()
 
-    for batch in dl:
+    for batch in tqdm(dl):
         with torch.no_grad():
             inputs, _ = batch
             logits = model(inputs)
