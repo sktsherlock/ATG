@@ -1,3 +1,5 @@
 from huggingface_hub import upload_file
 
-upload_file(path_or_fileobj="Movies_gemma_7b_256_mean.npy", path_in_repo="Movies/TextFeature/Movies_gemma_7b_256_mean.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Movies_convnextv2_huge.npy", path_in_repo="Movies/ImageFeature/Movies_convnextv2_huge.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Movies_swinv2_large.npy", path_in_repo="Movies/ImageFeature/Movies_swinv2_large.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Movies_vit_large.npy", path_in_repo="Movies/ImageFeature/Movies_vit_large.npy", repo_id="Sherirto/MAG")
