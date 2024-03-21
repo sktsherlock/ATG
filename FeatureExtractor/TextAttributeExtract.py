@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import os
 from sklearn.decomposition import PCA, TruncatedSVD
 from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrainedModel, Trainer, DataCollatorWithPadding, \
-    AutoConfig
+    AutoConfig, BitsAndBytesConfig
 from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 
@@ -42,6 +42,9 @@ def main():
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
     parser.add_argument('--batch_size', type=int, default=1000, help='Number of batch size for inference')
     parser.add_argument('--fp16', type=bool, default=True, help='if fp16')
+    parser.add_argument('--f16', type=bool, default=False, help='if f16')
+    parser.add_argument('--int8', type=bool, default=False, help='if int8')
+    parser.add_argument('--int4', type=bool, default=False, help='if int4')
     parser.add_argument('--cls', action='store_true', help='whether use first token to represent the whole text')
     parser.add_argument('--nomask', action='store_true', help='whether do not use mask to claculate the mean pooling')
     parser.add_argument('--norm', type=bool, default=False, help='nomic use True')
@@ -140,7 +143,17 @@ def main():
         model = AutoModel.from_pretrained(f'{args.pretrain_path}')
         print('Loading model from the path: {}'.format(args.pretrain_path))
     else:
-        model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+        if args.f16 is True:
+            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, torch_dtype=torch.bfloat16)
+        elif args.int8 is True:
+            quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
+        elif args.int4 is True:
+            quantization_config = BitsAndBytesConfig(load_in_4bit=True)
+            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
+        else:
+            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+
 
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
