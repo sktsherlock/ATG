@@ -145,12 +145,12 @@ def main():
     else:
         if args.f16 is True:
             model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, torch_dtype=torch.bfloat16)
-        elif args.int8 is True:
-            quantization_config = BitsAndBytesConfig(load_in_8bit=True)
-            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
-        elif args.int4 is True:
-            quantization_config = BitsAndBytesConfig(load_in_4bit=True)
-            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
+        # elif args.int8 is True:
+        #     quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+        #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
+        # elif args.int4 is True:
+        #     quantization_config = BitsAndBytesConfig(load_in_4bit=True)
+        #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
         else:
             model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
 
