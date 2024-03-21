@@ -3,10 +3,15 @@
 # MAG 
 ## Movies Text Feature
 ```python
-CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' 
-CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'
+CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 20 --text_column 'text' --f16 True --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 20 --text_column 'text' --f16 True --fp16 True
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --norm True
-CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'google/gemma-7b' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' 
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'google/gemma-7b' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 20 --text_column 'text' --f16 True --fp16 True
+```
+
+```python
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'meta-llama/Llama-2-13b-hf' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 20 --text_column 'text' --f16 True --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 128 --batch_size 20 --text_column 'text' --int8 True --fp16 True 
 ```
 
 
