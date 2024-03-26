@@ -112,22 +112,18 @@ test_predictions = clip_labels[test_ids]
 
 
 val_accuracy = accuracy_score(val_labels, val_predictions)
-val_micro_f1 = f1_score(val_labels, val_predictions,  average='micro')
 val_macro_f1 = f1_score(val_labels, val_predictions,  average='macro')
 
 test_accuracy = accuracy_score(test_labels, test_predictions)
-test_micro_f1 = f1_score(test_labels, test_predictions, average='micro')
 test_macro_f1 = f1_score(test_labels, test_predictions, average='macro')
 
 
 # 打印结果
 print("验证集上的准确率和F1指标：")
 print("准确率：", val_accuracy)
-print("micro F1指标：", val_micro_f1)
 print("macro F1指标：", val_macro_f1)
 
 
 print("测试集上的准确率和F1指标：")
 print("准确率：", test_accuracy)
-print("micro F1指标：", test_micro_f1)
 print("macro F1指标：", test_macro_f1)

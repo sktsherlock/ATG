@@ -86,6 +86,9 @@ class DataTrainingArguments:
             "help": "The ratio of validation"
         },
     )
+    prefix: Optional[str] = field(
+        default=None, metadata={"help": "The dataname to be used for splitting dataaset. like ogbn-arxiv"}
+    )
     overwrite_cache: bool = field(
         default=False, metadata={"help": "Overwrite the cached preprocessed datasets or not."}
     )
@@ -554,11 +557,6 @@ def main():
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
 
-    if training_args.do_predict:
-        logger.info("*** Predict ***")
-        metrics = trainer.evaluate(eval_dataset=predict_dataset, metric_key_prefix="test")
-        trainer.log_metrics("test", metrics)
-        trainer.save_metrics("test", metrics)
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
@@ -570,7 +568,7 @@ def main():
         df = pd.DataFrame({"True Label": predict_dataset['label'], "Predicted Label": predicted_labels})
 
         # 保存预测结果到 CSV 文件
-        df.to_csv("predictions.csv", index=False)
+        df.to_csv(f"{data_args.prefix}_predictions.csv", index=False)
 
         metrics = trainer.evaluate(eval_dataset=predict_dataset, metric_key_prefix="test")
         trainer.log_metrics("test", metrics)

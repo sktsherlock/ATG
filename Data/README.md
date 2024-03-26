@@ -30,6 +30,10 @@ wget --no-check-certificate https://jmcauley.ucsd.edu/data/amazon_v2/metaFiles2/
 gunzip meta_Electronics.json.gz   # gunzip meta_Electronics.jsonl.gz 
 cd ~/ATG/Data/
 python data_processing_utils_for_books.py --data_path 'Electronics/meta_Electronics.json'  --name 'Computers' --class_numbers 10 --second_category "Computers" 
+# Photo
+python data_processing_utils_for_books.py --data_path 'Electronics/meta_Electronics.json'  --name 'Photo' --class_numbers 12 --second_category "Photo" 
+from huggingface_hub import upload_file 
+upload_file(path_or_fileobj="PhotoImages.tar.gz", path_in_repo="Photo/PhotoImages.tar.gz", repo_id="Sherirto/MAG") 
 ```  
 
 ## Pet Supply
