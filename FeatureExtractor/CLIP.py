@@ -44,7 +44,7 @@ picture_path = args.path
 
 df = pd.read_csv(args.csv_path)
 labels = df['label'].tolist()
-categories = df['second_category'].unique().tolist()
+categories = df['third_category'].unique().tolist()
 num_classes = len(categories)
 # print(categories)
 
