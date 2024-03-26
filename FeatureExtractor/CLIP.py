@@ -86,8 +86,8 @@ if not os.path.exists(output_feature):
 
             logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
             probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
-            print(probs)
-            print('--------------------------------')
+            # print(probs)
+            # print('--------------------------------')
             clip_probs[i] = probs.squeeze()
             # 使用argmax获取预测的类别，并将其添加到类别列表中
             predicted_label = logits_per_image.argmax(dim=1).item()
