@@ -31,6 +31,7 @@ parser.add_argument('--csv_path', type=str, default='./', help='Where save the p
 parser.add_argument('--path', type=str, default='./', help='Where save the picture')
 parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
 parser.add_argument('--feature_size', type=int, default=768, help='Number of batch size of CLIP image models')
+parser.add_argument('--feature_path', type=str, default='./', help='Where to save the feature')
 args = parser.parse_args()
 
 device = th.device("cuda" if th.cuda.is_available() else "cpu")
@@ -46,6 +47,8 @@ df = pd.read_csv(args.csv_path)
 labels = df['label'].tolist()
 categories = df['third_category'].unique().tolist()
 num_classes = len(categories)
+if not os.path.exists(args.feature_path):
+    os.makedirs(args.feature_path)
 # print(categories)
 
 
@@ -59,10 +62,14 @@ clip_probs = np.zeros((len(sorted_files), num_classes))
 all_labels = []
 
 train_ids, val_ids, test_ids = split_data(len(sorted_files), train_ratio=0.6, val_ratio=0.2)
+output_feature = f'{args.feature_path}/{args.name}_openai_clip-vit-large-patch14.npy'
+output_probs = f'{args.feature_path}/{args.name}_clip_probs.npy'
+output_labels = f'{args.feature_path}/{args.name}_clip_labels.npy'
+print(f'The output file is {output_feature}')
 # print(train_ids, val_ids)
 # val_labels = np.array(labels)[val_ids]
 
-if not os.path.exists('clip_features.npy'):
+if not os.path.exists(output_feature):
     for i, filename in enumerate(sorted_files):
         if filename.endswith(".jpg") or filename.endswith(".png"):
             print(filename)
@@ -89,16 +96,16 @@ if not os.path.exists('clip_features.npy'):
 
     print("已从文件夹中的所有图像中提取特征.")
     # 保存特征矩阵和概率矩阵为npy文件
-    np.save('clip_features.npy', clip_features)
-    np.save('clip_probs.npy', clip_probs)
+    np.save(output_file, clip_features)
+    np.save(output_probs, clip_probs)
 
     # 将标签列表转换为NumPy数组并保存为npy文件
     clip_labels = np.array(all_labels)
-    np.save('clip_labels.npy', clip_labels)
+    np.save(output_labels, clip_labels)
 else:
     print('Existing features, please load!')
-    clip_features = np.load('clip_features.npy')
-    clip_labels = np.load('clip_labels.npy')
+    clip_features = np.load(output_feature)
+    clip_labels = np.load(output_labels)
 
 
 
