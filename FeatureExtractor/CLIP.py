@@ -70,14 +70,14 @@ print(f'The output file is {output_feature}')
 # val_labels = np.array(labels)[val_ids]
 
 if not os.path.exists(output_feature):
-    for i, filename in enumerate(sorted_files):
+    for i, filename in tqdm(enumerate(sorted_files), total=len(sorted_files)):
         if filename.endswith(".jpg") or filename.endswith(".png"):
-            print(filename)
+            # print(filename)
             image_path = os.path.join(picture_path, filename)
             image = Image.open(image_path)
 
             inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt", padding=True).to(device)
-            print(f"a {args.name} belonging to the '{category}'" for category in categories)
+            # print(f"a {args.name} belonging to the '{category}'" for category in categories)
             outputs = model(**inputs)
             feature = outputs.image_embeds
 
@@ -86,17 +86,18 @@ if not os.path.exists(output_feature):
 
             logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
             probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
-            # print(probs)
-            # print('--------------------------------')
+            print(probs)
+            print('--------------------------------')
             clip_probs[i] = probs.squeeze()
             # 使用argmax获取预测的类别，并将其添加到类别列表中
             predicted_label = logits_per_image.argmax(dim=1).item()
             # print(predicted_label, '---------------')
             all_labels.append(predicted_label)
 
+
     print("已从文件夹中的所有图像中提取特征.")
     # 保存特征矩阵和概率矩阵为npy文件
-    np.save(output_file, clip_features)
+    np.save(output_feature, clip_features)
     np.save(output_probs, clip_probs)
 
     # 将标签列表转换为NumPy数组并保存为npy文件
