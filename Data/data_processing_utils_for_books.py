@@ -128,6 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('--class_numbers', type=int, help='Dataset class threshold', required=True)
     parser.add_argument('--second_category', type=str, default='Computer')
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
+    parser.add_argument('--save', type=bool, help='Dataset class numbers', required=True)
     args = parser.parse_args()
 
     data_path = args.data_path
@@ -144,7 +145,10 @@ if __name__ == '__main__':
 
     df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers)
     count_data(df)
-    export_as_csv(df, output_csv_path)
-    construct_graph(output_csv_path, output_graph_path)
-    # 从本地读取处理后的CSV文件
-    download_images(df, output_img_path)
+    if args.save:
+        export_as_csv(df, output_csv_path)
+        construct_graph(output_csv_path, output_graph_path)
+        # 从本地读取处理后的CSV文件
+        download_images(df, output_img_path)
+    else:
+        print('Check Finished.')
