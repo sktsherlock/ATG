@@ -134,11 +134,14 @@ def data_filter(df, category_number=10):
 
 
 # 统计 DataFrame 中的数据
-def count_data(df):
+def count_data(df, third=False):
     print('Counting data...')
 
     # 统计类别信息
-    print(df['second_category'].value_counts())
+    if third is True:
+        print(df['third_category'].value_counts())
+    else:
+        print(df['second_category'].value_counts())
     print(df['label'].value_counts())
 
     # 统计文本单词长度信息

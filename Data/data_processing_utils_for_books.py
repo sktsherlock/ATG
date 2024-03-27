@@ -128,7 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('--class_numbers', type=int, help='Dataset class threshold', required=True)
     parser.add_argument('--second_category', type=str, default='Computer')
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
-    parser.add_argument('--save', type=bool, help='Dataset class numbers', required=True)
+    parser.add_argument('--save', action="store_true", help="is saving or not")
     args = parser.parse_args()
 
     data_path = args.data_path
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     output_graph_path = f'./{name}/{name}Graph.pt'
 
     df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers)
-    count_data(df)
+    count_data(df, True)
     if args.save is True:
         export_as_csv(df, output_csv_path)
         construct_graph(output_csv_path, output_graph_path)

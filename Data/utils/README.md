@@ -9,13 +9,15 @@ python data_processing_utils.py --data_path 'Fashion/meta_AMAZON_FASHION.json' -
 ``` 
 
 ## Arts 可能可以 试试 
+## 看看二级 Sewing
+python data_processing_utils_for_books.py --data_path 'Arts/meta_Arts_Crafts_and_Sewing.json'  --name 'Sewing' --class_numbers 15 --second_category "Sewing" 
 ```shell 
 mkdir ~/ATG/Data/Arts/
 cd ~/ATG/Data/Arts/
 wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Arts_Crafts_and_Sewing.json.gz
 gunzip meta_Arts_Crafts_and_Sewing.json.gz
 cd ~/ATG/Data/
-python data_processing_utils.py --data_path 'Arts/meta_Arts_Crafts_and_Sewing.json' --name 'Arts' --class_numbers 15 
+python data_processing_utils.py --data_path 'Arts/meta_Arts_Crafts_and_Sewing.json' --name 'Arts' --class_numbers 11 --save --download_image
 ``` 
 
 ```shell 
@@ -24,7 +26,7 @@ cd ~/ATG/Data/AutoMotive/
 wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Automotive.json.gz
 gunzip meta_Automotive.json.gz
 cd ~/ATG/Data/
-python data_processing_utils.py --data_path 'AutoMotive/meta_Automotive.json' --name 'AutoMotive' --class_numbers 15 
+python data_processing_utils.py --data_path 'AutoMotive/meta_Automotive.json' --name 'AutoMotive' --class_numbers 11 --save --download_image
 ``` 
 
 ```shell 
@@ -33,5 +35,5 @@ cd ~/ATG/Data/Grocery/
 wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Grocery_and_Gourmet_Food.json.gz
 gunzip meta_Grocery_and_Gourmet_Food.json.gz
 cd ~/ATG/Data/
-python data_processing_utils.py --data_path 'Grocery/meta_Grocery_and_Gourmet_Food.json' --name 'Grocery' --class_numbers 15 
+python data_processing_utils.py --data_path 'Grocery/meta_Grocery_and_Gourmet_Food.json' --name 'Grocery' --class_numbers 20 --save --download_image
 ``` 
