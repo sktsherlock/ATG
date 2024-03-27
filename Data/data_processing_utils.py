@@ -13,6 +13,7 @@ def parse_json(data_path):
     # 读取 json 文件
     df = pd.read_json(data_path, lines=True)
     # 查看df的前几行数据
+    print(df.columns)
     print(df.head())
     # 只取其中几列
     df = pd.DataFrame(df, columns=['asin', 'category', 'description', 'title',
