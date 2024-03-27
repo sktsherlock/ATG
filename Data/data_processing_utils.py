@@ -236,7 +236,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
     parser.add_argument('--class_numbers', type=int, help='Dataset class numbers', required=True)
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
-    parser.add_argument('--save', type=bool, help='Dataset class numbers', required=True)
+    parser.add_argument('--save', action="store_true", help="is saving or not")
     args = parser.parse_args()
 
     data_path = args.data_path
