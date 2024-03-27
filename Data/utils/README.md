@@ -26,3 +26,12 @@ gunzip meta_Automotive.json.gz
 cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'AutoMotive/meta_Automotive.json' --name 'AutoMotive' --class_numbers 15 
 ``` 
+
+```shell 
+mkdir ~/ATG/Data/Grocery/
+cd ~/ATG/Data/Grocery/
+wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Grocery_and_Gourmet_Food.json.gz
+gunzip meta_Grocery_and_Gourmet_Food.json.gz
+cd ~/ATG/Data/
+python data_processing_utils.py --data_path 'Grocery/meta_Grocery_and_Gourmet_Food.json' --name 'Grocery' --class_numbers 15 
+``` 
