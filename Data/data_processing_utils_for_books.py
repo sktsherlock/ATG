@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
     df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers)
     count_data(df)
-    if args.save:
+    if args.save is True:
         export_as_csv(df, output_csv_path)
         construct_graph(output_csv_path, output_graph_path)
         # 从本地读取处理后的CSV文件
