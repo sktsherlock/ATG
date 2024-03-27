@@ -23,6 +23,8 @@ def data_filter(df, category_number=10):
     # 过滤含有缺失数据和重复的记录
     df = df.drop_duplicates(subset=['asin'])
     df = df.dropna()
+    # 查看df的前几行数据
+    print(df.head())
     # 删除 DataFrame 中含有空图像或不含二级类别(二级类别会作为分类的 label)的行
     mask = (df['imageURLHighRes'].str.len() >= 1) & (df['category'].str.len() >= 2)
     # 保留符合条件的行

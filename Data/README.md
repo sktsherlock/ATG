@@ -18,8 +18,9 @@ wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_
 gunzip meta_Magazine_Subscriptions.json.gz
 cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Magazines/meta_Magazine_Subscriptions.json' --name 'Magazines' --class_numbers 17 
-
 ``` 
+
+
 
 ## Computers
 ```shell
