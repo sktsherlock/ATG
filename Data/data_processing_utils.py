@@ -6,6 +6,8 @@ import pandas as pd
 import requests
 import argparse
 from requests.exceptions import Timeout, RequestException, ConnectionError
+
+
 # 读取 json 文件并将其转换为 DataFrame 并返回
 def parse_json(data_path):
     # 读取 json 文件
@@ -81,8 +83,8 @@ def data_filter(df, category_number=10):
         lambda string: ''.join([c for c in string if c != '']) if string else None)
     # 替换 HTML 标签和空白
     df['description'] = df['description'].apply(lambda text: re.sub('<[\s\S]*>', '',
-                                                                                    re.sub('\s+', ' ',
-                                                                                           text)) if text else None)
+                                                                    re.sub('\s+', ' ',
+                                                                           text)) if text else None)
     # 若还有 '<', 则删除
     df['description'] = df['description'].apply(lambda x: x if x and not re.search('<', x) else None)
     print('步骤六****************************************************************')
@@ -121,7 +123,8 @@ def data_filter(df, category_number=10):
     # df.rename(columns={'second_category': 'label'}, inplace=True)  # 将列名 second_category 更改为 label
 
     # 只保留 DataFrame 中需要的列
-    df = df[['id', 'category', 'text', 'description', 'title', 'also_buy', 'also_view', 'imageURLHighRes', 'second_category', 'label']]
+    df = df[['id', 'category', 'text', 'description', 'title', 'also_buy', 'also_view', 'imageURLHighRes',
+             'second_category', 'label']]
 
     return df
 
@@ -199,7 +202,7 @@ def construct_graph(input_csv_path, output_graph_path):
     df['neighbour'] = df['also_view'] + df['also_buy']
     df['neighbour'] = df['neighbour'].apply(lambda x: list(set(x)))
     df['neighbour'] = df['neighbour'].apply(lambda x: sorted(x))
-    
+
     adj_list = {}
     asin_ids = sorted(df['id'].unique())
     for asin_id in asin_ids:
@@ -226,7 +229,6 @@ def construct_graph(input_csv_path, output_graph_path):
     print(G)
 
 
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -234,6 +236,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
     parser.add_argument('--class_numbers', type=int, help='Dataset class numbers', required=True)
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
+    parser.add_argument('--save', type=bool, help='Dataset class numbers', required=True)
     args = parser.parse_args()
 
     data_path = args.data_path
@@ -247,13 +250,13 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    if os.path.exists(output_csv_path):
-        df = pd.read_csv(output_csv_path)
-    else:
-        df = data_filter(parse_json(data_path), category_number=class_numbers)
-        count_data(df)
+    df = data_filter(parse_json(data_path), category_number=class_numbers)
+    count_data(df)
+    if args.save:
         export_as_csv(df, output_csv_path)
-    construct_graph(output_csv_path, output_graph_path)
-    # 从本地读取处理后的CSV文件
-    if args.download_image:
-        download_images(df, output_img_path)
+        construct_graph(output_csv_path, output_graph_path)
+        # 从本地读取处理后的CSV文件
+        if args.download_image:
+            download_images(df, output_img_path)
+    else:
+        print('Check Finished.')
