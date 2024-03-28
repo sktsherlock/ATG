@@ -245,6 +245,9 @@ def args_init():
     argparser.add_argument(
         "--val_ratio", type=float, default=0.2, help="training ratio"
     )
+    argparser.add_argument(
+        "--fewshots", type=int, default=None, help="fewshots values"
+    )
     return argparser
 
 
@@ -257,7 +260,7 @@ def main():
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                        val_ratio=args.val_ratio, name=args.data_name)
+                                                        val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
     n_classes = (labels.max() + 1).item()
@@ -288,7 +291,7 @@ def main():
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
-        # set_seed(args.seed)
+        set_seed(args.seed) if args.fewshots is None else set_seed(args.seed + run)
         model.reset_parameters()
         val_result, test_result = classification(
             args, model, feat, labels, train_idx, val_idx, test_idx, run+1
