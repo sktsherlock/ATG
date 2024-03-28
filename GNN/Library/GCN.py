@@ -162,6 +162,9 @@ def args_init():
     argparser.add_argument(
         "--val_ratio", type=float, default=0.2, help="training ratio"
     )
+    argparser.add_argument(
+        "--fewshots", type=int, default=None, help="fewshots values"
+    )
     return argparser
 
 
@@ -174,7 +177,7 @@ def main():
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                            val_ratio=args.val_ratio, name=args.data_name)
+                                                            val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
 
 
     if args.inductive:

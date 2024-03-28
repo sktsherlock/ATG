@@ -22,11 +22,25 @@ CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Photo/Ph
 python ImageExtract.py --gpu 0 --data_dir Data/Photo/PhotoImages/ --name Movies --path Data/Photo/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 224
 python ImageExtract.py --gpu 0 --data_dir Data/Photo/PhotoImages/ --name Movies --path Data/Photo/ImageFeature/ --batch_size 64 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
 python ImageExtract.py --gpu 1 --data_dir Data/Photo/PhotoImages/ --name Movies --path Data/Photo/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
-
-
 ```
 
 
+## Grocery Text Feature
+```python
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Grocery/Grocery.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Grocery' --path 'Data/Grocery/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Grocery/Grocery.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Grocery' --path 'Data/Grocery/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'  --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Grocery/Grocery.csv --model_name 'google/gemma-7b' --name 'Grocery' --path 'Data/Grocery/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'  --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Grocery/Grocery.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Grocery' --path 'Data/Grocery/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --norm True
+```
+
+
+## Arts Text Feature
+```python
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Arts/Arts.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Arts' --path 'Data/Arts/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Arts/Arts.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Arts' --path 'Data/Arts/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'  --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Arts/Arts.csv --model_name 'google/gemma-7b' --name 'Arts' --path 'Data/Arts/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'  --fp16 True
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Arts/Arts.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Arts' --path 'Data/Arts/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --norm True
+```
 
 
 ## Movies 
