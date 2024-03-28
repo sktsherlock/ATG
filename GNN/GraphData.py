@@ -18,8 +18,7 @@ def split_graph(nodes_num, train_ratio, val_ratio, labels, fewshots=None):
             label_indices = np.where(labels == label)[0]  # 获取属于当前类别的样本索引
             np.random.shuffle(label_indices)  # 对当前类别的样本索引进行随机排序
 
-            fewshot = fewshots[label]  # 获取当前类别的few-shot数量
-            fewshot_indices = label_indices[:fewshot]  # 选择指定数量的few-shot样本
+            fewshot_indices = label_indices[:fewshots]  # 选择指定数量的few-shot样本
             train_ids.extend(fewshot_indices)
 
         remaining_indices = np.setdiff1d(indices, train_ids)  # 获取剩余的样本索引
