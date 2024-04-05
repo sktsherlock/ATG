@@ -31,6 +31,7 @@ python ImageExtract.py --gpu 0 --data_dir Data/Movies/MoviesImages/ --name Movie
 python ImageExtract.py --gpu 0 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 64 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
 CUDA_VISIBLE_DEVICES=1 python ImageExtract.py --gpu 1 --data_dir Data/Photo/PhotoImages/ --name Photo --path Data/Photo/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 python ImageExtract.py --gpu 0 --data_dir Data/Arts/ArtsImages/ --name Arts --path Data/Arts/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
+python ImageExtract.py --gpu 0 --data_dir Data/Grocery/GroceryImages/ --name Arts --path Data/Grocery/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 """
 def main():
     # 定义命令行参数
@@ -46,7 +47,7 @@ def main():
 
     args = parser.parse_args()
 
-    device = torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(f'cuda' if torch.cuda.is_available() else 'cpu')
     # Set training arguments, hardcoded here for clarity
     image_size = (args.size, args.size)
     batch_size = args.batch_size

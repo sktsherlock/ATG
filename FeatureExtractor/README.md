@@ -32,7 +32,10 @@ CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Grocery/
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Grocery/Grocery.csv --model_name 'google/gemma-7b' --name 'Grocery' --path 'Data/Grocery/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'  --fp16 True
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Grocery/Grocery.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Grocery' --path 'Data/Grocery/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --norm True
 ```
-
+### Grocery Image Feature
+```python
+CUDA_VISIBLE_DEVICES=0 python CLIP.py --name Grocery --csv_path /home/aiscuser/ATG/Data/Grocery/Grocery.csv --path /home/aiscuser/ATG/Data/Grocery/GroceryImages/ --feature_path /home/aiscuser/ATG/Data/Grocery/ImageFeature
+```
 
 ## Arts Text Feature
 ```python
@@ -43,7 +46,8 @@ CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Arts/Arts.
 ```
 ### Arts Image Feature
 ```python
-python CLIP.py --name Arts --csv_path ../Data/Arts/Arts.csv --path ../Data/Arts/ArtsImages/ --feature_path ../Data/Arts/ImageFeature/
+CUDA_VISIBLE_DEVICES=1 python CLIP.py --name Arts --csv_path /home/aiscuser/ATG/Data/Arts/Arts.csv --path /home/aiscuser/ATG/Data/Arts/ArtsImages/ --feature_path 
+/home/aiscuser/ATG/Data/Arts/ImageFeature
 ```
 
 ## Movies 
