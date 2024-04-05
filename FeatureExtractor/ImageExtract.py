@@ -30,7 +30,7 @@ def create_datasets(image_size, data_mean, data_std, inference_path):
 python ImageExtract.py --gpu 0 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 224
 python ImageExtract.py --gpu 0 --data_dir Data/Movies/MoviesImages/ --name Movies --path Data/Movies/ImageFeature/ --batch_size 64 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
 CUDA_VISIBLE_DEVICES=1 python ImageExtract.py --gpu 1 --data_dir Data/Photo/PhotoImages/ --name Photo --path Data/Photo/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
-
+python ImageExtract.py --gpu 0 --data_dir Data/Arts/ArtsImages/ --name Arts --path Data/Arts/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 """
 def main():
     # 定义命令行参数

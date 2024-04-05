@@ -45,7 +45,7 @@ picture_path = args.path
 
 df = pd.read_csv(args.csv_path)
 labels = df['label'].tolist()
-categories = df['third_category'].unique().tolist()
+categories = df['second_category'].unique().tolist()
 num_classes = len(categories)
 if not os.path.exists(args.feature_path):
     os.makedirs(args.feature_path)
