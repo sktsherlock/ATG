@@ -76,7 +76,7 @@ if not os.path.exists(output_feature):
             image_path = os.path.join(picture_path, filename)
             image = Image.open(image_path)
 
-            inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt").to(device)
+            inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt", padding=True).to(device)
             # print(f"a {args.name} belonging to the '{category}'" for category in categories)
             outputs = model(**inputs)
             feature = outputs.image_embeds
