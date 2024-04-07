@@ -105,33 +105,39 @@ def main():
                                                             val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
 
 
-    if args.inductive:
-        # 构造Inductive Learning 实验条件
-        isolated_nodes = th.cat((val_idx, test_idx))
-        sort_isolated_nodes, _ = th.sort(isolated_nodes)
-        # 从图中删除指定节点
-        graph.remove_nodes(sort_isolated_nodes)
-
-        # 添加相同数量的孤立节点
-        graph.add_nodes(len(sort_isolated_nodes))
-
     # add reverse edges, tranfer to the  undirected graph
     if args.undirected:
         print("The Graph change to the undirected graph")
         srcs, dsts = graph.all_edges()
         graph.add_edges(dsts, srcs)
 
+    # 定义可观测图数据，用于inductive实验设置；
+    observe_graph = graph
+
+    if args.inductive:
+        # 构造Inductive Learning 实验条件
+        isolated_nodes = test_idx
+        sort_isolated_nodes, _ = th.sort(isolated_nodes)
+        # 从图中删除指定节点
+        observe_graph.remove_nodes(sort_isolated_nodes)
+
+        # 添加相同数量的孤立节点
+        observe_graph.add_nodes(len(sort_isolated_nodes))
+
+
     # add self-loop
     if args.selfloop:
         print(f"Total edges before adding self-loop {graph.number_of_edges()}")
         graph = graph.remove_self_loop().add_self_loop()
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
+        observe_graph = observe_graph.remove_self_loop().add_self_loop()
 
     feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
     n_classes = (labels.max()+1).item()
     print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
 
     graph.create_formats_()
+    observe_graph.create_formats_()
 
     train_idx = train_idx.to(device)
     val_idx = val_idx.to(device)
@@ -142,6 +148,7 @@ def main():
 
     labels = labels.to(device)
     graph = graph.to(device)
+    observe_graph = observe_graph.to(device)
 
     # run
     val_results = []
@@ -159,7 +166,7 @@ def main():
         set_seed(args.seed + run)
         model.reset_parameters()
         val_result, test_result = classification(
-            args, graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
+            args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)

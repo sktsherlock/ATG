@@ -39,7 +39,7 @@ def evaluate(
 
 
 def classification(
-        args, graph, model, feat, labels, train_idx, val_idx, test_idx, n_running):
+        args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, n_running):
     if args.early_stop_patience is not None:
         stopper = EarlyStopping(patience=args.early_stop_patience)
     optimizer = optim.AdamW(
@@ -65,7 +65,7 @@ def classification(
             adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
 
         train_loss, pred = train(
-            model, graph, feat, labels, train_idx, optimizer, label_smoothing=args.label_smoothing
+            model, observe_graph, feat, labels, train_idx, optimizer, label_smoothing=args.label_smoothing
         )
         if epoch % args.eval_steps == 0:
             (
