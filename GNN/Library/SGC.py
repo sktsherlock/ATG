@@ -62,6 +62,9 @@ def main():
 
         # 添加相同数量的孤立节点
         observe_graph.add_nodes(len(sort_isolated_nodes))
+        print(observe_graph)
+        print('***************')
+        print(graph)
 
     # add self-loop
     if args.selfloop:
