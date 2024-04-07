@@ -56,7 +56,7 @@ def main():
     if args.inductive:
         # 构造Inductive Learning 实验条件
 
-        isolated_nodes = th.cat(val_idx, test_idx)
+        isolated_nodes = th.cat((val_idx, test_idx))
         sort_isolated_nodes, _ = th.sort(isolated_nodes)
         # 从图中删除指定节点
         observe_graph.remove_nodes(sort_isolated_nodes)
