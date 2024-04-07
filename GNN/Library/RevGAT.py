@@ -1,6 +1,5 @@
 import sys
-import torch.nn as nn
-import dgl.nn.pytorch as dglnn
+import copy
 import argparse
 import wandb
 import torch as th
@@ -58,7 +57,7 @@ def main():
         graph.add_edges(dsts, srcs)
 
     # 定义可观测图数据，用于inductive实验设置；
-    observe_graph = graph
+    observe_graph = copy.deepcopy(graph)
 
     if args.inductive:
         # 构造Inductive Learning 实验条件
