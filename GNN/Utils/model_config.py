@@ -19,12 +19,6 @@ def add_common_args(argparser):
         "--dropout", type=float, default=0.5, help="dropout rate"
     )
     argparser.add_argument(
-        "--weight", type=bool, default=True, help="if False, no W."
-    )
-    argparser.add_argument(
-        "--bias", type=bool, default=True, help="if False, no last layer bias."
-    )
-    argparser.add_argument(
         "--min-lr", type=float, default=0.0001, help="the min learning rate"
     )
     argparser.add_argument(

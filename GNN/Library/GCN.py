@@ -25,8 +25,6 @@ class GCN(nn.Module):
             n_layers,
             activation,
             dropout,
-            weight=True,
-            last_layer_bias=True,
     ):
         super().__init__()
         self.n_layers = n_layers
@@ -39,13 +37,8 @@ class GCN(nn.Module):
         for i in range(n_layers):
             in_hidden = n_hidden if i > 0 else in_feats
             out_hidden = n_hidden if i < n_layers - 1 else n_classes
-            if i == n_layers - 1 and not last_layer_bias:
-                bias = False
-            else:
-                bias = True
-
             self.convs.append(
-                dglnn.GraphConv(in_hidden, out_hidden, "both", weight=weight, bias=bias)
+                dglnn.GraphConv(in_hidden, out_hidden, "both")
             )
 
             if i < n_layers - 1:
@@ -141,7 +134,7 @@ def main():
     test_results = []
 
     # Model implementation
-    model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout, weight=args.weight, last_layer_bias=args.bias).to(device)
+    model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
     print(model)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
