@@ -69,62 +69,52 @@ def data_filter_for_reddit(df, category_number=50):
         return group.sample(n=10, random_state=42)
 
     # 对每个subreddit进行采样
-    df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
+    new_df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
 
     # 重置索引并删除多余的列
-    df.reset_index(drop=True, inplace=True)
-    print(df)
+    new_df.reset_index(drop=True, inplace=True)
+    print(new_df)
 
-    # # 对每个subreddit进行采样
-    # new_df = pd.DataFrame()  # 创建一个空DataFrame用于存储采样结果
-    #
-    # for subreddit in subreddit_to_keep:
-    #     subreddit_samples = df[df['subreddit'] == subreddit].sample(n=10, random_state=42)
-    #     new_df = new_df.append(subreddit_samples)
-    #
-    # # 重置索引并删除多余的列
-    # new_df.reset_index(drop=True, inplace=True)
-    # print(new_df)
 
 
     hash_set = {}
-    for index, row in df.iterrows():
+    for index, row in new_df.iterrows():
         if row['author'] not in hash_set:
             hash_set[row['author']] = [row['image_id']]
         else:
             hash_set[row['author']].append(row['image_id'])
 
-    df['also_posted'] = None
+    new_df['also_posted'] = None
 
-    for index, row in df.iterrows():
-        df.at[index, 'also_posted'] = hash_set[row['author']][:]
+    for index, row in new_df.iterrows():
+        new_df.at[index, 'also_posted'] = hash_set[row['author']][:]
 
     # 删除孤立帖子
-    df = df[df['also_posted'].str.len() >= 2]
-    df = df.reset_index(drop=True)  # 重置索引
+    new_df = new_df[df['also_posted'].str.len() >= 2]
+    new_df = new_df.reset_index(drop=True)  # 重置索引
 
     # 将帖子的 image_id 映射为递增的 id 以便后续数据处理
     hash_table = {}
-    for index, row in df.iterrows():
+    for index, row in new_df.iterrows():
         hash_table[row['image_id']] = int(index)
-    df['id'] = df['image_id'].map(hash_table)  # 将 image_id 映射为 id
+    new_df['id'] = new_df['image_id'].map(hash_table)  # 将 image_id 映射为 id
 
     # 将 also_posted 中的帖子 image_id 索引替换为 id 索引, 同时剔除不存在项
-    df['also_posted'] = df['also_posted'].apply(lambda x: [hash_table[i] for i in x if i in hash_table])
+    new_df['also_posted'] = new_df['also_posted'].apply(lambda x: [hash_table[i] for i in x if i in hash_table])
 
     # 将类别映射为递增的 label
     hash_table = {}
     label_number = 0
-    for index, row in df.iterrows():
+    for index, row in new_df.iterrows():
         if row['subreddit'] not in hash_table:
             hash_table[row['subreddit']] = label_number
             label_number += 1
-    df['label'] = df['subreddit'].map(hash_table)  # 类别映射为递增的 label
+    new_df['label'] = new_df['subreddit'].map(hash_table)  # 类别映射为递增的 label
 
     # 只保留 DataFrame 中需要的列
-    df = df[['id', 'subreddit', 'caption', 'url', 'also_posted', 'label']]
+    new_df = new_df[['id', 'subreddit', 'caption', 'url', 'also_posted', 'label']]
 
-    return df
+    return new_df
 
 
 def construct_graph(input_csv_path, output_graph):
