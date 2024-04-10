@@ -73,6 +73,7 @@ def data_filter_for_reddit(df, category_number=50):
 
     # 使用apply方法应用函数到原始DataFrame上
     df = df.groupby('subreddit').apply(subreddit_sampling)
+    print(df)
 
     # 删除不包含指定subreddit的行
     df.dropna(subset=['subreddit'], inplace=True)
