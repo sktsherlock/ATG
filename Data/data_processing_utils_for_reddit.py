@@ -9,6 +9,7 @@ import warnings
 # 忽略特定警告
 warnings.filterwarnings("ignore", message="The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.")
 
+
 # 读取 json 文件并将其转换为 DataFrame 并返回
 def parse_json(data_path):
     # 读取 json 文件
@@ -17,9 +18,12 @@ def parse_json(data_path):
 
     data = data['annotations']
 
-    df = pd.DataFrame(data)
-    df = df[['image_id', 'subreddit', 'url', 'caption', 'author']]
-    return df
+    if data and all(key in data[0] for key in ['image_id', 'subreddit', 'url', 'caption', 'author']):
+        df = pd.DataFrame(data)
+        df = df[['image_id', 'subreddit', 'url', 'caption', 'author']]
+        return df
+    else:
+        return None
 
 
 # 数据过滤
@@ -112,7 +116,8 @@ data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'a
 for file_name in file_names:
     print(file_name)
     df = parse_json(os.path.join(folder_path, file_name))
-    data = data.append(df)
+    if df is not None:
+        data = data.append(df)
 
 # 记录代码开始执行的时间
 start_time = time.time()
