@@ -66,11 +66,11 @@ def data_filter_for_reddit(df, category_number=50):
 
     # 定义函数来对每个subreddit进行采样
     def subreddit_sampling(group):
-        return group.sample(n=10, random_state=42)
+        return group.sample(n=1000, random_state=42)
 
     # 对每个subreddit进行采样
     new_df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
-
+    new_df.drop_duplicates(inplace=True)
     # 重置索引并删除多余的列
     new_df.reset_index(drop=True, inplace=True)
     print(new_df)
@@ -92,7 +92,7 @@ def data_filter_for_reddit(df, category_number=50):
     # 删除孤立帖子
     new_df = new_df[new_df['also_posted'].str.len() >= 2]
     new_df = new_df.reset_index(drop=True)  # 重置索引
-    print(f'after deleteing the individual nodes: {new_df}')
+
 
     # 将帖子的 image_id 映射为递增的 id 以便后续数据处理
     hash_table = {}
@@ -111,10 +111,10 @@ def data_filter_for_reddit(df, category_number=50):
             hash_table[row['subreddit']] = label_number
             label_number += 1
     new_df['label'] = new_df['subreddit'].map(hash_table)  # 类别映射为递增的 label
-    print(new_df)
+
     # 只保留 DataFrame 中需要的列
     new_df = new_df[['id', 'subreddit', 'caption', 'url', 'also_posted', 'label']]
-    print(new_df)
+
 
     return new_df
 
