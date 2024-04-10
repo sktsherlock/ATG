@@ -54,9 +54,7 @@ def data_filter_for_reddit(df, category_number=50):
     df = df.reset_index(drop=True)  # 重置索引
 
     # 删除 url为空的行
-    mask = (df['url'] is not None)
-    # 保留符合条件的行
-    df = df[mask]
+    df.dropna(subset=['url'], inplace=True)
 
     subreddit_counts = df['subreddit'].value_counts()
     subreddit_to_keep = subreddit_counts.nlargest(category_number).index
@@ -170,7 +168,7 @@ def download_images(df, output_img_path):
 
             if index in downloaded_images:  # 图像已经下载过，跳过当前循环
                 need_deleted = False
-                break
+                continue
 
 
             if not os.path.exists(output_img_path):
