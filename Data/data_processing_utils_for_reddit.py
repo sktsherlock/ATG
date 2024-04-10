@@ -90,7 +90,7 @@ def data_filter_for_reddit(df, category_number=50):
         new_df.at[index, 'also_posted'] = hash_set[row['author']][:]
 
     # 删除孤立帖子
-    new_df = new_df[df['also_posted'].str.len() >= 2]
+    new_df = new_df[new_df['also_posted'].str.len() >= 2]
     new_df = new_df.reset_index(drop=True)  # 重置索引
 
     # 将帖子的 image_id 映射为递增的 id 以便后续数据处理
