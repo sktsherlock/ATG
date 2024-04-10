@@ -25,6 +25,7 @@ def parse_json(data_path):
     if data and all(key in data[0] for key in ['image_id', 'subreddit', 'url', 'caption', 'author']):
         df = pd.DataFrame(data)
         df = df[['image_id', 'subreddit', 'url', 'caption', 'author']]
+        print(df['url'])
         return df
     else:
         return None
