@@ -44,13 +44,19 @@ def count_data(df):
 
 
 # 数据过滤
-def data_filter_for_reddit(df):
+def data_filter_for_reddit(df, category_number=50):
     # 过滤含有缺失数据和重复的记录
     df = df.drop_duplicates(subset=['image_id'])
     df = df.dropna()
 
     df = df[df['author'] != 'None']  # 去除作者为空的行
     df = df.reset_index(drop=True)  # 重置索引
+
+    subreddit_counts = df['subreddit'].value_counts()
+    subreddit_to_keep = subreddit_counts.nlargest(category_number).index
+    df['subreddit'] = df['subreddit'].apply(lambda x: x if x in subreddit_to_keep else None)
+    df.dropna(subset=['subreddit'], inplace=True)
+
 
     hash_set = {}
     for index, row in df.iterrows():
