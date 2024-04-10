@@ -10,8 +10,10 @@ import torch
 import dgl
 import ast
 from tqdm import tqdm
+
 # 忽略特定警告
-warnings.filterwarnings("ignore", message="The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.")
+warnings.filterwarnings("ignore",
+                        message="The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.")
 
 
 # 读取 json 文件并将其转换为 DataFrame 并返回
@@ -25,7 +27,6 @@ def parse_json(data_path):
     if data and all(key in data[0] for key in ['image_id', 'subreddit', 'url', 'caption', 'author']):
         df = pd.DataFrame(data)
         df = df[['image_id', 'subreddit', 'url', 'caption', 'author']]
-        print(df['url'])
         return df
     else:
         return None
@@ -56,10 +57,24 @@ def data_filter_for_reddit(df, category_number=50):
     # 删除 url为空的行
     df.dropna(subset=['url'], inplace=True)
 
+    # 选择类别数最多的几个帖子
     subreddit_counts = df['subreddit'].value_counts()
     subreddit_to_keep = subreddit_counts.nlargest(category_number).index
     print(f'The large subreddit are: {subreddit_to_keep}')
     df['subreddit'] = df['subreddit'].apply(lambda x: x if x in subreddit_to_keep else None)
+    df.dropna(subset=['subreddit'], inplace=True)
+
+    # 进行采样
+    def subreddit_sampling(group):
+        if group['subreddit'] in subreddit_to_keep:
+            return group.sample(n=20, random_state=42)
+        else:
+            return group
+
+    # 使用apply方法应用函数到原始DataFrame上
+    df = df.groupby('subreddit').apply(subreddit_sampling)
+
+    # 删除不包含指定subreddit的行
     df.dropna(subset=['subreddit'], inplace=True)
 
 
@@ -104,7 +119,6 @@ def data_filter_for_reddit(df, category_number=50):
 
 
 def construct_graph(input_csv_path, output_graph):
-
     df = pd.read_csv(input_csv_path)
 
     df['also_posted'] = df['also_posted'].apply(lambda x: ast.literal_eval(x))
@@ -136,8 +150,6 @@ def construct_graph(input_csv_path, output_graph):
     G.ndata['label'] = torch.tensor(list(df['label']))
     dgl.save_graphs(f"{output_graph}", G)
     print(G)
-
-
 
 
 # 将 DataFrame 导出为 csv 文件
@@ -185,10 +197,6 @@ def download_images(df, output_img_path):
     print('Successfully downloaded images')
 
 
-
-
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
@@ -197,7 +205,6 @@ if __name__ == '__main__':
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
     parser.add_argument('--save', action="store_true", help="is saving or not")
     args = parser.parse_args()
-
 
     name = args.name
     class_numbers = args.class_numbers
@@ -210,7 +217,7 @@ if __name__ == '__main__':
     output_img = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    #Reddit/annotations/
+    # Reddit/annotations/
     folder_path = args.data_path
     # 获取文件夹内所有文件名
     file_names = os.listdir(folder_path)
