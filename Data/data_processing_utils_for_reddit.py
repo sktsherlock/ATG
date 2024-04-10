@@ -114,4 +114,4 @@ df = parse_json('Reddit/annotations/abandoned_2017.json')
 # data = data_filter_for_reddit(data)
 
 df = data_filter_for_reddit(df)
-
+print(df)
