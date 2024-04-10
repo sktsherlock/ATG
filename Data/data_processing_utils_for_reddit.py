@@ -9,6 +9,7 @@ import argparse
 import torch
 import dgl
 import ast
+from tqdm import tqdm
 # 忽略特定警告
 warnings.filterwarnings("ignore", message="The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.")
 
@@ -194,7 +195,7 @@ if __name__ == '__main__':
     # 获取文件夹内所有文件名
     file_names = os.listdir(folder_path)
     data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
-    for file_name in file_names:
+    for file_name in tqdm(file_names, desc='Processing Files'):
         df = parse_json(os.path.join(folder_path, file_name))
         if df is not None:
             data = data.append(df)
