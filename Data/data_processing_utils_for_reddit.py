@@ -108,7 +108,7 @@ folder_path = 'Reddit/annotations/'
 file_names = os.listdir(folder_path)
 data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
 for file_name in file_names:
-    df = parse_json(file_name)
+    df = parse_json(os.path.join(folder_path,file_name))
     data = data.append(df)
 
 # 记录代码开始执行的时间
