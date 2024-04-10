@@ -4,8 +4,10 @@ import os
 import time
 import pandas as pd
 import requests
+import warnings
 
-
+# 忽略特定警告
+warnings.filterwarnings("ignore", message="The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.")
 
 # 读取 json 文件并将其转换为 DataFrame 并返回
 def parse_json(data_path):
@@ -108,7 +110,8 @@ folder_path = 'Reddit/annotations/'
 file_names = os.listdir(folder_path)
 data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
 for file_name in file_names:
-    df = parse_json(os.path.join(folder_path,file_name))
+    print(file_name)
+    df = parse_json(os.path.join(folder_path, file_name))
     data = data.append(df)
 
 # 记录代码开始执行的时间
