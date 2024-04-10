@@ -65,19 +65,16 @@ def data_filter_for_reddit(df, category_number=50):
     df.dropna(subset=['subreddit'], inplace=True)
 
     # 进行采样
+    # 定义函数来对每个subreddit进行采样
     def subreddit_sampling(group):
-        if group['subreddit'] in subreddit_to_keep:
-            return group.sample(n=20, random_state=42)
-        else:
-            return group
+        return group.sample(n=10000, random_state=42)
 
     # 使用apply方法应用函数到原始DataFrame上
     df = df.groupby('subreddit').apply(subreddit_sampling)
     print(df)
 
     # 删除不包含指定subreddit的行
-    df.dropna(subset=['subreddit'], inplace=True)
-
+    df.reset_index(drop=True, inplace=True)
 
     hash_set = {}
     for index, row in df.iterrows():
