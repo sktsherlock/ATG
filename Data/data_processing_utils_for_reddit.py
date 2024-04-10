@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
     # 记录代码开始执行的时间
     start_time = time.time()
-    data = data_filter_for_reddit(data)
+    data = data_filter_for_reddit(data, class_numbers)
     # 记录代码执行结束的时间
     end_time = time.time()
     # 计算代码执行的时间
