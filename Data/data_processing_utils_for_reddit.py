@@ -52,6 +52,11 @@ def data_filter_for_reddit(df, category_number=50):
     df = df[df['author'] != 'None']  # 去除作者为空的行
     df = df.reset_index(drop=True)  # 重置索引
 
+    # 删除 url为空的行
+    mask = (df['url'] is not None)
+    # 保留符合条件的行
+    df = df[mask]
+
     subreddit_counts = df['subreddit'].value_counts()
     subreddit_to_keep = subreddit_counts.nlargest(category_number).index
     print(f'The large subreddit are: {subreddit_to_keep}')
@@ -146,7 +151,7 @@ def export_as_csv(df, output_csv_path):
 def download_images(df, output_img_path):
     print('Downloading images...')
     total = len(df)
-    print(total)
+
     downloaded_images = set()  # 已下载的图像编号集合
 
     # 检查已下载的图像文件
