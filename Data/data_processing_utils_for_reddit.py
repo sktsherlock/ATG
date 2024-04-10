@@ -136,6 +136,7 @@ def construct_graph(input_csv_path, output_graph):
 
 
 
+
 # 将 DataFrame 导出为 csv 文件
 def export_as_csv(df, output_csv_path):
     df.to_csv(output_csv_path, sep=',', index=False, header=True)
@@ -213,7 +214,7 @@ if __name__ == '__main__':
     count_data(data)
 
     if args.save is True:
-        export_as_csv(df, output_csv_path)
+        export_as_csv(data, output_csv_path)
         construct_graph(output_csv_path, output_graph_path)
         # 从本地读取处理后的CSV文件
         if args.download_image:
