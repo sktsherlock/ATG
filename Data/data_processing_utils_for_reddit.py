@@ -55,6 +55,7 @@ def data_filter_for_reddit(df, category_number=50):
 
     subreddit_counts = df['subreddit'].value_counts()
     subreddit_to_keep = subreddit_counts.nlargest(category_number).index
+    print(f'The large subreddit are: {subreddit_to_keep}')
     df['subreddit'] = df['subreddit'].apply(lambda x: x if x in subreddit_to_keep else None)
     df.dropna(subset=['subreddit'], inplace=True)
 
