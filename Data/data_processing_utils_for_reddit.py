@@ -175,6 +175,7 @@ def download_images(df, output_img_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
     parser.add_argument('--class_numbers', type=int, help='Dataset class numbers', required=True)
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
@@ -188,12 +189,13 @@ if __name__ == '__main__':
     if not os.path.exists(f'./{name}'):
         os.makedirs(f'./{name}')
 
+    initial_csv_path = f'./{name}/{name}_raw.csv'
     output_csv_path = f'./{name}/{name}.csv'
     output_img = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-
-    folder_path = 'Reddit/annotations/'
+    #Reddit/annotations/
+    folder_path = args.data_path
     # 获取文件夹内所有文件名
     file_names = os.listdir(folder_path)
     data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
@@ -201,6 +203,8 @@ if __name__ == '__main__':
         df = parse_json(os.path.join(folder_path, file_name))
         if df is not None:
             data = data.append(df)
+
+    data.to_csv(initial_csv_path, sep=',', index=False, header=True)
 
     # 记录代码开始执行的时间
     start_time = time.time()
