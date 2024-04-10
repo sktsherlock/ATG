@@ -66,14 +66,15 @@ def data_filter_for_reddit(df, category_number=50):
 
     # 定义函数来对每个subreddit进行采样
     def subreddit_sampling(group):
-        return group.sample(n=1000, random_state=42)
+        return group.sample(n=15000, random_state=42)
 
     # 对每个subreddit进行采样
     new_df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
     new_df.drop_duplicates(inplace=True)
     # 重置索引并删除多余的列
     new_df.reset_index(drop=True, inplace=True)
-    print(new_df)
+
+
 
 
 
