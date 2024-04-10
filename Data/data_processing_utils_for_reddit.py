@@ -147,12 +147,26 @@ def export_as_csv(df, output_csv_path):
 def download_images(df, output_img_path):
     print('Downloading images...')
     total = len(df)
+    downloaded_images = set()  # 已下载的图像编号集合
+
+    # 检查已下载的图像文件
+    for filename in os.listdir(output_img_path):
+        if filename.endswith('.jpg'):
+            image_id = int(filename.split('.')[0])
+            downloaded_images.add(image_id)
+
     for index, row in df.iterrows():
         if row['url']:
             need_deleted = True  # 是否需要删除该商品
             # for image_url in row['url']:
             image_name = '{}.jpg'.format(int(index))  # 图像命名为 '商品id.jpg'
             image_path = os.path.join(output_img_path, image_name)
+
+            if index in downloaded_images:  # 图像已经下载过，跳过当前循环
+                need_deleted = False
+                break
+
+
             if not os.path.exists(output_img_path):
                 os.makedirs(output_img_path)
             image_data = requests.get(row['url']).content  # 获取图像数据
@@ -164,7 +178,7 @@ def download_images(df, output_img_path):
                 break
             if need_deleted:
                 print('No.{} need to be deleted'.format(int(index)))
-        if (index + 1) % 50 == 0:
+        if (index + 1) % 100 == 0:
             print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
     print('Successfully downloaded images')
 
