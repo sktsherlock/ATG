@@ -147,6 +147,7 @@ def export_as_csv(df, output_csv_path):
 def download_images(df, output_img_path):
     print('Downloading images...')
     total = len(df)
+    print(total)
     downloaded_images = set()  # 已下载的图像编号集合
 
     # 检查已下载的图像文件
