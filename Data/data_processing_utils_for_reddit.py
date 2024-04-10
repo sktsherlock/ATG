@@ -64,6 +64,17 @@ def data_filter_for_reddit(df, category_number=50):
     df['subreddit'] = df['subreddit'].apply(lambda x: x if x in subreddit_to_keep else None)
     df.dropna(subset=['subreddit'], inplace=True)
 
+    # 定义函数来对每个subreddit进行采样
+    def subreddit_sampling(group):
+        return group.sample(n=10, random_state=42)
+
+    # 对每个subreddit进行采样
+    new_df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
+
+    # 重置索引并删除多余的列
+    new_df.reset_index(drop=True, inplace=True)
+    print(new_df)
+
     # 对每个subreddit进行采样
     new_df = pd.DataFrame()  # 创建一个空DataFrame用于存储采样结果
 
