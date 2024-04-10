@@ -113,6 +113,7 @@ def data_filter_for_reddit(df, category_number=50):
 
     # 只保留 DataFrame 中需要的列
     new_df = new_df[['id', 'subreddit', 'caption', 'url', 'also_posted', 'label']]
+    print(new_df)
 
     return new_df
 
