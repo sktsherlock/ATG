@@ -69,22 +69,22 @@ def data_filter_for_reddit(df, category_number=50):
         return group.sample(n=10, random_state=42)
 
     # 对每个subreddit进行采样
-    new_df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
+    df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
 
     # 重置索引并删除多余的列
-    new_df.reset_index(drop=True, inplace=True)
-    print(new_df)
+    df.reset_index(drop=True, inplace=True)
+    print(df)
 
-    # 对每个subreddit进行采样
-    new_df = pd.DataFrame()  # 创建一个空DataFrame用于存储采样结果
-
-    for subreddit in subreddit_to_keep:
-        subreddit_samples = df[df['subreddit'] == subreddit].sample(n=10, random_state=42)
-        new_df = new_df.append(subreddit_samples)
-
-    # 重置索引并删除多余的列
-    new_df.reset_index(drop=True, inplace=True)
-    print(new_df)
+    # # 对每个subreddit进行采样
+    # new_df = pd.DataFrame()  # 创建一个空DataFrame用于存储采样结果
+    #
+    # for subreddit in subreddit_to_keep:
+    #     subreddit_samples = df[df['subreddit'] == subreddit].sample(n=10, random_state=42)
+    #     new_df = new_df.append(subreddit_samples)
+    #
+    # # 重置索引并删除多余的列
+    # new_df.reset_index(drop=True, inplace=True)
+    # print(new_df)
 
 
     hash_set = {}
