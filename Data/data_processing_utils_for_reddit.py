@@ -160,35 +160,28 @@ def download_images(df, output_img_path):
             downloaded_images.add(image_id)
 
     for index, row in df.iterrows():
-        if row['url']:
-            need_deleted = True  # 是否需要删除该商品
-            image_name = '{}.jpg'.format(int(index))  # 图像命名为 '商品id.jpg'
-            image_path = os.path.join(output_img_path, image_name)
+        need_deleted = True  # 是否需要删除该商品
+        # for image_url in row['url']:
+        image_name = '{}.jpg'.format(int(index))  # 图像命名为 '商品id.jpg'
+        image_path = os.path.join(output_img_path, image_name)
 
-            if index in downloaded_images:  # 图像已经下载过，跳过当前循环
-                need_deleted = False
-                continue
+        if index in downloaded_images:  # 图像已经下载过，跳过当前循环
+            need_deleted = False
+            continue
 
-            if not os.path.exists(output_img_path):
-                os.makedirs(output_img_path)
+        if not os.path.exists(output_img_path):
+            os.makedirs(output_img_path)
+        image_data = requests.get(row['url']).content  # 获取图像数据
 
-            try:
-                response = requests.get(row['url'])
-                if response.status_code == 200:  # 确保请求成功
-                    with open(image_path, 'wb') as f:
-                        f.write(response.content)
-                    need_deleted = False  # 不需要删除该商品
-                else:
-                    print('Failed to download image for index {}'.format(int(index)))
-            except requests.exceptions.RequestException as e:
-                print('Error downloading image for index {}: {}'.format(int(index), str(e)))
-
-            if need_deleted:
-                print('No.{} needs to be deleted'.format(int(index)))
-
+        if not image_data.lower() == 'Not Found'.encode('utf-8').lower():  # 图像存在
+            need_deleted = False  # 不需要删除该商品
+            with open(image_path, 'wb') as f:
+                f.write(image_data)
+            continue
+        if need_deleted:
+            print('No.{} need to be deleted'.format(int(index)))
         if (index + 1) % 100 == 0:
-            print('Downloaded {} items\' images, {} in total'.format(index + 1, len(df)))
-
+            print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
     print('Successfully downloaded images')
 
 
