@@ -101,17 +101,17 @@ def download_images(df, output_img_path):
     print('Successfully downloaded images')
 
 
-df = parse_json('/Users/yuzhigang/PycharmProjects/PropertyGraph/data_utils/data/abandoned_2017.json')
+df = parse_json('Reddit/annotations/abandoned_2017.json')
 
-folder_path = ''
-# 获取文件夹内所有文件名
-file_names = os.listdir(folder_path)
-data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
-for file_name in file_names:
-    df = parse_json(file_name)
-    data = data.append(df)
-
-data = data_filter_for_reddit(data)
+# folder_path = ''
+# # 获取文件夹内所有文件名
+# file_names = os.listdir(folder_path)
+# data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
+# for file_name in file_names:
+#     df = parse_json(file_name)
+#     data = data.append(df)
+#
+# data = data_filter_for_reddit(data)
 
 df = data_filter_for_reddit(df)
 
