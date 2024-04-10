@@ -40,7 +40,6 @@ def count_data(df):
     print('Counting data text length...')
     df2 = pd.DataFrame(df)
     df2['text_length'] = df.apply(lambda x: len(x['caption'].split(' ')) if x['caption'] else 0, axis=1)
-    print(df2['text_length'].value_counts())
     print(df2['text_length'].describe())
 
 
@@ -237,7 +236,7 @@ if __name__ == '__main__':
         construct_graph(output_csv_path, output_graph_path)
         # 从本地读取处理后的CSV文件
         if args.download_image:
-            download_images(df, output_img)
+            download_images(data, output_img)
     else:
         print('Check Finished.')
     # df = data_filter_for_reddit(df)
