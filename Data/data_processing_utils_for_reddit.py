@@ -1,7 +1,7 @@
 # 数据处理工具函数
 import json
 import os
-
+import time
 import pandas as pd
 import requests
 
@@ -101,17 +101,29 @@ def download_images(df, output_img_path):
     print('Successfully downloaded images')
 
 
-df = parse_json('Reddit/annotations/abandoned_2017.json')
+# df = parse_json('Reddit/annotations/abandoned_2017.json')
 
-# folder_path = ''
-# # 获取文件夹内所有文件名
-# file_names = os.listdir(folder_path)
-# data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
-# for file_name in file_names:
-#     df = parse_json(file_name)
-#     data = data.append(df)
-#
-# data = data_filter_for_reddit(data)
+folder_path = 'Reddit/annotations/'
+# 获取文件夹内所有文件名
+file_names = os.listdir(folder_path)
+data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
+for file_name in file_names:
+    df = parse_json(file_name)
+    data = data.append(df)
 
-df = data_filter_for_reddit(df)
-print(df)
+# 记录代码开始执行的时间
+start_time = time.time()
+data = data_filter_for_reddit(data)
+# 记录代码执行结束的时间
+end_time = time.time()
+
+# 计算代码执行的时间
+execution_time = end_time - start_time
+
+# 打印代码执行时间
+print("代码执行时间：", execution_time, "秒")
+
+print(data)
+
+# df = data_filter_for_reddit(df)
+# print(df)
