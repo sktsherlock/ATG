@@ -150,18 +150,18 @@ def download_images(df, output_img_path):
     for index, row in df.iterrows():
         if row['url']:
             need_deleted = True  # 是否需要删除该商品
-            for image_url in row['url']:
-                image_name = '{}.jpg'.format(int(index))  # 图像命名为 '商品id.jpg'
-                image_path = os.path.join(output_img_path, image_name)
-                if not os.path.exists(output_img_path):
-                    os.makedirs(output_img_path)
-                image_data = requests.get(image_url).content  # 获取图像数据
+            # for image_url in row['url']:
+            image_name = '{}.jpg'.format(int(index))  # 图像命名为 '商品id.jpg'
+            image_path = os.path.join(output_img_path, image_name)
+            if not os.path.exists(output_img_path):
+                os.makedirs(output_img_path)
+            image_data = requests.get(row['url']).content  # 获取图像数据
 
-                if not image_data.lower() == 'Not Found'.encode('utf-8').lower():  # 图像存在
-                    need_deleted = False  # 不需要删除该商品
-                    with open(image_path, 'wb') as f:
-                        f.write(image_data)
-                    break
+            if not image_data.lower() == 'Not Found'.encode('utf-8').lower():  # 图像存在
+                need_deleted = False  # 不需要删除该商品
+                with open(image_path, 'wb') as f:
+                    f.write(image_data)
+                break
             if need_deleted:
                 print('No.{} need to be deleted'.format(int(index)))
         if (index + 1) % 50 == 0:
