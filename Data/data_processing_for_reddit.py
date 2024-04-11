@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
     if output_csv_path is not None:
         data = pd.read_csv(output_csv_path)
-        data['url'] = data['url'].apply(lambda x: ast.literal_eval(x))
+        # data['url'] = data['url'].apply(lambda x: ast.literal_eval(x))
         if args.download_image:
             download_images(data, output_img)
     else:
