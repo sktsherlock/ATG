@@ -194,7 +194,7 @@ def download_images(df, output_img_path):
             continue
         if need_deleted:
             print('No.{} need to be deleted'.format(int(index)))
-        if (index + 1) % 100 == 0:
+        if (index + 1) % 5 == 0:
             print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
     print('Successfully downloaded images')
 
@@ -223,32 +223,39 @@ if __name__ == '__main__':
     folder_path = args.data_path
     # 获取文件夹内所有文件名
     file_names = os.listdir(folder_path)
-    data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
-    for file_name in tqdm(file_names, desc='Processing Files'):
-        df = parse_json(os.path.join(folder_path, file_name))
-        if df is not None:
-            data = data.append(df)
 
-    data.to_csv(initial_csv_path, sep=',', index=False, header=True)
-
-    # 记录代码开始执行的时间
-    start_time = time.time()
-    data = data_filter_for_reddit(data, class_numbers)
-    # 记录代码执行结束的时间
-    end_time = time.time()
-    # 计算代码执行的时间
-    execution_time = end_time - start_time
-    # 打印代码执行时间
-    print("代码执行时间：", execution_time, "秒")
-    count_data(data)
-
-    if args.save is True:
-        export_as_csv(data, output_csv_path)
-        construct_graph(output_csv_path, output_graph_path)
-        # 从本地读取处理后的CSV文件
+    if output_csv_path is not None:
+        data = pd.read_csv(output_csv_path)
+        data['url'] = data['url'].apply(lambda x: ast.literal_eval(x))
         if args.download_image:
             download_images(data, output_img)
     else:
-        print('Check Finished.')
-    # df = data_filter_for_reddit(df)
-    # print(df)
+        data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
+        for file_name in tqdm(file_names, desc='Processing Files'):
+            df = parse_json(os.path.join(folder_path, file_name))
+            if df is not None:
+                data = data.append(df)
+
+        data.to_csv(initial_csv_path, sep=',', index=False, header=True)
+
+        # 记录代码开始执行的时间
+        start_time = time.time()
+        data = data_filter_for_reddit(data, class_numbers)
+        # 记录代码执行结束的时间
+        end_time = time.time()
+        # 计算代码执行的时间
+        execution_time = end_time - start_time
+        # 打印代码执行时间
+        print("代码执行时间：", execution_time, "秒")
+        count_data(data)
+
+        if args.save is True:
+            export_as_csv(data, output_csv_path)
+            construct_graph(output_csv_path, output_graph_path)
+            # 从本地读取处理后的CSV文件
+            if args.download_image:
+                download_images(data, output_img)
+        else:
+            print('Check Finished.')
+        # df = data_filter_for_reddit(df)
+        # print(df)
