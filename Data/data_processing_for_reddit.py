@@ -194,7 +194,7 @@ def download_images(df, output_img_path):
             continue
         if need_deleted:
             print('No.{} need to be deleted'.format(int(index)))
-        if (index + 1) % 5 == 0:
+        if (index + 1) % 1000 == 0:
             print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
     print('Successfully downloaded images')
 
