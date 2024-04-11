@@ -181,6 +181,8 @@ def download_images(df, output_img_path):
 
         if index in downloaded_images:  # 图像已经下载过，跳过当前循环
             need_deleted = False
+            if (index + 1) % 1000 == 0:
+                print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
             continue
 
         if not os.path.exists(output_img_path):
