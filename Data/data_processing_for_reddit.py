@@ -187,15 +187,16 @@ def download_images(df, output_img_path):
             os.makedirs(output_img_path)
         image_data = requests.get(row['url']).content  # 获取图像数据
 
+
         if not image_data.lower() == 'Not Found'.encode('utf-8').lower():  # 图像存在
             need_deleted = False  # 不需要删除该商品
+            if (index + 1) % 1000 == 0:
+                print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
             with open(image_path, 'wb') as f:
                 f.write(image_data)
             continue
         if need_deleted:
             print('No.{} need to be deleted'.format(int(index)))
-        if (index + 1) % 1000 == 0:
-            print('Downloaded {} items\' images, {} in total'.format(index + 1, total))
     print('Successfully downloaded images')
 
 
