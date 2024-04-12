@@ -228,14 +228,14 @@ if __name__ == '__main__':
     # 获取文件夹内所有文件名
     file_names = os.listdir(folder_path)
 
-    if output_csv_path is not None:
+    if os.path.exists(output_csv_path):
         data = pd.read_csv(output_csv_path)
         # data['url'] = data['url'].apply(lambda x: ast.literal_eval(x))
         if args.download_image:
             download_images(data, output_img)
     else:
         data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
-        if initial_csv_path is not None:
+        if os.path.exists(initial_csv_path):
             data = pd.read_csv(initial_csv_path)
         else:
             for file_name in tqdm(file_names, desc='Processing Files'):
