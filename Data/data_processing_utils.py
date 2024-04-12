@@ -56,7 +56,7 @@ def data_filter(df, category_number=10, sampling=None):
 
     if sampling is not None:
         new_df = df.groupby(df['second_category'].apply(lambda x: x[0]), group_keys=False).apply(subreddit_sampling)
-        new_df.drop_duplicates(inplace=True)
+        # new_df.drop_duplicates(inplace=True)
         # 重置索引并删除多余的列
         new_df.reset_index(drop=True, inplace=True)
         print(new_df)
