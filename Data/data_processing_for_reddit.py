@@ -235,12 +235,15 @@ if __name__ == '__main__':
             download_images(data, output_img)
     else:
         data = pd.DataFrame(None, columns=['image_id', 'subreddit', 'url', 'caption', 'author'])
-        for file_name in tqdm(file_names, desc='Processing Files'):
-            df = parse_json(os.path.join(folder_path, file_name))
-            if df is not None:
-                data = data.append(df)
+        if initial_csv_path is not None:
+            data = pd.read_csv(initial_csv_path)
+        else:
+            for file_name in tqdm(file_names, desc='Processing Files'):
+                df = parse_json(os.path.join(folder_path, file_name))
+                if df is not None:
+                    data = data.append(df)
 
-        data.to_csv(initial_csv_path, sep=',', index=False, header=True)
+            data.to_csv(initial_csv_path, sep=',', index=False, header=True)
 
         # 记录代码开始执行的时间
         start_time = time.time()
