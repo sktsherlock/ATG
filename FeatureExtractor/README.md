@@ -35,6 +35,9 @@ CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Grocery/
 ### Grocery Image Feature
 ```python
 CUDA_VISIBLE_DEVICES=0 python CLIP.py --name Grocery --csv_path /home/aiscuser/ATG/Data/Grocery/Grocery.csv --path /home/aiscuser/ATG/Data/Grocery/GroceryImages/ --feature_path /home/aiscuser/ATG/Data/Grocery/ImageFeature
+python ImageExtract.py --gpu 3 --data_dir Data/Grocery/GroceryImages/ --name Grocery --path Data/Grocery/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518
+python ImageExtract.py --gpu 4 --data_dir Data/Grocery/GroceryImages/ --name Grocery --path Data/Grocery/ImageFeature/ --batch_size 64 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
+python ImageExtract.py --gpu 5 --data_dir Data/Grocery/GroceryImages/ --name Grocery --path Data/Grocery/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 ```
 
 ## Arts Text Feature
@@ -46,8 +49,10 @@ CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Arts/Arts.
 ```
 ### Arts Image Feature
 ```python
-CUDA_VISIBLE_DEVICES=1 python CLIP.py --name Arts --csv_path /home/aiscuser/ATG/Data/Arts/Arts.csv --path /home/aiscuser/ATG/Data/Arts/ArtsImages/ --feature_path 
-/home/aiscuser/ATG/Data/Arts/ImageFeature
+CUDA_VISIBLE_DEVICES=1 python CLIP.py --name Arts --csv_path /home/aiscuser/ATG/Data/Arts/Arts.csv --path /home/aiscuser/ATG/Data/Arts/ArtsImages/ --feature_path /home/aiscuser/ATG/Data/Arts/ImageFeature
+CUDA_VISIBLE_DEVICES=4 python ImageExtract.py  --data_dir Data/Arts/ArtsImages/ --name Arts --path Data/Arts/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518
+CUDA_VISIBLE_DEVICES=5 python ImageExtract.py --data_dir Data/Arts/ArtsImages/ --name Arts --path Data/Arts/ImageFeature/ --batch_size 128 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
+CUDA_VISIBLE_DEVICES=6 python ImageExtract.py --data_dir Data/Arts/ArtsImages/ --name Arts --path Data/Arts/ImageFeature/ --batch_size 256 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 ```
 
 ## Movies 

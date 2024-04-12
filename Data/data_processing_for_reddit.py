@@ -46,7 +46,7 @@ def count_data(df):
 
 
 # 数据过滤
-def data_filter_for_reddit(df, category_number=50):
+def data_filter_for_reddit(df, category_number=50, sampling=15000):
     # 过滤含有缺失数据和重复的记录
     df = df.drop_duplicates(subset=['image_id'])
     df = df.dropna()
@@ -66,7 +66,7 @@ def data_filter_for_reddit(df, category_number=50):
 
     # 定义函数来对每个subreddit进行采样
     def subreddit_sampling(group):
-        return group.sample(n=15000, random_state=42)
+        return group.sample(n=sampling, random_state=42)
 
     # 对每个subreddit进行采样
     new_df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
@@ -207,6 +207,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
     parser.add_argument('--class_numbers', type=int, help='Dataset class numbers', required=True)
+    parser.add_argument('--sampling', type=int, help='Dataset class numbers', default=15000)
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
     parser.add_argument('--save', action="store_true", help="is saving or not")
     args = parser.parse_args()
@@ -243,7 +244,7 @@ if __name__ == '__main__':
 
         # 记录代码开始执行的时间
         start_time = time.time()
-        data = data_filter_for_reddit(data, class_numbers)
+        data = data_filter_for_reddit(data, class_numbers, args.sampling)
         # 记录代码执行结束的时间
         end_time = time.time()
         # 计算代码执行的时间
