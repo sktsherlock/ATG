@@ -36,4 +36,5 @@ wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_
 gunzip meta_Grocery_and_Gourmet_Food.json.gz
 cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Grocery/meta_Grocery_and_Gourmet_Food.json' --name 'Grocery' --class_numbers 20 --save --download_image
+python data_processing_utils.py --data_path 'Grocery/meta_Grocery_and_Gourmet_Food.json' --name 'Grocery' --class_numbers 20 --save --download_image --sampling 2000
 ``` 

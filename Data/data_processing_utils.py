@@ -49,7 +49,10 @@ def data_filter(df, category_number=10, sampling=None):
     # 进行采样来对数据集进行平衡
 
     def subreddit_sampling(group):
-        return group.sample(n=sampling, random_state=42)
+        if len(group) > sampling:
+            return group.sample(n=sampling, random_state=42)
+        else:
+            return group
 
     if sampling is not None:
         new_df = df.groupby('second_category', group_keys=False).apply(subreddit_sampling)
