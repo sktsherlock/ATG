@@ -59,6 +59,7 @@ def data_filter(df, category_number=10, sampling=None):
         new_df.drop_duplicates(inplace=True)
         # 重置索引并删除多余的列
         new_df.reset_index(drop=True, inplace=True)
+        print(new_df)
         df = new_df
 
     # 只保留 description 列表的第一项
