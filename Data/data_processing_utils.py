@@ -22,7 +22,7 @@ def parse_json(data_path):
 
 
 # 数据过滤
-def data_filter(df, category_number=10):
+def data_filter(df, category_number=10, sampling=None):
     # 过滤含有缺失数据和重复的记录
     df = df.drop_duplicates(subset=['asin'])
     df = df.dropna()
@@ -46,6 +46,18 @@ def data_filter(df, category_number=10):
     df.dropna(subset=['second_category'], inplace=True)
 
     print('步骤三****************************************************************')
+    # 进行采样来对数据集进行平衡
+
+    def subreddit_sampling(group):
+        return group.sample(n=sampling, random_state=42)
+
+    if sampling is not None:
+        new_df = df.groupby('second_category', group_keys=False).apply(subreddit_sampling)
+        new_df.drop_duplicates(inplace=True)
+        # 重置索引并删除多余的列
+        new_df.reset_index(drop=True, inplace=True)
+        df = new_df
+
     # 只保留 description 列表的第一项
     df['description'] = df['description'].apply(lambda x: x[0] if x else None)
 
