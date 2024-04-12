@@ -255,6 +255,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
     parser.add_argument('--class_numbers', type=int, help='Dataset class numbers', required=True)
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
+    parser.add_argument('--sampling', type=int, help='Dataset class numbers', default=None)
     parser.add_argument('--save', action="store_true", help="is saving or not")
     args = parser.parse_args()
 
@@ -269,7 +270,7 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter(parse_json(data_path), category_number=class_numbers)
+    df = data_filter(parse_json(data_path), category_number=class_numbers, sampling=args.sampling)
     count_data(df)
     if args.save is True:
         export_as_csv(df, output_csv_path)
