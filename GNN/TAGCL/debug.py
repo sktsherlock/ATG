@@ -68,8 +68,6 @@ class GCN(torch.nn.Module):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
         x, edge_index, batch = data.x, data.edge_index, data.batch
-        print(data.x)
-        print(data.edge_index)
 
         x = self.conv1(x, edge_index).relu()
         # (num_features -> 20)
@@ -77,7 +75,7 @@ class GCN(torch.nn.Module):
         # (20 -> 20)
         x = self.conv3(x, edge_index).relu()
         # (20 -> 20)
-        x = global_mean_pool(x, batch)
+        x = global_max_pool(x, batch)
         # (node -> graph)
         x = self.linear(x)
         # (20 -> num_classes)
