@@ -38,3 +38,14 @@ cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Grocery/meta_Grocery_and_Gourmet_Food.json' --name 'Grocery' --class_numbers 20 --save --download_image
 python data_processing_utils.py --data_path 'Grocery/meta_Grocery_and_Gourmet_Food.json' --name 'Grocery_5000' --class_numbers 20 --save --download_image --sampling 5000
 ``` 
+
+
+
+```shell 
+mkdir ~/ATG/Data/Toys/
+cd ~/ATG/Data/Toys/
+wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Toys_and_Games.json.gz
+gunzip meta_Toys_and_Games.json.gz
+cd ~/ATG/Data/
+python data_processing_utils.py --data_path 'Toys/meta_Toys_and_Games.json' --name 'Toys' --class_numbers 20  --save --download_image
+``` 

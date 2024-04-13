@@ -40,6 +40,27 @@ python ImageExtract.py --gpu 4 --data_dir Data/Grocery/GroceryImages/ --name Gro
 python ImageExtract.py --gpu 5 --data_dir Data/Grocery/GroceryImages/ --name Grocery --path Data/Grocery/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 ```
 
+## GroceryS Text Feature
+```python
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'  --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'google/gemma-7b' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'  --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --norm True
+```
+### GroceryS Image Feature
+```python
+CUDA_VISIBLE_DEVICES=0 python CLIP.py --name GroceryS --csv_path /home/aiscuser/ATG/Data/GroceryS/GroceryS.csv --path /home/aiscuser/ATG/Data/GroceryS/GrocerySImages/ --feature_path /home/aiscuser/ATG/Data/GroceryS/ImageFeature
+python ImageExtract.py  --data_dir Data/GroceryS/GrocerySImages/ --name GroceryS --path Data/GroceryS/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518
+python ImageExtract.py  --data_dir Data/GroceryS/GrocerySImages/ --name GroceryS --path Data/GroceryS/ImageFeature/ --batch_size 64 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
+python ImageExtract.py  --data_dir Data/GroceryS/GrocerySImages/ --name GroceryS --path Data/GroceryS/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
+```
+
+
+
+
+
+
+
 ## Arts Text Feature
 ```python
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Arts/Arts.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Arts' --path 'Data/Arts/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
@@ -54,6 +75,11 @@ CUDA_VISIBLE_DEVICES=4 python ImageExtract.py  --data_dir Data/Arts/ArtsImages/ 
 CUDA_VISIBLE_DEVICES=5 python ImageExtract.py --data_dir Data/Arts/ArtsImages/ --name Arts --path Data/Arts/ImageFeature/ --batch_size 128 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
 CUDA_VISIBLE_DEVICES=6 python ImageExtract.py --data_dir Data/Arts/ArtsImages/ --name Arts --path Data/Arts/ImageFeature/ --batch_size 256 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 ```
+
+### Reddit Image Feature
+
+
+
 
 ## Movies 
 ```python
