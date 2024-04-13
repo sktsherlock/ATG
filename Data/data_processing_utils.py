@@ -276,7 +276,6 @@ if __name__ == '__main__':
 
     df = data_filter(parse_json(data_path), category_number=class_numbers, sampling=args.sampling)
     count_data(df)
-    construct_graph(output_csv_path, output_graph_path)
     if args.save is True:
         export_as_csv(df, output_csv_path)
         construct_graph(output_csv_path, output_graph_path)
