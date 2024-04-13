@@ -87,7 +87,7 @@ class GCN(torch.nn.Module):
 
 model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
 model = model.to(device)
-model.train()
+
 print(model)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -101,6 +101,7 @@ for epoch in range(args.epochs):
     total_correct = []
     for data in tqdm(trainloader):
         data = data.to(device)
+        model.train()
         # data.shape: (num_nodes, num_features)
         optimizer.zero_grad()
         output = model(data)
