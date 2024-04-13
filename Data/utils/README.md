@@ -47,5 +47,38 @@ cd ~/ATG/Data/Toys/
 wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Toys_and_Games.json.gz
 gunzip meta_Toys_and_Games.json.gz
 cd ~/ATG/Data/
-python data_processing_utils.py --data_path 'Toys/meta_Toys_and_Games.json' --name 'Toys' --class_numbers 20  --save --download_image
+python data_processing_utils.py --data_path 'Toys/meta_Toys_and_Games.json' --name 'Toys' --class_numbers 18 --sampling  5000 --save --download_image
+``` 
+
+
+```shell 直接pass
+mkdir ~/ATG/Data/Sports/
+cd ~/ATG/Data/Sports/
+wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Sports_and_Outdoors.json.gz 
+gunzip meta_Sports_and_Outdoors.json.gz 
+cd ~/ATG/Data/
+python data_processing_utils.py --data_path 'Sports/meta_Sports_and_Outdoors.json' --name 'Sports' --class_numbers 30 --sampling  5000 --save --download_image
+``` 
+
+
+```shell 
+mkdir ~/ATG/Data/Home/
+cd ~/ATG/Data/Home/
+wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Home_and_Kitchen.json.gz 
+gunzip meta_Home_and_Kitchen.json.gz 
+cd ~/ATG/Data/
+python data_processing_utils.py --data_path 'Home/meta_Home_and_Kitchen.json' --name 'Home' --class_numbers 20 --sampling  5000 --save --download_image
+python data_processing_utils_for_books.py --data_path 'Home/meta_Home_and_Kitchen.json'  --name 'Kitchen' --class_numbers 20 --second_category "Kitchen" 
+``` 
+
+
+```shell 
+mkdir ~/ATG/Data/Office/
+cd ~/ATG/Data/Office/
+wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Office_Products.json.gz 
+gunzip meta_Office_Products.json.gz 
+cd ~/ATG/Data/
+python data_processing_utils.py --data_path 'Office/meta_Office_Products.json' --name 'Office' --class_numbers 20 --sampling  5000 --save --download_image
+
+
 ``` 

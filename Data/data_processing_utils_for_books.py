@@ -9,7 +9,7 @@ from data_processing_utils import construct_graph, export_as_csv, parse_json, do
 
 
 # 数据过滤
-def data_filter_for_books(df, category, category_numbers=10):
+def data_filter_for_books(df, category, category_numbers=10, sampling=None):
     # 过滤含有缺失数据和重复的记录
     df = df.drop_duplicates(subset=['asin'])
     df = df.dropna()
@@ -37,6 +37,24 @@ def data_filter_for_books(df, category, category_numbers=10):
     df['third_category'] = df['third_category'].apply(lambda x: x if x in categories_to_keep else None)
     df.dropna(subset=['third_category'], inplace=True)
     print('步骤三****************************************************************')
+    # 进行采样来对数据集进行平衡
+    def subreddit_sampling(group):
+        if len(group) > sampling:
+            return group.sample(n=sampling, random_state=42)
+        else:
+            return group
+
+    if sampling is not None:
+        new_df = df.groupby(df['third_category'].apply(lambda x: x[0]), group_keys=False).apply(subreddit_sampling)
+        # new_df.drop_duplicates(inplace=True)
+        # 重置索引并删除多余的列
+        new_df.reset_index(drop=True, inplace=True)
+        print(new_df)
+        df = new_df
+
+
+
+
     # 只保留 description 列表的第一项
     df['description'] = df['description'].apply(lambda x: x[0] if x else None)
 
@@ -128,6 +146,7 @@ if __name__ == '__main__':
     parser.add_argument('--class_numbers', type=int, help='Dataset class threshold', required=True)
     parser.add_argument('--second_category', type=str, default='Computer')
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
+    parser.add_argument('--sampling', type=int, help='Dataset class numbers', default=None)
     parser.add_argument('--save', action="store_true", help="is saving or not")
     args = parser.parse_args()
 
@@ -143,7 +162,7 @@ if __name__ == '__main__':
     output_img_path = f'./{name}/{name}Images'
     output_graph_path = f'./{name}/{name}Graph.pt'
 
-    df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers)
+    df = data_filter_for_books(parse_json(data_path), args.second_category,  category_numbers=class_numbers, sampling=args.sampling)
     count_data(df, True)
     if args.save is True:
         export_as_csv(df, output_csv_path)

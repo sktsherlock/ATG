@@ -55,7 +55,10 @@ python ImageExtract.py  --data_dir Data/GroceryS/GrocerySImages/ --name GroceryS
 python ImageExtract.py  --data_dir Data/GroceryS/GrocerySImages/ --name GroceryS --path Data/GroceryS/ImageFeature/ --batch_size 1024 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 ```
 
-
+## Toys Text Feature
+```python
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+```
 
 
 
