@@ -61,7 +61,7 @@ python data_processing_utils.py --data_path 'Sports/meta_Sports_and_Outdoors.jso
 ``` 
 
 
-```shell 
+```shell 用不了kitchen 效果太好
 mkdir ~/ATG/Data/Home/
 cd ~/ATG/Data/Home/
 wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Home_and_Kitchen.json.gz 
@@ -69,16 +69,15 @@ gunzip meta_Home_and_Kitchen.json.gz
 cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Home/meta_Home_and_Kitchen.json' --name 'Home' --class_numbers 20 --sampling  5000 --save --download_image
 python data_processing_utils_for_books.py --data_path 'Home/meta_Home_and_Kitchen.json'  --name 'Kitchen' --class_numbers 20 --second_category "Kitchen" 
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Kitchen/Kitchen.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Kitchen' --path 'Data/Kitchen/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 ``` 
 
 
-```shell 
+```shell  放弃
 mkdir ~/ATG/Data/Office/
 cd ~/ATG/Data/Office/
 wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Office_Products.json.gz 
 gunzip meta_Office_Products.json.gz 
 cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Office/meta_Office_Products.json' --name 'Office' --class_numbers 20 --sampling  5000 --save --download_image
-
-
 ``` 
