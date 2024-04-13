@@ -73,7 +73,7 @@ class GCN(torch.nn.Module):
         # (num_features -> 20)
         x = self.conv2(x, edge_index).relu()
         # (20 -> 20)
-        x = self.conv3(x, edge_index).relu()
+        x = self.conv3(x, edge_index)
         # (20 -> 20)
         x = global_max_pool(x, batch)
         # (node -> graph)
