@@ -75,7 +75,7 @@ class GCN(torch.nn.Module):
         # (20 -> 20)
         x = self.conv3(x, edge_index).relu()
         # (20 -> 20)
-        x = global_max_pool(x, batch)
+        x = global_mean_pool(x, batch)
         # (node -> graph)
         x = self.linear(x)
         # (20 -> num_classes)
