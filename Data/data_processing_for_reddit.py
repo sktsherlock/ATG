@@ -56,6 +56,8 @@ def data_filter_for_reddit(df, category_number=50, sampling=15000):
 
     # 删除 url为空的行
     df.dropna(subset=['url'], inplace=True)
+    # 删除url 包含imgur的行
+    df = df[~df['url'].str.contains('imgur')]
 
     # 选择类别数最多的几个帖子
     subreddit_counts = df['subreddit'].value_counts()
@@ -73,9 +75,6 @@ def data_filter_for_reddit(df, category_number=50, sampling=15000):
     new_df.drop_duplicates(inplace=True)
     # 重置索引并删除多余的列
     new_df.reset_index(drop=True, inplace=True)
-
-
-
 
 
     hash_set = {}

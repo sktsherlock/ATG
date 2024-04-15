@@ -58,8 +58,14 @@ python ImageExtract.py  --data_dir Data/GroceryS/GrocerySImages/ --name GroceryS
 ## Toys Text Feature
 ```python
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'google/gemma-7b' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True 
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --fp16 True --norm True
 ```
-
+CUDA_VISIBLE_DEVICES=0 python CLIP.py --name Toys --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --path /home/aiscuser/ATG/Data/Toys/ToysImages/ --feature_path /home/aiscuser/ATG/Data/Toys/ImageFeature
+CUDA_VISIBLE_DEVICES=0  python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518
+python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 64 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
+python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 512 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
 
 
 
