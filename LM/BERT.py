@@ -273,13 +273,13 @@ def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     training_args.output_dir = training_args.output_dir + model_args.model_name_or_path.split('/')[-1].replace("-", "_") + '/' + f't_{data_args.train_ratio}_v_{data_args.val_ratio}_d_{model_args.drop_out}_w_{training_args.warmup_ratio}_lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}_u{model_args.unfreeze_layers}'
-    training_args.evaluation_strategy = 'epoch'
-    training_args.save_strategy = 'epoch'
-    training_args.load_best_model_at_end = True
-    training_args.save_total_limit = None
-    training_args.do_train = True
-    training_args.do_eval = True
-    training_args.do_predict = True
+    # training_args.evaluation_strategy = 'epoch'
+    # training_args.save_strategy = 'epoch'
+    # training_args.load_best_model_at_end = True
+    # training_args.save_total_limit = None
+    # training_args.do_train = True
+    # training_args.do_eval = True
+    # training_args.do_predict = True
 
     send_example_telemetry("run_classification", model_args, data_args)
 
