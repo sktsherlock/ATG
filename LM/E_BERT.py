@@ -3,12 +3,9 @@ import os
 import random
 import sys
 import shutil
-import torch.nn as nn
-import torch.nn.functional as F
 from dataclasses import dataclass, field
 from typing import List, Optional, Union
 
-from ogb.nodeproppred import DglNodePropPredDataset
 import evaluate
 import numpy as np
 from datasets import Value, load_dataset
@@ -260,34 +257,6 @@ def get_label_list(raw_dataset, split="train") -> List[int]:
     return label_list
 
 
-# def split_dataset(nodes_num, train_ratio, val_ratio, data_name=None):
-#     if data_name == 'ogbn-arxiv':
-#         data = DglNodePropPredDataset(name=data_name)
-#         splitted_idx = data.get_idx_split()
-#         train_idx, val_idx, test_idx = (
-#             splitted_idx["train"],
-#             splitted_idx["valid"],
-#             splitted_idx["test"],
-#         )
-#         _, labels = data[0]
-#         labels = labels[:, 0]
-#     else:
-#         np.random.seed(42)
-#         indices = np.random.permutation(nodes_num)
-#
-#         train_size = int(nodes_num * train_ratio)
-#         val_size = int(nodes_num * val_ratio)
-#
-#         train_idx = indices[:train_size]
-#         val_idx = indices[train_size:train_size + val_size]
-#         test_idx = indices[train_size + val_size:]
-#         train_idx = torch.tensor(train_idx)
-#         val_idx = torch.tensor(val_idx)
-#         test_idx = torch.tensor(test_idx)
-#         labels = None
-#
-#     return train_idx, val_idx, test_idx, labels
-
 
 def print_trainable_parameters(model):
     """
@@ -383,10 +352,7 @@ def main():
     train_data = raw_data['train']
     nodes_num = len(raw_data['train'])
 
-    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio)
-
-    # train_ids, val_ids, test_ids, labels = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio,
-    #                                                      data_name=data_args.data_name)
+    train_ids, val_ids, test_ids = split_dataset(nodes_num, data_args.train_ratio, data_args.val_ratio, data_name=data_args.data_name)
     # 根据划分的索引创建划分后的数据集
     train_dataset = train_data.select(train_ids)
     val_dataset = train_data.select(val_ids)
@@ -433,11 +399,15 @@ def main():
     if num_labels <= 1:
         raise ValueError("You need more than one label to do classification.")
 
+
     # Load pretrained model and tokenizer
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
     config = set_peft_config(model_args)
     config.cls_head_bias = model_args.cls_head_bias
+    config.problem_type = "single_label_classification"
+    logger.info("setting problem type to single label classification")
+
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
@@ -450,8 +420,7 @@ def main():
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    # 创建用于分类的模型
-    # 加载PLM 作为Encoder
+
     encoder = AutoModel.from_pretrained(
         model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
@@ -483,6 +452,7 @@ def main():
     else:
         # We will pad later, dynamically at batch creation, to the max sequence length in each batch
         padding = False
+
 
     if data_args.max_seq_length > tokenizer.model_max_length:
         logger.warning(
