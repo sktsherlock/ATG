@@ -422,6 +422,7 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
+    print(encoder)
     peft_encoder = PeftModelForFeatureExtraction(encoder, config)
     peft_encoder.print_trainable_parameters()
 
