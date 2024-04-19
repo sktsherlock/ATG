@@ -7,6 +7,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file Data/Movi
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 20 --text_column 'text' --f16 True --fp16 True
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --norm True
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'google/gemma-7b' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' 
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'meta-llama/Meta-Llama-3-8B' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 ```
 
 ## Photo Text Feature
@@ -57,10 +58,12 @@ python ImageExtract.py  --data_dir Data/GroceryS/GrocerySImages/ --name GroceryS
 
 ## Toys Text Feature 
 ```python
-CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'google/gemma-7b' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True 
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --fp16 True --norm True
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name $datain/llama3-8b/ --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+/scratch/azureml/cr/j/4f81cb2ec77945d89e62c1956f8689a6/cap/data-capability/wd/INPUT_datain/
 ```
 CUDA_VISIBLE_DEVICES=0 python CLIP.py --name Toys --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --path /home/aiscuser/ATG/Data/Toys/ToysImages/ --feature_path /home/aiscuser/ATG/Data/Toys/ImageFeature
 CUDA_VISIBLE_DEVICES=0  python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518
@@ -75,6 +78,7 @@ CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file Data/Reddit/Red
 CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'mistralai/Mistral-7B-v0.1' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 80 --text_column 'text' --fp16 True
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'google/gemma-7b' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 80 --text_column 'text' --fp16 True 
 CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 500 --text_column 'text' --fp16 True --norm True
+CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name $datain/llama3-8b/ --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 ```
 CUDA_VISIBLE_DEVICES=0 python CLIP.py --name Reddit --csv_path /home/aiscuser/ATG/Data/Reddit/Reddit.csv --path /home/aiscuser/ATG/Data/Reddit/RedditImages/ --feature_path /home/aiscuser/ATG/Data/Reddit/ImageFeature
 CUDA_VISIBLE_DEVICES=0  python ImageExtract.py  --data_dir Data/Reddit/RedditImages/ --name Reddit --path Data/Reddit/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518

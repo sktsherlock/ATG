@@ -33,9 +33,11 @@ from Task import CLSClassifier, MEANClassifier
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
 
-check_min_version("4.35.0")
+# Will error if the minimal version of Transformers is not installed. Remove at your own risks.
+check_min_version("4.39.0")
 
 require_version("datasets>=1.8.0", "To fix: pip install -r examples/pytorch/text-classification/requirements.txt")
+
 
 logger = logging.getLogger(__name__)
 
@@ -150,8 +152,7 @@ class ModelArguments:
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
     """
     model_name_or_path: str = field(
-        default='prajjwal1/bert-tiny',
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        default='prajjwal1/bert-tiny', metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
@@ -214,27 +215,27 @@ class ModelArguments:
         default=True,
         metadata={"help": "Whether to add bias for classifier head."}
     )
-    peft_type: str = field(
-        default="LORA",
-        metadata={"help": "Which PEFT model to be used."},
-    )
-    lora_rank: int = field(
-        default=8,
-        metadata={"help": "The rank of LoRA."},
-    )
-    lora_train_bias: str = field(
-        default="none",
-        metadata={"help": "Whether to train bias, choices: none, lora_only and all."},
-    )
-    lora_dropout: float = field(default=0.0, metadata={"help": "Lora dropout"})
-    lora_alpha: int = field(default=8, metadata={"help": "Lora alpha"})
-    lora_target_modules: Optional[Union[List[str], str]] = field(
-        default=None,
-        metadata={
-            "help": "List of module names or regex expression of the module names to replace with Lora."
-                    "For example, ['q', 'v'] or '.*decoder.*(SelfAttention|EncDecAttention).*(q|v)$' "
-        },
-    )
+    # peft_type: str = field(
+    #     default="LORA",
+    #     metadata={"help": "Which PEFT model to be used."},
+    # )
+    # lora_rank: int = field(
+    #     default=8,
+    #     metadata={"help": "The rank of LoRA."},
+    # )
+    # lora_train_bias: str = field(
+    #     default="none",
+    #     metadata={"help": "Whether to train bias, choices: none, lora_only and all."},
+    # )
+    # lora_dropout: float = field(default=0.0, metadata={"help": "Lora dropout"})
+    # lora_alpha: int = field(default=8, metadata={"help": "Lora alpha"})
+    # lora_target_modules: Optional[Union[List[str], str]] = field(
+    #     default=None,
+    #     metadata={
+    #         "help": "List of module names or regex expression of the module names to replace with Lora."
+    #                 "For example, ['q', 'v'] or '.*decoder.*(SelfAttention|EncDecAttention).*(q|v)$' "
+    #     },
+    # )
 
 
 
