@@ -277,9 +277,9 @@ def main():
     training_args.save_strategy = 'epoch'
     training_args.load_best_model_at_end = True
     training_args.save_total_limit = None
-    training_args.do_train = True
-    training_args.do_eval = True
-    training_args.do_predict = True
+    training_args.do_train = False
+    training_args.do_eval = False
+    training_args.do_predict = False
 
     send_example_telemetry("run_classification", model_args, data_args)
 
