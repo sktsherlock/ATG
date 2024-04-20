@@ -1,11 +1,14 @@
 import argparse
 import torch
+import sys
+import os
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from torch_sparse import SparseTensor
 from torch_geometric.nn import GCNConv
 from ogb.nodeproppred import DglNodePropPredDataset
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from GraphData import Evaluator, split_edge, Logger
 import dgl
 import numpy as np
