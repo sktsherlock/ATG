@@ -185,16 +185,18 @@ def main():
     parser.add_argument('--test_ratio', type=float, default=0.08)
     parser.add_argument('--val_ratio', type=float, default=0.02)
     parser.add_argument('--neg_len', type=str, default='2000')
-    parser.add_argument("--feature", type=str, default='/dataintent/local/user/v-yinju/haoyan/Data/Movies/Feature/Movies_Llama_2_13b_hf_256_mean.npy', help="Use LM embedding as feature",)
-    parser.add_argument("--path", type=str, default="/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies/",
+    parser.add_argument("--feature", type=str,
+                        default='Data/Reddit/TextFeature/Reddit_Llama_2_7b_hf_100_mean.npy',
+                        help="Use LM embedding as feature", )
+    parser.add_argument("--path", type=str, default="Data/LinkPrediction/Reddit/",
                         help="Path to save splitting")
-    parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt",
+    parser.add_argument("--graph_path", type=str,
+                        default="Data/Reddit/RedditGraph.pt",
                         help="Path to load the graph")
     args = parser.parse_args()
     wandb.config = args
     wandb.init(config=args, reinit=True)
     print(args)
-
 
     if not os.path.exists(f'{args.path}{args.neg_len}/'):
         os.makedirs(f'{args.path}{args.neg_len}/')
@@ -208,27 +210,19 @@ def main():
     else:
         graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
 
-
     edge_split = split_edge(graph, test_ratio=0.08, val_ratio=0.02, path=args.path, neg_len=args.neg_len)
 
     x = torch.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
 
-
     edge_index = edge_split['train']['edge'].t()
     adj_t = SparseTensor.from_edge_index(edge_index).t()
+    print('The first adj_ t is: {}'.format(adj_t))
     adj_t = adj_t.to_symmetric().to(device)
+    print('The second adj_t is:{}'.format(adj_t))
 
-
-    if args.gnn_model == 'SAGE':
-        model = SAGE(x.size(1), args.hidden_channels,
-                     args.hidden_channels, args.num_layers,
-                     args.dropout).to(device)
-    elif args.gnn_model == 'GCN':
-        model = GCN(x.size(1), args.hidden_channels,
-                    args.hidden_channels, args.num_layers,
-                    args.dropout).to(device)
-    else:
-        raise ValueError('Not implemented')
+    model = GCN(x.size(1), args.hidden_channels,
+                args.hidden_channels, args.num_layers,
+                args.dropout).to(device)
 
     predictor = LinkPredictor(args.hidden_channels, args.hidden_channels, 1,
                               args.num_layers, args.dropout).to(device)
