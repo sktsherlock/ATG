@@ -122,7 +122,7 @@ def main():
         set_seed(args.seed + run)
         # Model implementation
         GNN = gen_model(args, device, n_classes)
-        Fusion = gen_fusion(args, device)
+        Fusion = gen_fusion(args, device, Text_feature.shape[1], Visual_feature.shape[1])
 
         # MAGNN implementation
         Model = MAGNN(Fusion, GNN)

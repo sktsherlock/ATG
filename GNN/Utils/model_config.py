@@ -173,13 +173,13 @@ def gen_model(args, device, n_classes):
     return model
 
 
-def gen_fusion(args, device):
+def gen_fusion(args, device, t_dim, v_dim):
     if args.fusion_name == 'TF':
         fusion = TensorFusion()
     elif args.fusion_name == 'LRTF':
         fusion = LowRankTensorFusion(args.input_dims, args.output_dim, args.rank).to(device)
     elif args.fusion_name == 'ConcatWithLinear':
-        fusion = ConcatWithLinear(args.input_dims, args.output_dim).to(device)
+        fusion = ConcatWithLinear(t_dim + v_dim, args.output_dim).to(device)
     else:
         raise ValueError('Fusion must be in the implementrary.')
     return fusion
