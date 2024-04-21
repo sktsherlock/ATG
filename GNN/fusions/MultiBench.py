@@ -75,6 +75,10 @@ class ConcatWithLinear(nn.Module):
         self.concat_dim = concat_dim
         self.fc = nn.Linear(input_dim, output_dim)
 
+    def reset_parameters(self):
+        """Reset the parameters of the TensorFusion module."""
+        self.fc.reset_parameters()
+
     def forward(self, modalities):
         """
         Forward Pass of Stack.

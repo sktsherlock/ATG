@@ -178,6 +178,8 @@ def gen_fusion(args, device):
         fusion = TensorFusion()
     elif args.fusion_name == 'LRTF':
         fusion = LowRankTensorFusion(args.input_dims, args.output_dim, args.rank).to(device)
+    elif args.fusion_name == 'ConcatWithLinear':
+        fusion = ConcatWithLinear(args.input_dims, args.output_dim).to(device)
     else:
         raise ValueError('Fusion must be in the implementrary.')
     return fusion
