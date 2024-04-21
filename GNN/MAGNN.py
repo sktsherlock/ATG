@@ -22,6 +22,11 @@ class MAGNN(nn.Module):
         self.early_fusion = early_fusion
         self.gnn = gnn
 
+    def reset_parameters(self):
+        self.gnn.reset_parameters()
+
+        self.early_fusion.reset_parameters()
+
     def forward(self, graph, text_feature, visual_feature):
         feat = self.early_fusion(text_feature, visual_feature)
         h = self.gnn(graph, feat)
