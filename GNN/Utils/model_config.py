@@ -161,7 +161,7 @@ def add_appnp_args(argparser):
 
 
 def gen_model(args, device):
-    if args.model_name is 'GCN':
+    if args.model_name == 'GCN':
         model = GCN(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
     else:
         raise ValueError('GNN must be in the implementrary.')
@@ -169,9 +169,9 @@ def gen_model(args, device):
 
 
 def gen_fusion(args, device):
-    if args.fusion_name is 'TF':
+    if args.fusion_name == 'TF':
         fusion = TensorFusion()
-    elif args.fusion_name is 'LRTF':
+    elif args.fusion_name == 'LRTF':
         fusion = LowRankTensorFusion(args.input_dims, args.output_dim, args.rank).to(device)
     else:
         raise ValueError('Fusion must be in the implementrary.')
