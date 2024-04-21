@@ -5,6 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fusions.MultiBench import *
 
 
+
 def add_common_args(argparser):
     argparser.add_argument("--gpu", type=int, default=0, help="GPU device ID.")
     argparser.add_argument(
@@ -162,6 +163,7 @@ def add_appnp_args(argparser):
 
 def gen_model(args, device):
     if args.model_name == 'GCN':
+        from Library.GCN import GCN
         model = GCN(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
     else:
         raise ValueError('GNN must be in the implementrary.')
