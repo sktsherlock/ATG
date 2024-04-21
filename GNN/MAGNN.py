@@ -116,7 +116,7 @@ def main():
     for run in range(args.n_runs):
         set_seed(args.seed + run)
         # Model implementation
-        GNN = gen_model(args, device)
+        GNN = gen_model(args, device, n_classes)
         Fusion = gen_fusion(args, device)
 
         # MAGNN implementation

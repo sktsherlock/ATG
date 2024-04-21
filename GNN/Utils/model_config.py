@@ -161,7 +161,7 @@ def add_appnp_args(argparser):
     )
 
 
-def gen_model(args, device):
+def gen_model(args, device, n_classes):
     if args.model_name == 'GCN':
         from Library.GCN import GCN
         model = GCN(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
