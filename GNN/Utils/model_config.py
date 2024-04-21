@@ -165,6 +165,9 @@ def gen_model(args, device, n_classes):
     if args.model_name == 'GCN':
         from Library.GCN import GCN
         model = GCN(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
+    elif args.model_name == 'SAGE':
+        from Library.GraphSAGE import GraphSAGE
+        model = GraphSAGE(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout, aggregator_type=args.aggregator).to(device)
     else:
         raise ValueError('GNN must be in the implementrary.')
     return model

@@ -15,6 +15,7 @@ from GraphData import load_data, set_seed
 from NodeClassification import classification
 from Utils.model_config import add_common_args
 
+
 class GraphSAGE(nn.Module):
     def __init__(self,
                  in_feats,
