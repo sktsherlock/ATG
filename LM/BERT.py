@@ -539,12 +539,10 @@ def main():
 
     if data_args.metric_name is not None:
         if data_args.metric_name == 'f1':
-            print('Metric is f1 macro')
             metric = (evaluate.load(data_args.metric_name, average='macro'))
         else:
             metric = (evaluate.load(data_args.metric_name))
         logger.info(f"Using metric {data_args.metric_name} for evaluation.")
-        logger.info(f'Using the {metric}')
     else:
         metric = evaluate.load("accuracy")
         logger.info("Using accuracy as classification score, you can use --metric_name to overwrite.")
@@ -552,7 +550,7 @@ def main():
     def compute_metrics(p: EvalPrediction):
         preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
         preds = np.argmax(preds, axis=1)
-        result = metric.compute(predictions=preds, references=p.label_ids)
+        result = metric.compute(predictions=preds, references=p.label_ids, average='macro') if data_args.metric_name == 'f1' else metric.compute(predictions=preds, references=p.label_ids)
         if len(result) > 1:
             result["combined_score"] = np.mean(list(result.values())).item()
         return result
