@@ -12,6 +12,12 @@ class Concat(nn.Module):
         """Initialize Concat Module."""
         super(Concat, self).__init__()
 
+
+    def reset_parameters(self):
+        """Reset the parameters of the TensorFusion module."""
+        pass
+
+
     def forward(self, modalities):
         """
         Forward Pass of Concat.

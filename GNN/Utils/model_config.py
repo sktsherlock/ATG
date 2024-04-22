@@ -180,6 +180,8 @@ def gen_fusion(args, device, t_dim, v_dim):
         fusion = LowRankTensorFusion(args.input_dims, args.output_dim, args.rank).to(device)
     elif args.fusion_name == 'ConcatWithLinear':
         fusion = ConcatWithLinear(t_dim + v_dim, args.output_dim).to(device)
+    elif args.fusion_name == 'Concat':
+        fusion = Concat()
     else:
         raise ValueError('Fusion must be in the implementrary.')
     return fusion
