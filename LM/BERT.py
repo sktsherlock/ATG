@@ -543,6 +543,7 @@ def main():
         else:
             metric = (evaluate.load(data_args.metric_name))
         logger.info(f"Using metric {data_args.metric_name} for evaluation.")
+        logger.info(f'Using the {metric}')
     else:
         metric = evaluate.load("accuracy")
         logger.info("Using accuracy as classification score, you can use --metric_name to overwrite.")
