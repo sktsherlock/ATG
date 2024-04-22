@@ -111,8 +111,15 @@ def classification(
     print("*" * 50)
     print(f"Best val  {args.metric}: {best_val_result}, Final test  {args.metric}: {final_test_result}")
     print("*" * 50)
+    # 加载模型并进行推理得到完整的predictions
+    load_model = th.load(os.path.join(save_path, "model.pt"))
+    load_model.eval()
+    with th.no_grad():
+        pred = load_model(graph, feat)
+    print('The prediction files is maked.')
 
-    return best_val_result, final_test_result
+
+    return best_val_result, final_test_result, pred
 
 
 def mag_train(model, graph, text_feat, visual_feat, labels, train_idx, optimizer, label_smoothing):
