@@ -61,6 +61,9 @@ def add_common_args(argparser):
         "--data_name", type=str, default=None, help="The dataset name.",
     )
     argparser.add_argument(
+        "--exp_path", type=str, default=None, help="The dataset name.",
+    )
+    argparser.add_argument(
         "--feature", type=str, default=None, help="Use Unimodal feature embedding as feature",
     )
     argparser.add_argument(

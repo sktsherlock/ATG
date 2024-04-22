@@ -36,7 +36,7 @@ def evaluate(
 
 
 def classification(
-        args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, n_running):
+        args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, n_running, save_path):
     if args.early_stop_patience is not None:
         stopper = EarlyStopping(patience=args.early_stop_patience)
     optimizer = optim.AdamW(
@@ -94,6 +94,7 @@ def classification(
             if val_result > best_val_result:
                 best_val_result = val_result
                 final_test_result = test_result
+                th.save(model, save_path)
 
             if args.early_stop_patience is not None:
                 if stopper.step(val_result):
