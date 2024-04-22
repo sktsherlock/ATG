@@ -19,16 +19,11 @@ parser.add_argument(
     "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
     help="The metric to be used."
 )
-argparser.add_argument(
+parser.add_argument(
     "--average", type=str, default=None, choices=['weighted', 'micro', 'macro', None]
 )
 
-args = parser.parse_args()
 
-# load data
-graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                        val_ratio=args.val_ratio, name=args.data_name,
-                                                        fewshots=args.fewshots)
 
 
 def ensembling(list_logits, c_and_s=False):
@@ -54,6 +49,11 @@ def ensembling(list_logits, c_and_s=False):
 
 def compute():
     args = parser.parse_args()
+
+    # load data
+    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
+                                                            val_ratio=args.val_ratio, name=args.data_name,
+                                                            fewshots=args.fewshots)
     train_acc_list, val_acc_list, test_acc_list = [], [], []
     for seed in range(args.start_seed, args.start_seed + 10):
         list_logits = args.list_logits.split(" ")
