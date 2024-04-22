@@ -1,6 +1,6 @@
 import time
 import wandb
-import numpy as np
+import os
 import torch as th
 import torch.optim as optim
 from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
@@ -94,7 +94,7 @@ def classification(
             if val_result > best_val_result:
                 best_val_result = val_result
                 final_test_result = test_result
-                th.save(model, save_path)
+                th.save(model, os.path.join(save_path, "model.pt"))
 
             if args.early_stop_patience is not None:
                 if stopper.step(val_result):
