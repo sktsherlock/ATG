@@ -156,13 +156,13 @@ def main():
 
     for run in range(args.n_runs):
         set_seed(args.seed + run)
-        save_path = os.path.join(save_path, f'Seed{args.seed}/')
+        exp_seed_path = os.path.join(save_path, f'Seed{args.seed}/')
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         print(f'The save_path now is {save_path}')
         model.reset_parameters()
         val_result, test_result = classification(
-            args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1, save_path
+            args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1, exp_seed_path
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
