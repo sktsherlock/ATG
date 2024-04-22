@@ -538,7 +538,10 @@ def main():
             logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
 
     if data_args.metric_name is not None:
-        metric = (evaluate.load(data_args.metric_name))
+        if data_args.metric_name == 'f1':
+            metric = (evaluate.load(data_args.metric_name, average='macro'))
+        else:
+            metric = (evaluate.load(data_args.metric_name))
         logger.info(f"Using metric {data_args.metric_name} for evaluation.")
     else:
         metric = evaluate.load("accuracy")
