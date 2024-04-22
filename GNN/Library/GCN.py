@@ -159,7 +159,7 @@ def main():
         exp_seed_path = os.path.join(save_path, f'Seed{args.seed + run}/')
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        print(f'The save_path now is {save_path}')
+        print(f'The save_path now is {exp_seed_path}')
         model.reset_parameters()
         val_result, test_result = classification(
             args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1, exp_seed_path
