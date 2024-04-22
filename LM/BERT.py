@@ -539,6 +539,7 @@ def main():
 
     if data_args.metric_name is not None:
         if data_args.metric_name == 'f1':
+            print('Metric is f1 macro')
             metric = (evaluate.load(data_args.metric_name, average='macro'))
         else:
             metric = (evaluate.load(data_args.metric_name))
