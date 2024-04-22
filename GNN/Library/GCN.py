@@ -156,7 +156,7 @@ def main():
 
     for run in range(args.n_runs):
         set_seed(args.seed + run)
-        exp_seed_path = os.path.join(save_path, f'Seed{args.seed}/')
+        exp_seed_path = os.path.join(save_path, f'Seed{args.seed + run}/')
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         print(f'The save_path now is {save_path}')
