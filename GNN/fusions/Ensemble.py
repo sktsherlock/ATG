@@ -1,24 +1,38 @@
 import argparse
-
+import sys
+import os
 import numpy as np
 import torch
 from torch_geometric.nn import CorrectAndSmooth
 from torch_geometric.transforms import ToSparseTensor
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from GraphData import load_data
+from LossFunction import get_metric
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--list_logits", type=str, help="for ensembling")
-parser.add_argument("--dataset", type=str, default="ogbn-arxiv", help="for ensembling")
+parser.add_argument("--graph_path", type=str, default=None, help="The datasets to be implemented.")
 parser.add_argument("--c_and_s", action="store_true", help="correct and smoothing")
 parser.add_argument("--weights", nargs="+", type=float)
-parser.add_argument("--start_seed", type=int, default=0)
+parser.add_argument("--start_seed", type=int, default=42)
+parser.add_argument(
+    "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
+    help="The metric to be used."
+)
+argparser.add_argument(
+    "--average", type=str, default=None, choices=['weighted', 'micro', 'macro', None]
+)
+
 args = parser.parse_args()
+
+# load data
+graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
+                                                        val_ratio=args.val_ratio, name=args.data_name,
+                                                        fewshots=args.fewshots)
 
 
 def ensembling(list_logits, c_and_s=False):
-    data, split_idx, evaluator = load_data_bundle(
-        "ogbn-arxiv", root="../data", tokenizer=None, tokenize=False
-    )
+
     list_logits = [torch.load(logits).cpu() for logits in list_logits]
     weights = np.asarray(args.weights) / sum(args.weights)
     list_logits = [
@@ -29,28 +43,13 @@ def ensembling(list_logits, c_and_s=False):
     if c_and_s:
         y_pred = correct_and_smooth(data, split_idx, y_pred)
 
-    y_pred = y_pred.argmax(dim=-1, keepdim=True)
-    y_true = data.y
-    train_acc = evaluator.eval(
-        {
-            "y_true": y_true[split_idx["train"]],
-            "y_pred": y_pred[split_idx["train"]],
-        }
-    )["acc"]
-    val_acc = evaluator.eval(
-        {
-            "y_true": y_true[split_idx["valid"]],
-            "y_pred": y_pred[split_idx["valid"]],
-        }
-    )["acc"]
-    test_acc = evaluator.eval(
-        {
-            "y_true": y_true[split_idx["test"]],
-            "y_pred": y_pred[split_idx["test"]],
-        }
-    )["acc"]
+    # y_pred = y_pred.argmax(dim=-1, keepdim=True)
+    y_true = labels
+    train_results = get_metric(th.argmax(y_pred[train_idx], dim=1), y_true[train_idx], metric, average=average)
+    valid_results = get_metric(th.argmax(y_pred[val_idx], dim=1), y_true[val_idx], metric, average=average)
+    test_results = get_metric(th.argmax(y_pred[test_idx], dim=1), y_true[test_idx], metric, average=average)
 
-    return train_acc, val_acc, test_acc
+    return train_results, valid_results, test_results
 
 
 def compute():
@@ -63,9 +62,7 @@ def compute():
         train_acc_list.append(train_acc)
         val_acc_list.append(val_acc)
         test_acc_list.append(test_acc)
-        # print("cur train_acc: {:.2f} ± {:.2f}".format(100 * np.mean(train_acc_list), 100 * np.std(train_acc_list)))
-        # print("cur val_acc: {:.2f} ± {:.2f}".format(100 * np.mean(val_acc_list), 100 * np.std(val_acc_list)))
-        # print("cur test_acc: {:.2f} ± {:.2f}".format(100 * np.mean(test_acc_list), 100 * np.std(test_acc_list)))
+
     print(
         "train_acc: {:.2f} ± {:.2f}".format(
             100 * np.mean(train_acc_list), 100 * np.std(train_acc_list)
