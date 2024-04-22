@@ -147,20 +147,18 @@ def main():
 
     # Model implementation
     model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
-    print(model)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
     # 确定所训练的模型保存的地址
     save_path = args.exp_path
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-        print(f"The save path {save_path} have been maked up")
 
     for run in range(args.n_runs):
         set_seed(args.seed + run)
-        save_path = os.path.join(save_path, f'{args.seed}/')
+        save_path = os.path.join(save_path, f'Seed{args.seed}/')
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
         print(f'The save_path now is {save_path}')
         model.reset_parameters()
         val_result, test_result = classification(
