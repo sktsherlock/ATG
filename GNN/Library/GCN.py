@@ -157,8 +157,8 @@ def main():
     for run in range(args.n_runs):
         set_seed(args.seed + run)
         exp_seed_path = os.path.join(save_path, f'Seed{args.seed + run}/')
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        if not os.path.exists(exp_seed_path):
+            os.makedirs(exp_seed_path)
         print(f'The save_path now is {exp_seed_path}')
         model.reset_parameters()
         val_result, test_result = classification(
