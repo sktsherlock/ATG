@@ -49,11 +49,11 @@ def ensembling(text_feature_path, image_feature_path, args, labels, train_idx, v
     # if c_and_s:
     #     y_pred = correct_and_smooth(data, split_idx, y_pred)
 
-    # y_pred = y_pred.argmax(dim=-1, keepdim=True)
+    y_pred = y_pred.argmax(dim=-1, keepdim=True)
     y_true = labels
-    train_results = get_metric(torch.argmax(y_pred[train_idx], dim=1), y_true[train_idx], metric, average=average)
-    valid_results = get_metric(torch.argmax(y_pred[val_idx], dim=1), y_true[val_idx], metric, average=average)
-    test_results = get_metric(torch.argmax(y_pred[test_idx], dim=1), y_true[test_idx], metric, average=average)
+    train_results = get_metric(y_pred[train_idx], y_true[train_idx], metric, average=average)
+    valid_results = get_metric(y_pred[val_idx], y_true[val_idx], metric, average=average)
+    test_results = get_metric(y_pred[test_idx], y_true[test_idx], metric, average=average)
 
     return train_results, valid_results, test_results
 
