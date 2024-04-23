@@ -152,7 +152,11 @@ def main():
     )
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
     # 确定所训练的模型保存的地址
-    save_path = args.exp_path
+    parts = args.feature.split("/")
+    data_name = parts[1]
+    feature_type = parts[2]
+    save_path = os.path.join(args.exp_path, f'{data_name}/GCN/{feature_type}/')
+
 
     for run in range(args.n_runs):
         set_seed(args.seed + run)
