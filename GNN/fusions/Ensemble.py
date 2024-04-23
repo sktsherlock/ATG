@@ -25,8 +25,6 @@ parser.add_argument(
     "--average", type=str, default=None, choices=['weighted', 'micro', 'macro', None]
 )
 
-text_logits = args.text_logits + args.metric
-visual_logits = args.visual_logits + args.metric
 
 
 
@@ -50,6 +48,8 @@ def ensembling(text_feature_path, image_feature_path, c_and_s=False):
 
 def compute():
     args = parser.parse_args()
+    text_logits = args.text_logits + args.metric
+    visual_logits = args.visual_logits + args.metric
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
