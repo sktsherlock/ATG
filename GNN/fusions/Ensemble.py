@@ -45,11 +45,12 @@ def ensembling(text_feature_path, image_feature_path, args, labels, train_idx, v
     text_feature_pred = np.load(text_feature_path)
     image_feature_pred = np.load(image_feature_path)
     y_pred = (args.text_feature_weight * text_feature_pred + args.image_feature_weight * image_feature_pred) / (args.text_feature_weight + args.image_feature_weight)
-
+    print(y_pred.shape)
     # if c_and_s:
     #     y_pred = correct_and_smooth(data, split_idx, y_pred)
 
-    y_pred = y_pred.argmax(dim=-1, keepdim=True)
+    y_pred = np.argmax(y_pred, axis=-1)
+    print(y_pred.shape)
     y_true = labels
     train_results = get_metric(y_pred[train_idx], y_true[train_idx], metric, average=average)
     valid_results = get_metric(y_pred[val_idx], y_true[val_idx], metric, average=average)
