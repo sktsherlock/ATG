@@ -10,10 +10,12 @@ from GraphData import load_data
 from LossFunction import get_metric
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--list_logits", type=str, help="for ensembling")
+parser.add_argument("--text_logits", type=str, default='Exp/Transductive/Movies/GCN/TextFeature/', help="The logits generated from the text feature for ensembling")
+parser.add_argument("--visual_logits", type=str, default='Exp/Transductive/Movies/GCN/ImageFeature/', help="The logits generated from the visual feature for ensembling")
 parser.add_argument("--graph_path", type=str, default=None, help="The datasets to be implemented.")
 parser.add_argument("--c_and_s", action="store_true", help="correct and smoothing")
-parser.add_argument("--weights", nargs="+", type=float)
+parser.add_argument("--text_feature_weight", default=1.0, type=float)
+parser.add_argument("--image_feature_weight", default=1.0, type=float)
 parser.add_argument("--start_seed", type=int, default=42)
 parser.add_argument(
     "--metric", type=str, default='accuracy', choices=['accuracy', 'precision', 'recall', 'f1'],
@@ -23,20 +25,19 @@ parser.add_argument(
     "--average", type=str, default=None, choices=['weighted', 'micro', 'macro', None]
 )
 
+text_logits = args.text_logits + args.metric
+visual_logits = args.visual_logits + args.metric
 
 
 
-def ensembling(list_logits, c_and_s=False):
+def ensembling(text_feature_path, image_feature_path, c_and_s=False):
+    # 加载预测文件
+    text_feature_pred = np.load(text_feature_path)
+    image_feature_pred = np.load(image_feature_path)
+    y_pred = (text_feature_weight * text_feature_pred + image_feature_weight * image_feature_pred) / (text_feature_weight + image_feature_weight)
 
-    list_logits = [torch.load(logits).cpu() for logits in list_logits]
-    weights = np.asarray(args.weights) / sum(args.weights)
-    list_logits = [
-        logits.softmax(dim=-1) * weight for logits, weight in zip(list_logits, weights)
-    ]
-    y_pred = sum(list_logits) / len(list_logits)
-
-    if c_and_s:
-        y_pred = correct_and_smooth(data, split_idx, y_pred)
+    # if c_and_s:
+    #     y_pred = correct_and_smooth(data, split_idx, y_pred)
 
     # y_pred = y_pred.argmax(dim=-1, keepdim=True)
     y_true = labels
@@ -56,9 +57,9 @@ def compute():
                                                             fewshots=args.fewshots)
     train_acc_list, val_acc_list, test_acc_list = [], [], []
     for seed in range(args.start_seed, args.start_seed + 10):
-        list_logits = args.list_logits.split(" ")
-        list_logits = [logits + f"/logits_seed{seed}.pt" for logits in list_logits]
-        train_acc, val_acc, test_acc = ensembling(list_logits, c_and_s=args.c_and_s)
+        text_feature_path = f'{text_logits}/Seed{seed}.npy'
+        image_feature_path = f'{visual_logits}/Seed{seed}.npy'
+        train_acc, val_acc, test_acc = ensembling(text_feature_path, image_feature_path, c_and_s=args.c_and_s)
         train_acc_list.append(train_acc)
         val_acc_list.append(val_acc)
         test_acc_list.append(test_acc)
