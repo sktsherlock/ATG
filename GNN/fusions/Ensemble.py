@@ -61,7 +61,7 @@ def compute():
     # visual_logits = args.visual_logits + args.metric
 
     root_dir = os.path.dirname(os.path.abspath(__file__))
-    base_dir = os.path.dirname(root_dir.rstrip('/'))
+    base_dir = os.path.dirname(os.path.dirname(root_dir.rstrip('/')))
     text_logits = os.path.join(base_dir, args.text_logits, args.metric)
     visual_logits = os.path.join(base_dir, args.visual_logits, args.metric)
 
