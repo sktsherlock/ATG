@@ -41,7 +41,7 @@ def ensembling(text_feature_path, image_feature_path, args, c_and_s=False):
     # 加载预测文件
     text_feature_pred = np.load(text_feature_path)
     image_feature_pred = np.load(image_feature_path)
-    y_pred = (args.text_feature_weight * text_feature_pred + args.image_feature_weight * image_feature_pred) / (text_feature_weight + image_feature_weight)
+    y_pred = (args.text_feature_weight * text_feature_pred + args.image_feature_weight * image_feature_pred) / (args.text_feature_weight + args.image_feature_weight)
 
     # if c_and_s:
     #     y_pred = correct_and_smooth(data, split_idx, y_pred)
