@@ -18,6 +18,9 @@ parser.add_argument("--text_feature_weight", default=1.0, type=float)
 parser.add_argument("--image_feature_weight", default=1.0, type=float)
 parser.add_argument("--start_seed", type=int, default=42)
 parser.add_argument(
+    "--fewshots", type=int, default=None, help="fewshots values"
+)
+parser.add_argument(
     "--data_name", type=str, default=None, help="The dataset name.",
 )
 parser.add_argument(
