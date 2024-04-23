@@ -104,9 +104,9 @@ def cross_entropy(x, target, label_smoothing=0.0):
     return th.mean(y)
 
 
-def get_metric(y_true, y_pred, metric, average=None):
+def get_metric(y_pred, y_true,  metric, average=None):
+    y_pred = y_pred.cpu() if isinstance(y_pred, torch.Tensor) else y_pred
     y_true = y_true.cpu()
-    y_pred = y_pred.cpu()
     if metric == "accuracy":
         return accuracy_score(y_true, y_pred)
     elif metric == "precision":
