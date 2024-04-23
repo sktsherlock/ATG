@@ -51,9 +51,9 @@ def ensembling(text_feature_path, image_feature_path, args, labels, c_and_s=Fals
 
     # y_pred = y_pred.argmax(dim=-1, keepdim=True)
     y_true = labels
-    train_results = get_metric(th.argmax(y_pred[train_idx], dim=1), y_true[train_idx], metric, average=average)
-    valid_results = get_metric(th.argmax(y_pred[val_idx], dim=1), y_true[val_idx], metric, average=average)
-    test_results = get_metric(th.argmax(y_pred[test_idx], dim=1), y_true[test_idx], metric, average=average)
+    train_results = get_metric(torch.argmax(y_pred[train_idx], dim=1), y_true[train_idx], metric, average=average)
+    valid_results = get_metric(torch.argmax(y_pred[val_idx], dim=1), y_true[val_idx], metric, average=average)
+    test_results = get_metric(torch.argmax(y_pred[test_idx], dim=1), y_true[test_idx], metric, average=average)
 
     return train_results, valid_results, test_results
 
