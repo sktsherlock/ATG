@@ -57,8 +57,13 @@ def ensembling(text_feature_path, image_feature_path, c_and_s=False):
 
 def compute():
     args = parser.parse_args()
-    text_logits = args.text_logits + args.metric
-    visual_logits = args.visual_logits + args.metric
+    # text_logits = args.text_logits + args.metric
+    # visual_logits = args.visual_logits + args.metric
+
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(root_dir.rstrip('/'))
+    text_logits = os.path.join(base_dir, args.text_logits, args.metric)
+    visual_logits = os.path.join(base_dir, args.visual_logits, args.metric)
 
     # load data
     # graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
@@ -66,8 +71,8 @@ def compute():
     #                                                         fewshots=args.fewshots)
     train_acc_list, val_acc_list, test_acc_list = [], [], []
     for seed in range(args.start_seed, args.start_seed + 10):
-        text_feature_path = f'{text_logits}/Seed{seed}.npy'
-        image_feature_path = f'{visual_logits}/Seed{seed}.npy'
+        text_feature_path = f'{text_logits}Seed{seed}.npy'
+        image_feature_path = f'{visual_logits}Seed{seed}.npy'
         train_acc, val_acc, test_acc = ensembling(text_feature_path, image_feature_path, c_and_s=args.c_and_s)
         train_acc_list.append(train_acc)
         val_acc_list.append(val_acc)
