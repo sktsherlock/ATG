@@ -155,7 +155,7 @@ def main():
     parts = args.feature.split("/")
     data_name = parts[1]
     feature_type = parts[2]
-    save_path = os.path.join(args.exp_path, f'{data_name}/GCN/{feature_type}/{args.metric}')
+    save_path = os.path.join(args.exp_path, f'{data_name}/GCN/{feature_type}/{args.metric}/')
 
 
     for run in range(args.n_runs):
