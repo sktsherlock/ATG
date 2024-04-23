@@ -40,7 +40,7 @@ parser.add_argument(
 
 
 
-def ensembling(text_feature_path, image_feature_path, args, labels, train_idx, val_idx, test_idx, metric, c_and_s=False):
+def ensembling(text_feature_path, image_feature_path, args, labels, c_and_s=False):
     # 加载预测文件
     text_feature_pred = np.load(text_feature_path)
     image_feature_pred = np.load(image_feature_path)
@@ -52,9 +52,9 @@ def ensembling(text_feature_path, image_feature_path, args, labels, train_idx, v
     y_pred = np.argmax(y_pred, axis=-1)
     print(y_pred.shape)
     y_true = labels
-    train_results = get_metric(y_pred[train_idx], y_true[train_idx], metric, average=average)
-    valid_results = get_metric(y_pred[val_idx], y_true[val_idx], metric, average=average)
-    test_results = get_metric(y_pred[test_idx], y_true[test_idx], metric, average=average)
+    train_results = get_metric(y_pred[args.train_idx], y_true[args.train_idx], args.metric, average=args.average)
+    valid_results = get_metric(y_pred[args.val_idx], y_true[args.val_idx], args.metric, average=args.average)
+    test_results = get_metric(y_pred[args.test_idx], y_true[args.test_idx], args.metric, average=args.average)
 
     return train_results, valid_results, test_results
 
