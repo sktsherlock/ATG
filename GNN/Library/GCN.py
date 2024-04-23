@@ -172,6 +172,7 @@ def main():
         val_results.append(val_result)
         test_results.append(test_result)
         np.save(os.path.join(exp_seed_path, f"Seed{args.seed + run}.npy"), predictions.cpu())
+        print(f'Success saving predictions in the {exp_seed_path}')
 
     print(f"Runned {args.n_runs} times")
     print(f"Average val {args.metric}: {np.mean(val_results)} ± {np.std(val_results)}")
