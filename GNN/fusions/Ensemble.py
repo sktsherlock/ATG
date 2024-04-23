@@ -67,9 +67,9 @@ def compute():
     base_dir = os.path.dirname(os.path.dirname(root_dir.rstrip('/')))
     text_logits = os.path.join(base_dir, args.text_logits, args.metric)
     visual_logits = os.path.join(base_dir, args.visual_logits, args.metric)
-
+    graph_path = os.path.join(base_dir, args.graph_path)
     # load data
-    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
+    graph, labels, train_idx, val_idx, test_idx = load_data(graph_path, train_ratio=args.train_ratio,
                                                             val_ratio=args.val_ratio, name=args.data_name,
                                                             fewshots=args.fewshots)
     train_acc_list, val_acc_list, test_acc_list = [], [], []
