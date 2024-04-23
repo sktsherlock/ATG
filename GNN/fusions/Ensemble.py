@@ -40,7 +40,7 @@ parser.add_argument(
 
 
 
-def ensembling(text_feature_path, image_feature_path, args, labels, c_and_s=False):
+def ensembling(text_feature_path, image_feature_path, args, labels, train_idx, val_idx, test_idx, c_and_s=False):
     # 加载预测文件
     text_feature_pred = np.load(text_feature_path)
     image_feature_pred = np.load(image_feature_path)
@@ -76,7 +76,7 @@ def compute():
     for seed in range(args.start_seed, args.start_seed + 10):
         text_feature_path = f'{text_logits}/Seed{seed}/Seed{seed}.npy'
         image_feature_path = f'{visual_logits}/Seed{seed}/Seed{seed}.npy'
-        train_acc, val_acc, test_acc = ensembling(text_feature_path, image_feature_path, args, labels, c_and_s=args.c_and_s)
+        train_acc, val_acc, test_acc = ensembling(text_feature_path, image_feature_path, args, labels, train_idx, val_idx, test_idx, c_and_s=args.c_and_s)
         train_acc_list.append(train_acc)
         val_acc_list.append(val_acc)
         test_acc_list.append(test_acc)
