@@ -61,9 +61,9 @@ def compute():
     visual_logits = args.visual_logits + args.metric
 
     # load data
-    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                            val_ratio=args.val_ratio, name=args.data_name,
-                                                            fewshots=args.fewshots)
+    # graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
+    #                                                         val_ratio=args.val_ratio, name=args.data_name,
+    #                                                         fewshots=args.fewshots)
     train_acc_list, val_acc_list, test_acc_list = [], [], []
     for seed in range(args.start_seed, args.start_seed + 10):
         text_feature_path = f'{text_logits}/Seed{seed}.npy'
