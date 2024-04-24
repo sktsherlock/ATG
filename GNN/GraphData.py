@@ -77,7 +77,7 @@ def set_seed(seed: int):
     th.cuda.manual_seed_all(seed)
 
 
-def split_edge(dgl_graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len='1000', path=None, way='random'):
+def split_edge(graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len='1000', path=None):
     if os.path.exists(os.path.join(path, f'{neg_len}/edge_split.pt')):
         edge_split = th.load(os.path.join(path, f'{neg_len}/edge_split.pt'))
 
@@ -86,12 +86,12 @@ def split_edge(dgl_graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len
         np.random.seed(random_seed)
         th.manual_seed(random_seed)
 
-        graph = from_dgl(dgl_graph)
+        # graph = from_dgl(dgl_graph)
 
-        eids = np.arange(graph.num_edges)
+        eids = np.arange(graph.num_edges())
         eids = np.random.permutation(eids)
 
-        u, v = graph.edge_index
+        u, v = graph.edges()
 
         test_size = int(len(eids) * test_ratio)
         val_size = int(len(eids) * val_ratio)
@@ -104,8 +104,8 @@ def split_edge(dgl_graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len
         val_edge_index = th.stack((val_pos_u, val_pos_v), dim=1)
         test_edge_index = th.stack((test_pos_u, test_pos_v), dim=1)
 
-        valid_neg_edge_index = th.randint(0, graph.num_nodes, [int(neg_len), 2], dtype=th.long)
-        test_neg_edge_index = th.randint(0, graph.num_nodes, [int(neg_len), 2], dtype=th.long)
+        valid_neg_edge_index = th.randint(0, graph.num_nodes(), [int(neg_len), 2], dtype=th.long)
+        test_neg_edge_index = th.randint(0, graph.num_nodes(), [int(neg_len), 2], dtype=th.long)
         # ! 创建dict类型存法
         edge_split = {'train': {'edge': train_edge_index},
                       'valid': {'edge': val_edge_index, 'edge_neg': valid_neg_edge_index},
