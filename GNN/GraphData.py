@@ -217,6 +217,7 @@ class Evaluator:
         '''
 
         if type_info == 'torch':
+            print(y_pred_pos, y_pred_neg, y_pred_pos.shape, y_pred_neg.shape)
             y_pred = th.cat([y_pred_pos.view(-1, 1), y_pred_neg], dim=1)
             argsort = th.argsort(y_pred, dim=1, descending=True)
             ranking_list = th.nonzero(argsort == 0, as_tuple=False)
