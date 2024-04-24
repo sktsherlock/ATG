@@ -120,7 +120,7 @@ def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, l
             for key, result in results.items():
                 loggers[key].add_result(n_running, result)
 
-            if epoch % args.log_steps == 0:
+            if epoch % args.log_every == 0:
                 for key, result in results.items():
                     train_hits, valid_hits, test_hits = result
                     print(key)
