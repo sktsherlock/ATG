@@ -106,15 +106,15 @@ def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size, loggers)
     train_mrr = evaluator.eval({
         'y_pred_pos': pos_train_pred,
         'y_pred_neg': neg_valid_pred,
-    })[f'mrr']
+    }, mrr=True)
     valid_mrr = evaluator.eval({
         'y_pred_pos': pos_valid_pred,
         'y_pred_neg': neg_valid_pred,
-    })[f'mrr']
+    }, mrr=True)
     test_mrr = evaluator.eval({
         'y_pred_pos': pos_test_pred,
         'y_pred_neg': neg_test_pred,
-    })[f'mrr']
+    }, mrr=True)
     results[f'MRR'] = (train_mrr, valid_mrr, test_mrr)
 
     return results

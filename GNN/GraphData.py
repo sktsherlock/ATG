@@ -119,150 +119,72 @@ def split_edge(graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len='10
 class Evaluator:
     def __init__(self, name):
         self.name = name
-        meta_info = {
-            'History': {
-                'name': 'History',
-                'eval_metric': 'hits@50'
-            },
-            'Movies': {
-                'name': 'Movies',
-                'eval_metric': 'hits@50'
-            },
-            'DBLP': {
-                'name': 'DBLP',
-                'eval_metric': 'mrr'
-            }
-        }
+        self.K = 10
 
-        self.eval_metric = meta_info[self.name]['eval_metric']
-
-        if 'hits@' in self.eval_metric:
-
-            self.K = int(self.eval_metric.split('@')[1])
 
     def _parse_and_check_input(self, input_dict):
-        if 'hits@' in self.eval_metric:
-            if not 'y_pred_pos' in input_dict:
-                raise RuntimeError('Missing key of y_pred_pos')
-            if not 'y_pred_neg' in input_dict:
-                raise RuntimeError('Missing key of y_pred_neg')
 
-            y_pred_pos, y_pred_neg = input_dict['y_pred_pos'], input_dict['y_pred_neg']
+        if not 'y_pred_pos' in input_dict:
+            raise RuntimeError('Missing key of y_pred_pos')
+        if not 'y_pred_neg' in input_dict:
+            raise RuntimeError('Missing key of y_pred_neg')
 
-            '''
-                y_pred_pos: numpy ndarray or torch tensor of shape (num_edge, )
-                y_pred_neg: numpy ndarray or torch tensor of shape (num_edge, )
-            '''
+        y_pred_pos, y_pred_neg = input_dict['y_pred_pos'], input_dict['y_pred_neg']
 
-            # convert y_pred_pos, y_pred_neg into either torch tensor or both numpy array
-            # type_info stores information whether torch or numpy is used
+        '''
+            y_pred_pos: numpy ndarray or torch tensor of shape (num_edge, )
+            y_pred_neg: numpy ndarray or torch tensor of shape (num_edge, )
+        '''
 
-            type_info = None
+        # convert y_pred_pos, y_pred_neg into either torch tensor or both numpy array
+        # type_info stores information whether torch or numpy is used
 
-            # check the raw tyep of y_pred_pos
-            if not (isinstance(y_pred_pos, np.ndarray) or (th is not None and isinstance(y_pred_pos, th.Tensor))):
-                raise ValueError('y_pred_pos needs to be either numpy ndarray or th tensor')
+        type_info = None
 
-            # check the raw type of y_pred_neg
-            if not (isinstance(y_pred_neg, np.ndarray) or (th is not None and isinstance(y_pred_neg, th.Tensor))):
-                raise ValueError('y_pred_neg needs to be either numpy ndarray or th tensor')
+        # check the raw tyep of y_pred_pos
+        if not (isinstance(y_pred_pos, np.ndarray) or (th is not None and isinstance(y_pred_pos, th.Tensor))):
+            raise ValueError('y_pred_pos needs to be either numpy ndarray or th tensor')
 
-            # if either y_pred_pos or y_pred_neg is th tensor, use th tensor
-            if th is not None and (isinstance(y_pred_pos, th.Tensor) or isinstance(y_pred_neg, th.Tensor)):
-                # converting to th.Tensor to numpy on cpu
-                if isinstance(y_pred_pos, np.ndarray):
-                    y_pred_pos = th.from_numpy(y_pred_pos)
+        # check the raw type of y_pred_neg
+        if not (isinstance(y_pred_neg, np.ndarray) or (th is not None and isinstance(y_pred_neg, th.Tensor))):
+            raise ValueError('y_pred_neg needs to be either numpy ndarray or th tensor')
 
-                if isinstance(y_pred_neg, np.ndarray):
-                    y_pred_neg = th.from_numpy(y_pred_neg)
+        # if either y_pred_pos or y_pred_neg is th tensor, use th tensor
+        if th is not None and (isinstance(y_pred_pos, th.Tensor) or isinstance(y_pred_neg, th.Tensor)):
+            # converting to th.Tensor to numpy on cpu
+            if isinstance(y_pred_pos, np.ndarray):
+                y_pred_pos = th.from_numpy(y_pred_pos)
 
-                # put both y_pred_pos and y_pred_neg on the same device
-                y_pred_pos = y_pred_pos.to(y_pred_neg.device)
+            if isinstance(y_pred_neg, np.ndarray):
+                y_pred_neg = th.from_numpy(y_pred_neg)
 
-                type_info = 'torch'
+            # put both y_pred_pos and y_pred_neg on the same device
+            y_pred_pos = y_pred_pos.to(y_pred_neg.device)
 
-            else:
-                # both y_pred_pos and y_pred_neg are numpy ndarray
-
-                type_info = 'numpy'
-
-            if not y_pred_pos.ndim == 1:
-                raise RuntimeError('y_pred_pos must to 1-dim arrray, {}-dim array given'.format(y_pred_pos.ndim))
-
-            if not y_pred_neg.ndim == 1:
-                raise RuntimeError('y_pred_neg must to 1-dim arrray, {}-dim array given'.format(y_pred_neg.ndim))
-
-            return y_pred_pos, y_pred_neg, type_info
-
-        elif 'mrr' == self.eval_metric:
-
-            if not 'y_pred_pos' in input_dict:
-                raise RuntimeError('Missing key of y_pred_pos')
-            if not 'y_pred_neg' in input_dict:
-                raise RuntimeError('Missing key of y_pred_neg')
-
-            y_pred_pos, y_pred_neg = input_dict['y_pred_pos'], input_dict['y_pred_neg']
-
-            '''
-                y_pred_pos: numpy ndarray or torch tensor of shape (num_edge, )
-                y_pred_neg: numpy ndarray or torch tensor of shape (num_edge, num_node_negative)
-            '''
-
-            # convert y_pred_pos, y_pred_neg into either torch tensor or both numpy array
-            # type_info stores information whether torch or numpy is used
-
-            type_info = None
-
-            # check the raw tyep of y_pred_pos
-            if not (isinstance(y_pred_pos, np.ndarray) or (th is not None and isinstance(y_pred_pos, th.Tensor))):
-                raise ValueError('y_pred_pos needs to be either numpy ndarray or th tensor')
-
-            # check the raw type of y_pred_neg
-            if not (isinstance(y_pred_neg, np.ndarray) or (th is not None and isinstance(y_pred_neg, th.Tensor))):
-                raise ValueError('y_pred_neg needs to be either numpy ndarray or th tensor')
-
-            # if either y_pred_pos or y_pred_neg is th tensor, use th tensor
-            if th is not None and (isinstance(y_pred_pos, th.Tensor) or isinstance(y_pred_neg, th.Tensor)):
-                # converting to th.Tensor to numpy on cpu
-                if isinstance(y_pred_pos, np.ndarray):
-                    y_pred_pos = th.from_numpy(y_pred_pos)
-
-                if isinstance(y_pred_neg, np.ndarray):
-                    y_pred_neg = th.from_numpy(y_pred_neg)
-
-                # put both y_pred_pos and y_pred_neg on the same device
-                y_pred_pos = y_pred_pos.to(y_pred_neg.device)
-
-                type_info = 'torch'
-
-
-            else:
-                # both y_pred_pos and y_pred_neg are numpy ndarray
-
-                type_info = 'numpy'
-
-            if not y_pred_pos.ndim == 1:
-                raise RuntimeError('y_pred_pos must to 1-dim arrray, {}-dim array given'.format(y_pred_pos.ndim))
-
-            if not y_pred_neg.ndim == 2:
-                raise RuntimeError('y_pred_neg must to 2-dim arrray, {}-dim array given'.format(y_pred_neg.ndim))
-
-            return y_pred_pos, y_pred_neg, type_info
+            type_info = 'torch'
 
         else:
-            raise ValueError('Undefined eval metric %s' % (self.eval_metric))
+            # both y_pred_pos and y_pred_neg are numpy ndarray
 
-    def eval(self, input_dict):
+            type_info = 'numpy'
 
-        if 'hits@' in self.eval_metric:
-            y_pred_pos, y_pred_neg, type_info = self._parse_and_check_input(input_dict)
-            return self._eval_hits(y_pred_pos, y_pred_neg, type_info)
-        elif self.eval_metric == 'mrr':
-            y_pred_pos, y_pred_neg, type_info = self._parse_and_check_input(input_dict)
+        if not y_pred_pos.ndim == 1:
+            raise RuntimeError('y_pred_pos must to 1-dim arrray, {}-dim array given'.format(y_pred_pos.ndim))
+
+        if not y_pred_neg.ndim == 1:
+            raise RuntimeError('y_pred_neg must to 1-dim arrray, {}-dim array given'.format(y_pred_neg.ndim))
+
+        return y_pred_pos, y_pred_neg, type_info
+
+
+
+    def eval(self, input_dict, mrr=False):
+        y_pred_pos, y_pred_neg, type_info = self._parse_and_check_input(input_dict)
+        if mrr:
             return self._eval_mrr(y_pred_pos, y_pred_neg, type_info)
-
         else:
-            raise ValueError('Undefined eval metric %s' % (self.eval_metric))
+            return self._eval_hits(y_pred_pos, y_pred_neg, type_info)
+
 
     def _eval_hits(self, y_pred_pos, y_pred_neg, type_info):
         '''
