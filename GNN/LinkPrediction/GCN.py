@@ -105,12 +105,21 @@ def main():
         graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
 
 
-    edge_split = split_edge(graph, test_ratio=args.test_ratio, val_ratio=0.02, path=args.link_path, neg_len=args.neg_len)
+    edge_split = split_edge(graph, test_ratio=args.test_ratio, val_ratio=0.01, neg_len=args.neg_len, path=args.link_path)
+
+    torch.manual_seed(42)
+    idx = torch.randperm(edge_split['train']['source_node'].numel())[:len(edge_split['valid']['source_node'])]
+    edge_split['eval_train'] = {
+        'source_node': edge_split['train']['source_node'][idx],
+        'target_node': edge_split['train']['target_node'][idx],
+        'target_node_neg': edge_split['valid']['target_node_neg'],
+    }
+
+    train_edge_index = torch.stack((edge_split['train']['source_node']), edge_split['train']['target_node']).t()
 
     feat = torch.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
 
-    edge_index = edge_split['train']['edge'].t()
-    adj_t = SparseTensor.from_edge_index(edge_index).t()
+    adj_t = SparseTensor.from_edge_index(train_edge_index).t()
     adj_t = adj_t.to_symmetric().to(device)
     # Load the GCN model
     model = GCN(feat.shape[1], args.n_hidden, args.n_hidden, args.n_layers, args.dropout).to(device)
@@ -130,7 +139,7 @@ def main():
         model.reset_parameters()
         predictor.reset_parameters()
 
-        loggers = linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, run)
+        loggers = linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, run, args.neg_len)
 
         for key in loggers.keys():
             print(key)

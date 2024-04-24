@@ -86,34 +86,79 @@ def split_edge(graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len='10
         np.random.seed(random_seed)
         th.manual_seed(random_seed)
 
-        # graph = from_dgl(dgl_graph)
-
         eids = np.arange(graph.num_edges())
         eids = np.random.permutation(eids)
 
-        u, v = graph.edges()
-
+        all_source, all_target = graph.edges()
+        # all_source = graph.edge_index[0]
+        # all_target = graph.edge_index[1]
         test_size = int(len(eids) * test_ratio)
         val_size = int(len(eids) * val_ratio)
 
-        test_pos_u, test_pos_v = u[eids[:test_size]], v[eids[:test_size]]
-        val_pos_u, val_pos_v = u[eids[test_size:test_size + val_size]], v[eids[test_size:test_size + val_size]]
-        train_pos_u, train_pos_v = u[eids[test_size + val_size:]], v[eids[test_size + val_size:]]
 
-        train_edge_index = th.stack((train_pos_u, train_pos_v), dim=1)
-        val_edge_index = th.stack((val_pos_u, val_pos_v), dim=1)
-        test_edge_index = th.stack((test_pos_u, test_pos_v), dim=1)
+        test_source, test_target = all_source[eids[:test_size]], all_target[eids[:test_size]]
+        val_source, val_target = all_source[eids[test_size:test_size + val_size]], all_target[eids[test_size:test_size + val_size]]
+        tra_source, tra_target = all_source[eids[test_size + val_size:]], all_target[eids[test_size + val_size:]]
 
-        valid_neg_edge_index = th.randint(0, graph.num_nodes(), [int(neg_len), 2], dtype=th.long)
-        test_neg_edge_index = th.randint(0, graph.num_nodes(), [int(neg_len), 2], dtype=th.long)
+
+        val_target_neg = th.randint(low=0, high=graph.num_nodes(), size=(len(val_source), neg_len))
+        test_target_neg = th.randint(low=0, high=graph.num_nodes(), size=(len(test_source), neg_len))
+
         # ! 创建dict类型存法
-        edge_split = {'train': {'edge': train_edge_index},
-                      'valid': {'edge': val_edge_index, 'edge_neg': valid_neg_edge_index},
-                      'test': {'edge': test_edge_index, 'edge_neg': test_neg_edge_index}}
+        edge_split = {'train': {'source_node': tra_source, 'target_node': tra_target},
+                      'valid': {'source_node': val_source, 'target_node': val_target,
+                                'target_node_neg': val_target_neg},
+                      'test': {'source_node': test_source, 'target_node': test_target,
+                               'target_node_neg': test_target_neg}}
 
-        th.save(edge_split, os.path.join(path, f'{neg_len}/edge_split.pt'))
+        th.save(edge_split, os.path.join(path, 'edge_split.pt'))
 
     return edge_split
+
+
+
+def _eval_mrr(y_pred_pos, y_pred_neg, type_info):
+    '''
+        compute mrr
+        y_pred_neg is an array with shape (batch size, num_entities_neg).
+        y_pred_pos is an array with shape (batch size, )
+    '''
+
+
+    if type_info == 'torch':
+        # calculate ranks
+        y_pred_pos = y_pred_pos.view(-1, 1)
+        # optimistic rank: "how many negatives have a larger score than the positive?"
+        # ~> the positive is ranked first among those with equal score
+        optimistic_rank = (y_pred_neg > y_pred_pos).sum(dim=1)
+        # pessimistic rank: "how many negatives have at least the positive score?"
+        # ~> the positive is ranked last among those with equal score
+        pessimistic_rank = (y_pred_neg >= y_pred_pos).sum(dim=1)
+        ranking_list = 0.5 * (optimistic_rank + pessimistic_rank) + 1
+        hits1_list = (ranking_list <= 1).to(th.float)
+        hits5_list = (ranking_list <= 5).to(th.float)
+        hits10_list = (ranking_list <= 10).to(th.float)
+        mrr_list = 1./ranking_list.to(th.float)
+
+        return {'hits@1_list': hits1_list,
+                 'hits@5_list': hits5_list,
+                 'hits@10_list': hits10_list,
+                 'mrr_list': mrr_list}
+
+    else:
+        y_pred_pos = y_pred_pos.reshape(-1, 1)
+        optimistic_rank = (y_pred_neg >= y_pred_pos).sum(dim=1)
+        pessimistic_rank = (y_pred_neg > y_pred_pos).sum(dim=1)
+        ranking_list = 0.5 * (optimistic_rank + pessimistic_rank) + 1
+        hits1_list = (ranking_list <= 1).astype(np.float32)
+        hits5_list = (ranking_list <= 5).astype(np.float32)
+        hits10_list = (ranking_list <= 10).astype(np.float32)
+        mrr_list = 1./ranking_list.astype(np.float32)
+
+        return {'hits@1_list': hits1_list,
+                 'hits@5_list': hits5_list,
+                 'hits@10_list': hits10_list,
+                 'mrr_list': mrr_list}
 
 
 class Evaluator:
@@ -177,79 +222,9 @@ class Evaluator:
 
 
 
-    def eval(self, input_dict, mrr=False):
+    def eval(self, input_dict):
         y_pred_pos, y_pred_neg, type_info = self._parse_and_check_input(input_dict)
-        if mrr:
-            return self._eval_mrr(y_pred_pos, y_pred_neg, type_info)
-        else:
-            return self._eval_hits(y_pred_pos, y_pred_neg, type_info)
-
-
-    def _eval_hits(self, y_pred_pos, y_pred_neg, type_info):
-        '''
-            compute Hits@K
-            For each positive target node, the negative target nodes are the same.
-
-            y_pred_neg is an array.
-            rank y_pred_pos[i] against y_pred_neg for each i
-        '''
-
-        print(y_pred_pos, y_pred_neg, y_pred_pos.shape, y_pred_neg.shape)
-        if len(y_pred_neg) < self.K:
-            return {'hits@{}'.format(self.K): 1.}
-
-        if type_info == 'torch':
-            kth_score_in_negative_edges = th.topk(y_pred_neg, self.K)[0][-1]
-            print(kth_score_in_negative_edges)
-            hitsK = float(th.sum(y_pred_pos > kth_score_in_negative_edges).cpu()) / len(y_pred_pos)
-
-        # type_info is numpy
-        else:
-            kth_score_in_negative_edges = np.sort(y_pred_neg)[-self.K]
-            hitsK = float(np.sum(y_pred_pos > kth_score_in_negative_edges)) / len(y_pred_pos)
-
-        return {'hits@{}'.format(self.K): hitsK}
-
-
-    def _eval_mrr(self, y_pred_pos, y_pred_neg, type_info):
-        '''
-            compute mrr
-            y_pred_neg is an array with shape (batch size, num_entities_neg).
-            y_pred_pos is an array with shape (batch size, )
-        '''
-
-        if type_info == 'torch':
-            print(y_pred_pos, y_pred_neg, y_pred_pos.shape, y_pred_neg.shape)
-            y_pred = th.cat([y_pred_pos.view(-1, 1), y_pred_neg], dim=1)
-            argsort = th.argsort(y_pred, dim=1, descending=True)
-            ranking_list = th.nonzero(argsort == 0, as_tuple=False)
-            ranking_list = ranking_list[:, 1] + 1
-            # hits1_list = (ranking_list <= 1).to(th.float)
-            # hits3_list = (ranking_list <= 3).to(th.float)
-            # hits10_list = (ranking_list <= 10).to(th.float)
-            mrr_list = 1. / ranking_list.to(th.float)
-
-            return {
-                # 'hits@1_list': hits1_list,
-                #  'hits@3_list': hits3_list,
-                #  'hits@10_list': hits10_list,
-                'mrr_list': mrr_list}
-
-        else:
-            y_pred = np.concatenate([y_pred_pos.reshape(-1, 1), y_pred_neg], axis=1)
-            argsort = np.argsort(-y_pred, axis=1)
-            ranking_list = (argsort == 0).nonzero()
-            ranking_list = ranking_list[1] + 1
-            # hits1_list = (ranking_list <= 1).astype(np.float32)
-            # hits3_list = (ranking_list <= 3).astype(np.float32)
-            # hits10_list = (ranking_list <= 10).astype(np.float32)
-            mrr_list = 1. / ranking_list.astype(np.float32)
-
-            return {
-                # 'hits@1_list': hits1_list,
-                #  'hits@3_list': hits3_list,
-                #  'hits@10_list': hits10_list,
-                'mrr_list': mrr_list}
+        return _eval_mrr(y_pred_pos, y_pred_neg, type_info)
 
 
 class Logger(object):

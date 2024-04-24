@@ -39,88 +39,45 @@ def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
 
 
 @torch.no_grad()
-def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size, loggers):
+def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size, neg_len):
     model.eval()
     predictor.eval()
 
     h = model(x, adj_t)
 
-    pos_train_edge = edge_split['train']['edge'].to(h.device)
-    pos_valid_edge = edge_split['valid']['edge'].to(h.device)
-    neg_valid_edge = edge_split['valid']['edge_neg'].to(h.device)
-    pos_test_edge = edge_split['test']['edge'].to(h.device)
-    neg_test_edge = edge_split['test']['edge_neg'].to(h.device)
+    def test_split(split, neg_length):
+        source = edge_split[split]['source_node'].to(h.device)
+        target = edge_split[split]['target_node'].to(h.device)
+        target_neg = edge_split[split]['target_node_neg'].to(h.device)
 
-    pos_train_preds = []
-    for perm in DataLoader(range(pos_train_edge.size(0)), batch_size):
-        edge = pos_train_edge[perm].t()
-        pos_train_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    pos_train_pred = torch.cat(pos_train_preds, dim=0)
+        pos_preds = []
+        for perm in DataLoader(range(source.size(0)), batch_size):
+            src, dst = source[perm], target[perm]
+            pos_preds += [predictor(h[src], h[dst]).squeeze().cpu()]
+        pos_pred = torch.cat(pos_preds, dim=0)
 
-    pos_valid_preds = []
-    for perm in DataLoader(range(pos_valid_edge.size(0)), batch_size):
-        edge = pos_valid_edge[perm].t()
-        pos_valid_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    pos_valid_pred = torch.cat(pos_valid_preds, dim=0)
+        neg_preds = []
+        source = source.view(-1, 1).repeat(1, neg_length).view(-1)
+        target_neg = target_neg.view(-1)
+        for perm in DataLoader(range(source.size(0)), batch_size):
+            src, dst_neg = source[perm], target_neg[perm]
+            neg_preds += [predictor(h[src], h[dst_neg]).squeeze().cpu()]
+        neg_pred = torch.cat(neg_preds, dim=0).view(-1, neg_length)
 
-    neg_valid_preds = []
-    for perm in DataLoader(range(neg_valid_edge.size(0)), batch_size):
-        edge = neg_valid_edge[perm].t()
-        neg_valid_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    neg_valid_pred = torch.cat(neg_valid_preds, dim=0)
+        return evaluator.eval({
+            'y_pred_pos': pos_pred,
+            'y_pred_neg': neg_pred,
+        })['mrr_list'].mean().item()
 
-    h = model(x, adj_t)
-
-    pos_test_preds = []
-    for perm in DataLoader(range(pos_test_edge.size(0)), batch_size):
-        edge = pos_test_edge[perm].t()
-        pos_test_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    pos_test_pred = torch.cat(pos_test_preds, dim=0)
-
-    neg_test_preds = []
-    for perm in DataLoader(range(neg_test_edge.size(0)), batch_size):
-        edge = neg_test_edge[perm].t()
-        neg_test_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    neg_test_pred = torch.cat(neg_test_preds, dim=0)
-
-    results = {}
-
-    # 计算 Hits@1, Hits@5, Hits@10,
-    for K in [1, 5, 10]:
-        evaluator.K = K
-        train_hits = evaluator.eval({
-            'y_pred_pos': pos_train_pred,
-            'y_pred_neg': neg_valid_pred,
-        })[f'hits@{K}']
-        valid_hits = evaluator.eval({
-            'y_pred_pos': pos_valid_pred,
-            'y_pred_neg': neg_valid_pred,
-        })[f'hits@{K}']
-        test_hits = evaluator.eval({
-            'y_pred_pos': pos_test_pred,
-            'y_pred_neg': neg_test_pred,
-        })[f'hits@{K}']
-
-        results[f'Hits@{K}'] = (train_hits, valid_hits, test_hits)
-    # 计算MRR 的值
-    train_mrr = evaluator.eval({
-        'y_pred_pos': pos_train_pred,
-        'y_pred_neg': neg_valid_pred,
-    }, mrr=True)
-    valid_mrr = evaluator.eval({
-        'y_pred_pos': pos_valid_pred,
-        'y_pred_neg': neg_valid_pred,
-    }, mrr=True)
-    test_mrr = evaluator.eval({
-        'y_pred_pos': pos_test_pred,
-        'y_pred_neg': neg_test_pred,
-    }, mrr=True)
-    results[f'MRR'] = (train_mrr, valid_mrr, test_mrr)
-
-    return results
+    train_mrr = test_split('eval_train', neg_len)
+    valid_mrr = test_split('valid', neg_len)
+    test_mrr = test_split('test', neg_len)
 
 
-def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, n_running):
+    return train_mrr, valid_mrr, test_mrr
+
+
+def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, n_running, neg_len):
     # 定义优化器
     optimizer = torch.optim.Adam(
         list(model.parameters()) + list(predictor.parameters()),
@@ -132,7 +89,7 @@ def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, l
 
         if epoch % args.eval_steps == 0:
             results = test(model, predictor, feat, adj_t, edge_split, evaluator,
-                           args.batch_size, loggers)
+                           args.batch_size, loggers, neg_len=neg_len)
             for key, result in results.items():
                 loggers[key].add_result(n_running, result)
 
