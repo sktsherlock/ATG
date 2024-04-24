@@ -6,29 +6,29 @@ def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
     model.train()
     predictor.train()
 
-    pos_train_edge = edge_split['train']['edge'].to(x.device)
+    source_edge = edge_split['train']['source_node'].to(x.device)
+    target_edge = edge_split['train']['target_node'].to(x.device)
 
     total_loss = total_examples = 0
-    for perm in DataLoader(range(pos_train_edge.size(0)), batch_size,
+    for perm in DataLoader(range(source_edge.size(0)), batch_size,
                            shuffle=True):
         optimizer.zero_grad()
 
         h = model(x, adj_t)
 
-        edge = pos_train_edge[perm].t()
+        src, dst = source_edge[perm], target_edge[perm]
 
-        pos_out = predictor(h[edge[0]], h[edge[1]])
+        pos_out = predictor(h[src], h[dst])
         pos_loss = -torch.log(pos_out + 1e-15).mean()
 
         # Just do some trivial random sampling.
-        edge = torch.randint(0, x.size(0), edge.size(), dtype=torch.long,
+        dst_neg = torch.randint(0, x.size(0), src.size(), dtype=torch.long,
                              device=h.device)
-        neg_out = predictor(h[edge[0]], h[edge[1]])
+        neg_out = predictor(h[src], h[dst_neg])
         neg_loss = -torch.log(1 - neg_out + 1e-15).mean()
 
         loss = pos_loss + neg_loss
         loss.backward()
-
         optimizer.step()
 
         num_examples = pos_out.size(0)
