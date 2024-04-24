@@ -176,8 +176,8 @@ class Evaluator:
         y_pred_pos, y_pred_neg = input_dict['y_pred_pos'], input_dict['y_pred_neg']
 
         '''
-            y_pred_pos: numpy ndarray or torch tensor of shape (num_edge, )
-            y_pred_neg: numpy ndarray or torch tensor of shape (num_edge, )
+            y_pred_pos: numpy ndarray or torch tensor of shape (num_edges, )
+            y_pred_neg: numpy ndarray or torch tensor of shape (num_edges, num_nodes_negative)
         '''
 
         # convert y_pred_pos, y_pred_neg into either torch tensor or both numpy array
@@ -187,15 +187,15 @@ class Evaluator:
 
         # check the raw tyep of y_pred_pos
         if not (isinstance(y_pred_pos, np.ndarray) or (th is not None and isinstance(y_pred_pos, th.Tensor))):
-            raise ValueError('y_pred_pos needs to be either numpy ndarray or th tensor')
+            raise ValueError('y_pred_pos needs to be either numpy ndarray or torch tensor')
 
         # check the raw type of y_pred_neg
         if not (isinstance(y_pred_neg, np.ndarray) or (th is not None and isinstance(y_pred_neg, th.Tensor))):
-            raise ValueError('y_pred_neg needs to be either numpy ndarray or th tensor')
+            raise ValueError('y_pred_neg needs to be either numpy ndarray or torch tensor')
 
-        # if either y_pred_pos or y_pred_neg is th tensor, use th tensor
+        # if either y_pred_pos or y_pred_neg is torch tensor, use torch tensor
         if th is not None and (isinstance(y_pred_pos, th.Tensor) or isinstance(y_pred_neg, th.Tensor)):
-            # converting to th.Tensor to numpy on cpu
+            # converting to torch.Tensor to numpy on cpu
             if isinstance(y_pred_pos, np.ndarray):
                 y_pred_pos = th.from_numpy(y_pred_pos)
 
@@ -206,6 +206,7 @@ class Evaluator:
             y_pred_pos = y_pred_pos.to(y_pred_neg.device)
 
             type_info = 'torch'
+
 
         else:
             # both y_pred_pos and y_pred_neg are numpy ndarray
