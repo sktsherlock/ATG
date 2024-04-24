@@ -68,8 +68,7 @@ def main():
     if not os.path.exists(f'{args.link_path}{args.neg_len}/'):
         os.makedirs(f'{args.link_path}{args.neg_len}/')
 
-    device = f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu'
-    device = torch.device(device)
+    device = torch.device("cuda:%d" % args.gpu if torch.cuda.is_available() else 'cpu')
 
     # Load the graph
     if args.graph_path == 'ogbn-arxiv':
