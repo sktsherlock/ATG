@@ -137,7 +137,6 @@ class Evaluator:
         self.eval_metric = meta_info[self.name]['eval_metric']
 
         if 'hits@' in self.eval_metric:
-            ### Hits@K
 
             self.K = int(self.eval_metric.split('@')[1])
 

@@ -120,9 +120,10 @@ def main():
 
     evaluator = Evaluator(name='Movies')
     loggers = {
+        'Hits@1': Logger(args.n_runs, args),
+        'Hits@5': Logger(args.n_runs, args),
         'Hits@10': Logger(args.n_runs, args),
-        'Hits@50': Logger(args.n_runs, args),
-        'Hits@100': Logger(args.n_runs, args),
+        'MRR': Logger(args.n_runs, args),
     }
 
     for run in range(args.n_runs):

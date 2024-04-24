@@ -39,7 +39,7 @@ def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
 
 
 @torch.no_grad()
-def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size):
+def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size, loggers):
     model.eval()
     predictor.eval()
 
@@ -84,7 +84,9 @@ def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size):
     neg_test_pred = torch.cat(neg_test_preds, dim=0)
 
     results = {}
-    for K in [10, 50, 100]:
+
+    # 计算 Hits@1, Hits@5, Hits@10,
+    for K in [1, 5, 10]:
         evaluator.K = K
         train_hits = evaluator.eval({
             'y_pred_pos': pos_train_pred,
@@ -100,6 +102,20 @@ def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size):
         })[f'hits@{K}']
 
         results[f'Hits@{K}'] = (train_hits, valid_hits, test_hits)
+    # 计算MRR 的值
+    train_mrr = evaluator.eval({
+        'y_pred_pos': pos_train_pred,
+        'y_pred_neg': neg_valid_pred,
+    })[f'mrr']
+    valid_mrr = evaluator.eval({
+        'y_pred_pos': pos_valid_pred,
+        'y_pred_neg': neg_valid_pred,
+    })[f'mrr']
+    test_mrr = evaluator.eval({
+        'y_pred_pos': pos_test_pred,
+        'y_pred_neg': neg_test_pred,
+    })[f'mrr']
+    results[f'MRR'] = (train_mrr, valid_mrr, test_mrr)
 
     return results
 
@@ -116,7 +132,7 @@ def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, l
 
         if epoch % args.eval_steps == 0:
             results = test(model, predictor, feat, adj_t, edge_split, evaluator,
-                           args.batch_size)
+                           args.batch_size, loggers)
             for key, result in results.items():
                 loggers[key].add_result(n_running, result)
 
