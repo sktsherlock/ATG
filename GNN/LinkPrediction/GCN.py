@@ -2,45 +2,33 @@ import argparse
 import torch
 import sys
 import os
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
-
-from torch_sparse import SparseTensor
-from torch_geometric.nn import GCNConv
-from ogb.nodeproppred import DglNodePropPredDataset
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from GraphData import Evaluator, split_edge, Logger
 import dgl
 import numpy as np
 import wandb
 import os
+import torch.nn.functional as F
+from ogb.nodeproppred import DglNodePropPredDataset
+from torch_sparse import SparseTensor
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from GraphData import Evaluator, split_edge, Logger, load_data
+from LinkPrediction import linkpredition
+from Utils.model_config import add_common_args
+from Library.GCN import GCN
 
 
-class GCN(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
-                 dropout):
-        super(GCN, self).__init__()
+def args_init():
+    argparser = argparse.ArgumentParser(
+        "Link-Prediction for GCN",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    add_common_args(argparser)
+    argparser.add_argument('--hidden_channels', type=int, default=256)
+    argparser.add_argument('--batch_size', type=int, default=64 * 1024)
+    argparser.add_argument('--neg_len', type=str, default='5000')
+    argparser.add_argument("--link_path", type=str, default="Data/LinkPrediction/Reddit/", required=True,
+                        help="Path to save the splitting for the link prediction tasks")
+    return argparser
 
-        self.convs = torch.nn.ModuleList()
-        self.convs.append(GCNConv(in_channels, hidden_channels, cached=True))
-        for _ in range(num_layers - 2):
-            self.convs.append(
-                GCNConv(hidden_channels, hidden_channels, cached=True))
-        self.convs.append(GCNConv(hidden_channels, out_channels, cached=True))
-
-        self.dropout = dropout
-
-    def reset_parameters(self):
-        for conv in self.convs:
-            conv.reset_parameters()
-
-    def forward(self, x, adj_t):
-        for conv in self.convs[:-1]:
-            x = conv(x, adj_t)
-            x = F.relu(x)
-            x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.convs[-1](x, adj_t)
-        return x
 
 
 class LinkPredictor(torch.nn.Module):
@@ -70,133 +58,9 @@ class LinkPredictor(torch.nn.Module):
         return torch.sigmoid(x)
 
 
-def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
-    model.train()
-    predictor.train()
-
-    pos_train_edge = edge_split['train']['edge'].to(x.device)
-
-    total_loss = total_examples = 0
-    for perm in DataLoader(range(pos_train_edge.size(0)), batch_size,
-                           shuffle=True):
-        optimizer.zero_grad()
-
-        h = model(x, adj_t)
-
-        edge = pos_train_edge[perm].t()
-
-        pos_out = predictor(h[edge[0]], h[edge[1]])
-        pos_loss = -torch.log(pos_out + 1e-15).mean()
-
-        # Just do some trivial random sampling.
-        edge = torch.randint(0, x.size(0), edge.size(), dtype=torch.long,
-                             device=h.device)
-        neg_out = predictor(h[edge[0]], h[edge[1]])
-        neg_loss = -torch.log(1 - neg_out + 1e-15).mean()
-
-        loss = pos_loss + neg_loss
-        loss.backward()
-
-        optimizer.step()
-
-        num_examples = pos_out.size(0)
-        total_loss += loss.item() * num_examples
-        total_examples += num_examples
-
-    return total_loss / total_examples
-
-
-@torch.no_grad()
-def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size):
-    model.eval()
-    predictor.eval()
-
-    h = model(x, adj_t)
-
-    pos_train_edge = edge_split['train']['edge'].to(h.device)
-    pos_valid_edge = edge_split['valid']['edge'].to(h.device)
-    neg_valid_edge = edge_split['valid']['edge_neg'].to(h.device)
-    pos_test_edge = edge_split['test']['edge'].to(h.device)
-    neg_test_edge = edge_split['test']['edge_neg'].to(h.device)
-
-    pos_train_preds = []
-    for perm in DataLoader(range(pos_train_edge.size(0)), batch_size):
-        edge = pos_train_edge[perm].t()
-        pos_train_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    pos_train_pred = torch.cat(pos_train_preds, dim=0)
-
-    pos_valid_preds = []
-    for perm in DataLoader(range(pos_valid_edge.size(0)), batch_size):
-        edge = pos_valid_edge[perm].t()
-        pos_valid_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    pos_valid_pred = torch.cat(pos_valid_preds, dim=0)
-
-    neg_valid_preds = []
-    for perm in DataLoader(range(neg_valid_edge.size(0)), batch_size):
-        edge = neg_valid_edge[perm].t()
-        neg_valid_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    neg_valid_pred = torch.cat(neg_valid_preds, dim=0)
-
-    h = model(x, adj_t)
-
-    pos_test_preds = []
-    for perm in DataLoader(range(pos_test_edge.size(0)), batch_size):
-        edge = pos_test_edge[perm].t()
-        pos_test_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    pos_test_pred = torch.cat(pos_test_preds, dim=0)
-
-    neg_test_preds = []
-    for perm in DataLoader(range(neg_test_edge.size(0)), batch_size):
-        edge = neg_test_edge[perm].t()
-        neg_test_preds += [predictor(h[edge[0]], h[edge[1]]).squeeze().cpu()]
-    neg_test_pred = torch.cat(neg_test_preds, dim=0)
-
-    results = {}
-    for K in [10, 50, 100]:
-        evaluator.K = K
-        train_hits = evaluator.eval({
-            'y_pred_pos': pos_train_pred,
-            'y_pred_neg': neg_valid_pred,
-        })[f'hits@{K}']
-        valid_hits = evaluator.eval({
-            'y_pred_pos': pos_valid_pred,
-            'y_pred_neg': neg_valid_pred,
-        })[f'hits@{K}']
-        test_hits = evaluator.eval({
-            'y_pred_pos': pos_test_pred,
-            'y_pred_neg': neg_test_pred,
-        })[f'hits@{K}']
-
-        results[f'Hits@{K}'] = (train_hits, valid_hits, test_hits)
-
-    return results
-
-
 def main():
-    parser = argparse.ArgumentParser(description='Link-Prediction for GNN')
-    parser.add_argument('--device', type=int, default=0)
-    parser.add_argument('--log_steps', type=int, default=1)
-    parser.add_argument('--num_layers', type=int, default=3)
-    parser.add_argument('--hidden_channels', type=int, default=256)
-    parser.add_argument('--dropout', type=float, default=0.0)
-    parser.add_argument('--batch_size', type=int, default=64 * 1024)
-    parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--epochs', type=int, default=10)
-    parser.add_argument('--gnn_model', type=str, help='GNN MOdel', default='GCN')
-    parser.add_argument('--eval_steps', type=int, default=1)
-    parser.add_argument('--runs', type=int, default=5)
-    parser.add_argument('--test_ratio', type=float, default=0.08)
-    parser.add_argument('--val_ratio', type=float, default=0.02)
-    parser.add_argument('--neg_len', type=str, default='2000')
-    parser.add_argument("--feature", type=str,
-                        default='Data/Reddit/TextFeature/Reddit_Llama_2_7b_hf_100_mean.npy',
-                        help="Use LM embedding as feature", )
-    parser.add_argument("--path", type=str, default="Data/LinkPrediction/Reddit/",
-                        help="Path to save splitting")
-    parser.add_argument("--graph_path", type=str,
-                        default="Data/Reddit/RedditGraph.pt",
-                        help="Path to load the graph")
-    args = parser.parse_args()
+    argparser = args_init()
+    args = argparser.parse_args()
     wandb.config = args
     wandb.init(config=args, reinit=True)
     print(args)
@@ -207,15 +71,17 @@ def main():
     device = f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
 
+    # Load the graph
     if args.graph_path == 'ogbn-arxiv':
         data = DglNodePropPredDataset(name=args.graph_path)
         graph, _ = data[0]
     else:
         graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
 
-    edge_split = split_edge(graph, test_ratio=0.08, val_ratio=0.02, path=args.path, neg_len=args.neg_len)
 
-    x = torch.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
+    edge_split = split_edge(graph, test_ratio=args.test_ratio, val_ratio=0.02, path=args.path, neg_len=args.neg_len)
+
+    feat = torch.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
 
     edge_index = edge_split['train']['edge'].t()
     adj_t = SparseTensor.from_edge_index(edge_index).t()
@@ -223,48 +89,23 @@ def main():
     adj_t = adj_t.to_symmetric().to(device)
     print('The second adj_t is:{}'.format(adj_t))
 
-    model = GCN(x.size(1), args.hidden_channels,
-                args.hidden_channels, args.num_layers,
-                args.dropout).to(device)
+    model = GCN(feat.shape[1], args.n_hidden, args.n_hidden, args.n_layers, F.relu, args.dropout).to(device)
 
-    predictor = LinkPredictor(args.hidden_channels, args.hidden_channels, 1,
-                              args.num_layers, args.dropout).to(device)
+    predictor = LinkPredictor(args.n_hidden, args.n_hidden, 1,
+                              3, args.dropout).to(device)
 
     evaluator = Evaluator(name='Movies')
     loggers = {
-        'Hits@10': Logger(args.runs, args),
-        'Hits@50': Logger(args.runs, args),
-        'Hits@100': Logger(args.runs, args),
+        'Hits@10': Logger(args.n_runs, args),
+        'Hits@50': Logger(args.n_runs, args),
+        'Hits@100': Logger(args.n_runs, args),
     }
 
-    for run in range(args.runs):
+    for run in range(args.n_runs):
         model.reset_parameters()
         predictor.reset_parameters()
-        optimizer = torch.optim.Adam(
-            list(model.parameters()) + list(predictor.parameters()),
-            lr=args.lr)
 
-        for epoch in range(1, 1 + args.epochs):
-            loss = train(model, predictor, x, adj_t, edge_split, optimizer,
-                         args.batch_size)
-
-            if epoch % args.eval_steps == 0:
-                results = test(model, predictor, x, adj_t, edge_split, evaluator,
-                               args.batch_size)
-                for key, result in results.items():
-                    loggers[key].add_result(run, result)
-
-                if epoch % args.log_steps == 0:
-                    for key, result in results.items():
-                        train_hits, valid_hits, test_hits = result
-                        print(key)
-                        print(f'Run: {run + 1:02d}, '
-                              f'Epoch: {epoch:02d}, '
-                              f'Loss: {loss:.4f}, '
-                              f'Train: {100 * train_hits:.2f}%, '
-                              f'Valid: {100 * valid_hits:.2f}%, '
-                              f'Test: {100 * test_hits:.2f}%')
-                    print('---')
+        loggers = linkpredition(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, run)
 
         for key in loggers.keys():
             print(key)

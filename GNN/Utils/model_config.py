@@ -96,7 +96,10 @@ def add_common_args(argparser):
         "--train_ratio", type=float, default=0.6, help="training ratio"
     )
     argparser.add_argument(
-        "--val_ratio", type=float, default=0.2, help="training ratio"
+        "--val_ratio", type=float, default=0.2, help="val ratio"
+    )
+    argparser.add_argument(
+        "--test_ratio", type=float, default=0.08, help="test ratio for link prediction"
     )
     argparser.add_argument(
         "--fewshots", type=int, default=None, help="fewshots values"

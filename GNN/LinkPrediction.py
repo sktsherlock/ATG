@@ -1,96 +1,5 @@
-import argparse
 import torch
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
-
-from torch_sparse import SparseTensor
-from torch_geometric.nn import GCNConv, SAGEConv
-from ogb.nodeproppred import DglNodePropPredDataset
-from GraphData import Evaluator, split_edge, Logger
-import dgl
-import numpy as np
-import wandb
-import os
-
-
-class GCN(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
-                 dropout):
-        super(GCN, self).__init__()
-
-        self.convs = torch.nn.ModuleList()
-        self.convs.append(GCNConv(in_channels, hidden_channels, cached=True))
-        for _ in range(num_layers - 2):
-            self.convs.append(
-                GCNConv(hidden_channels, hidden_channels, cached=True))
-        self.convs.append(GCNConv(hidden_channels, out_channels, cached=True))
-
-        self.dropout = dropout
-
-    def reset_parameters(self):
-        for conv in self.convs:
-            conv.reset_parameters()
-
-    def forward(self, x, adj_t):
-        for conv in self.convs[:-1]:
-            x = conv(x, adj_t)
-            x = F.relu(x)
-            x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.convs[-1](x, adj_t)
-        return x
-
-
-class SAGE(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
-                 dropout):
-        super(SAGE, self).__init__()
-
-        self.convs = torch.nn.ModuleList()
-        self.convs.append(SAGEConv(in_channels, hidden_channels))
-        for _ in range(num_layers - 2):
-            self.convs.append(SAGEConv(hidden_channels, hidden_channels))
-        self.convs.append(SAGEConv(hidden_channels, out_channels))
-
-        self.dropout = dropout
-
-    def reset_parameters(self):
-        for conv in self.convs:
-            conv.reset_parameters()
-
-    def forward(self, x, adj_t):
-        for conv in self.convs[:-1]:
-            x = conv(x, adj_t)
-            x = F.relu(x)
-            x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.convs[-1](x, adj_t)
-        return x
-
-
-class LinkPredictor(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
-                 dropout):
-        super(LinkPredictor, self).__init__()
-
-        self.lins = torch.nn.ModuleList()
-        self.lins.append(torch.nn.Linear(in_channels, hidden_channels))
-        for _ in range(num_layers - 2):
-            self.lins.append(torch.nn.Linear(hidden_channels, hidden_channels))
-        self.lins.append(torch.nn.Linear(hidden_channels, out_channels))
-
-        self.dropout = dropout
-
-    def reset_parameters(self):
-        for lin in self.lins:
-            lin.reset_parameters()
-
-    def forward(self, x_i, x_j):
-        x = x_i * x_j
-        for lin in self.lins[:-1]:
-            x = lin(x)
-            x = F.relu(x)
-            x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.lins[-1](x)
-        return torch.sigmoid(x)
 
 
 def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
@@ -195,114 +104,32 @@ def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size):
     return results
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Link-Prediction for GNN')
-    parser.add_argument('--device', type=int, default=0)
-    parser.add_argument('--log_steps', type=int, default=1)
-    parser.add_argument('--num_layers', type=int, default=3)
-    parser.add_argument('--hidden_channels', type=int, default=256)
-    parser.add_argument('--dropout', type=float, default=0.0)
-    parser.add_argument('--batch_size', type=int, default=64 * 1024)
-    parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--epochs', type=int, default=10)
-    parser.add_argument('--gnn_model', type=str, help='GNN MOdel', default='GCN')
-    parser.add_argument('--eval_steps', type=int, default=1)
-    parser.add_argument('--runs', type=int, default=5)
-    parser.add_argument('--test_ratio', type=float, default=0.08)
-    parser.add_argument('--val_ratio', type=float, default=0.02)
-    parser.add_argument('--neg_len', type=str, default='2000')
-    parser.add_argument("--feature", type=str, default='/dataintent/local/user/v-yinju/haoyan/Data/Movies/Feature/Movies_Llama_2_13b_hf_256_mean.npy', help="Use LM embedding as feature",)
-    parser.add_argument("--path", type=str, default="/dataintent/local/user/v-yinju/haoyan/LinkPrediction/Movies/",
-                        help="Path to save splitting")
-    parser.add_argument("--graph_path", type=str, default="/dataintent/local/user/v-yinju/haoyan/Data/Movies/MoviesGraph.pt",
-                        help="Path to load the graph")
-    args = parser.parse_args()
-    wandb.config = args
-    wandb.init(config=args, reinit=True)
-    print(args)
+def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, n_running):
+    # 定义优化器
+    optimizer = torch.optim.Adam(
+        list(model.parameters()) + list(predictor.parameters()),
+        lr=args.lr)
+    # 进行训练
+    for epoch in range(1, 1 + args.n_epochs):
+        loss = train(model, predictor, feat, adj_t, edge_split, optimizer,
+                     args.batch_size)
 
+        if epoch % args.eval_steps == 0:
+            results = test(model, predictor, feat, adj_t, edge_split, evaluator,
+                           args.batch_size)
+            for key, result in results.items():
+                loggers[key].add_result(n_running, result)
 
-    if not os.path.exists(f'{args.path}{args.neg_len}/'):
-        os.makedirs(f'{args.path}{args.neg_len}/')
-
-    device = f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu'
-    device = torch.device(device)
-
-    if args.graph_path == 'ogbn-arxiv':
-        data = DglNodePropPredDataset(name=args.graph_path)
-        graph, _ = data[0]
-    else:
-        graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
-
-
-    edge_split = split_edge(graph, test_ratio=0.08, val_ratio=0.02, path=args.path, neg_len=args.neg_len)
-
-    x = torch.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
-
-
-    edge_index = edge_split['train']['edge'].t()
-    adj_t = SparseTensor.from_edge_index(edge_index).t()
-    adj_t = adj_t.to_symmetric().to(device)
-
-
-    if args.gnn_model == 'SAGE':
-        model = SAGE(x.size(1), args.hidden_channels,
-                     args.hidden_channels, args.num_layers,
-                     args.dropout).to(device)
-    elif args.gnn_model == 'GCN':
-        model = GCN(x.size(1), args.hidden_channels,
-                    args.hidden_channels, args.num_layers,
-                    args.dropout).to(device)
-    else:
-        raise ValueError('Not implemented')
-
-    predictor = LinkPredictor(args.hidden_channels, args.hidden_channels, 1,
-                              args.num_layers, args.dropout).to(device)
-
-    evaluator = Evaluator(name='Movies')
-    loggers = {
-        'Hits@10': Logger(args.runs, args),
-        'Hits@50': Logger(args.runs, args),
-        'Hits@100': Logger(args.runs, args),
-    }
-
-    for run in range(args.runs):
-        model.reset_parameters()
-        predictor.reset_parameters()
-        optimizer = torch.optim.Adam(
-            list(model.parameters()) + list(predictor.parameters()),
-            lr=args.lr)
-
-        for epoch in range(1, 1 + args.epochs):
-            loss = train(model, predictor, x, adj_t, edge_split, optimizer,
-                         args.batch_size)
-
-            if epoch % args.eval_steps == 0:
-                results = test(model, predictor, x, adj_t, edge_split, evaluator,
-                               args.batch_size)
+            if epoch % args.log_steps == 0:
                 for key, result in results.items():
-                    loggers[key].add_result(run, result)
+                    train_hits, valid_hits, test_hits = result
+                    print(key)
+                    print(f'Run: {n_running + 1:02d}, '
+                          f'Epoch: {epoch:02d}, '
+                          f'Loss: {loss:.4f}, '
+                          f'Train: {100 * train_hits:.2f}%, '
+                          f'Valid: {100 * valid_hits:.2f}%, '
+                          f'Test: {100 * test_hits:.2f}%')
+                print('---')
 
-                if epoch % args.log_steps == 0:
-                    for key, result in results.items():
-                        train_hits, valid_hits, test_hits = result
-                        print(key)
-                        print(f'Run: {run + 1:02d}, '
-                              f'Epoch: {epoch:02d}, '
-                              f'Loss: {loss:.4f}, '
-                              f'Train: {100 * train_hits:.2f}%, '
-                              f'Valid: {100 * valid_hits:.2f}%, '
-                              f'Test: {100 * test_hits:.2f}%')
-                    print('---')
-
-        for key in loggers.keys():
-            print(key)
-            loggers[key].print_statistics(run)
-
-    for key in loggers.keys():
-        print(key)
-        loggers[key].print_statistics(key=key)
-
-
-if __name__ == "__main__":
-    main()
+    return loggers

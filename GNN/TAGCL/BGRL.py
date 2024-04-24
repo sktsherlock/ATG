@@ -63,6 +63,8 @@ class Encoder(torch.nn.Module):
         self.online_encoder = encoder
         self.target_encoder = None
         self.augmentor = augmentor
+
+
         self.predictor = torch.nn.Sequential(
             torch.nn.Linear(hidden_dim, hidden_dim),
             Normalize(hidden_dim, norm=predictor_norm),
