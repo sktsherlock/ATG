@@ -129,9 +129,9 @@ def main():
 
     evaluator = Evaluator()
     loggers = {
-        'Hits@1': Logger(args.n_runs, args),
-        'Hits@5': Logger(args.n_runs, args),
-        'Hits@10': Logger(args.n_runs, args),
+        # 'Hits@1': Logger(args.n_runs, args),
+        # 'Hits@5': Logger(args.n_runs, args),
+        # 'Hits@10': Logger(args.n_runs, args),
         'MRR': Logger(args.n_runs, args),
     }
 
