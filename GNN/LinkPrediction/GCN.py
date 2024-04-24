@@ -9,11 +9,38 @@ import os
 import torch.nn.functional as F
 from ogb.nodeproppred import DglNodePropPredDataset
 from torch_sparse import SparseTensor
+from torch_geometric.nn import GCNConv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from GraphData import Evaluator, split_edge, Logger, load_data
 from LinkTask import linkprediction
 from Utils.model_config import add_common_args
-from Library.GCN import GCN
+
+
+class GCN(torch.nn.Module):
+    def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
+                 dropout):
+        super(GCN, self).__init__()
+
+        self.convs = torch.nn.ModuleList()
+        self.convs.append(GCNConv(in_channels, hidden_channels, cached=True))
+        for _ in range(num_layers - 2):
+            self.convs.append(
+                GCNConv(hidden_channels, hidden_channels, cached=True))
+        self.convs.append(GCNConv(hidden_channels, out_channels, cached=True))
+
+        self.dropout = dropout
+
+    def reset_parameters(self):
+        for conv in self.convs:
+            conv.reset_parameters()
+
+    def forward(self, x, adj_t):
+        for conv in self.convs[:-1]:
+            x = conv(x, adj_t)
+            x = F.relu(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.convs[-1](x, adj_t)
+        return x
 
 
 def args_init():
@@ -84,11 +111,9 @@ def main():
 
     edge_index = edge_split['train']['edge'].t()
     adj_t = SparseTensor.from_edge_index(edge_index).t()
-    print('The first adj_ t is: {}'.format(adj_t))
     adj_t = adj_t.to_symmetric().to(device)
-    print('The second adj_t is:{}'.format(adj_t))
-
-    model = GCN(feat.shape[1], args.n_hidden, args.n_hidden, args.n_layers, F.relu, args.dropout).to(device)
+    # Load the GCN model
+    model = GCN(feat.shape[1], args.n_hidden, args.n_hidden, args.n_layers, args.dropout).to(device)
 
     predictor = LinkPredictor(args.n_hidden, args.n_hidden, 1,
                               3, args.dropout).to(device)
