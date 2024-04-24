@@ -101,8 +101,8 @@ def split_edge(graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len='10
         tra_source, tra_target = all_source[eids[test_size + val_size:]], all_target[eids[test_size + val_size:]]
 
 
-        val_target_neg = th.randint(low=0, high=graph.num_nodes(), size=(len(val_source), neg_len))
-        test_target_neg = th.randint(low=0, high=graph.num_nodes(), size=(len(test_source), neg_len))
+        val_target_neg = th.randint(low=0, high=graph.num_nodes(), size=(len(val_source), int(neg_len)))
+        test_target_neg = th.randint(low=0, high=graph.num_nodes(), size=(len(test_source), int(neg_len)))
 
         # ! 创建dict类型存法
         edge_split = {'train': {'source_node': tra_source, 'target_node': tra_target},
