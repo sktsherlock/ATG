@@ -11,7 +11,7 @@ from ogb.nodeproppred import DglNodePropPredDataset
 from torch_sparse import SparseTensor
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from GraphData import Evaluator, split_edge, Logger, load_data
-from LinkPrediction import linkprediction
+from LinkTask import linkprediction
 from Utils.model_config import add_common_args
 from Library.GCN import GCN
 
