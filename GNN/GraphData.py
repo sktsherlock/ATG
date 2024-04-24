@@ -117,8 +117,7 @@ def split_edge(graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len='10
 
 
 class Evaluator:
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
         self.K = 10
 
 
