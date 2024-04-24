@@ -25,7 +25,7 @@ def args_init():
     argparser.add_argument('--hidden_channels', type=int, default=256)
     argparser.add_argument('--batch_size', type=int, default=2* 1024)
     argparser.add_argument('--neg_len', type=str, default='5000')
-    argparser.add_argument("--link_path", type=str, default="Data/LinkPrediction/Reddit/", required=True,
+    argparser.add_argument("--link_path", type=str, default="Data/LinkPrediction/Movies/", required=True,
                         help="Path to save the splitting for the link prediction tasks")
     return argparser
 
