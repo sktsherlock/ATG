@@ -118,7 +118,7 @@ def main():
     predictor = LinkPredictor(args.n_hidden, args.n_hidden, 1,
                               3, args.dropout).to(device)
 
-    evaluator = Evaluator(name='DBLP')
+    evaluator = Evaluator()
     loggers = {
         'Hits@1': Logger(args.n_runs, args),
         'Hits@5': Logger(args.n_runs, args),
