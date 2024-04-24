@@ -89,7 +89,7 @@ def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, l
 
         if epoch % args.eval_steps == 0:
             results = test(model, predictor, feat, adj_t, edge_split, evaluator,
-                           args.batch_size, loggers, neg_len=neg_len)
+                           args.batch_size, neg_len=neg_len)
             for key, result in results.items():
                 loggers[key].add_result(n_running, result)
 
