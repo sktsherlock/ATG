@@ -115,7 +115,7 @@ def main():
         'target_node_neg': edge_split['valid']['target_node_neg'],
     }
 
-    train_edge_index = torch.stack((edge_split['train']['source_node']), edge_split['train']['target_node']).t()
+    train_edge_index = torch.stack((edge_split['train']['source_node'], edge_split['train']['target_node']), dim=1).t()
 
     feat = torch.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
 
