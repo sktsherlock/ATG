@@ -78,7 +78,7 @@ def main():
         graph = dgl.load_graphs(f'{args.graph_path}')[0][0]
 
 
-    edge_split = split_edge(graph, test_ratio=args.test_ratio, val_ratio=0.02, path=args.path, neg_len=args.neg_len)
+    edge_split = split_edge(graph, test_ratio=args.test_ratio, val_ratio=0.02, path=args.link_path, neg_len=args.neg_len)
 
     feat = torch.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
 
