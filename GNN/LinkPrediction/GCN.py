@@ -104,7 +104,7 @@ def main():
         model.reset_parameters()
         predictor.reset_parameters()
 
-        loggers = linkpredition(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, run)
+        loggers = linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, run)
 
         for key in loggers.keys():
             print(key)
