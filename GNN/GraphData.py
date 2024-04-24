@@ -194,11 +194,13 @@ class Evaluator:
             rank y_pred_pos[i] against y_pred_neg for each i
         '''
 
+        print(y_pred_pos, y_pred_neg, y_pred_pos.shape, y_pred_neg.shape)
         if len(y_pred_neg) < self.K:
             return {'hits@{}'.format(self.K): 1.}
 
         if type_info == 'torch':
             kth_score_in_negative_edges = th.topk(y_pred_neg, self.K)[0][-1]
+            print(kth_score_in_negative_edges)
             hitsK = float(th.sum(y_pred_pos > kth_score_in_negative_edges).cpu()) / len(y_pred_pos)
 
         # type_info is numpy
