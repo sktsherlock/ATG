@@ -92,7 +92,7 @@ def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, l
                            args.batch_size, neg_len=int(neg_len))
             loggers.add_result(n_running, result)
 
-            if epoch % args.log_steps == 0:
+            if epoch % args.log_every == 0:
                 train_mrr, valid_mrr, test_mrr = result
                 print(f'Run: {n_running + 1:02d}, '
                       f'Epoch: {epoch:02d}, '
