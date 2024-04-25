@@ -22,6 +22,9 @@ def args_init():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     add_common_args(argparser)
+    argparser.add_argument(
+        "--k", type=int, default=2, help="number of k in SGC"
+    )
     argparser.add_argument('--hidden_channels', type=int, default=256)
     argparser.add_argument('--batch_size', type=int, default=2 * 1024)
     argparser.add_argument('--neg_len', type=str, default='5000')
