@@ -23,7 +23,7 @@ def train(model, predictor, x, adj_t, edge_split, optimizer, batch_size):
 
         # Just do some trivial random sampling.
         dst_neg = torch.randint(0, x.size(0), src.size(), dtype=torch.long,
-                             device=h.device)
+                                device=h.device)
         neg_out = predictor(h[src], h[dst_neg])
         neg_loss = -torch.log(1 - neg_out + 1e-15).mean()
 
@@ -64,17 +64,29 @@ def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size, neg_len)
             neg_preds += [predictor(h[src], h[dst_neg]).squeeze().cpu()]
         neg_pred = torch.cat(neg_preds, dim=0).view(-1, neg_length)
 
-        return evaluator.eval({
-            'y_pred_pos': pos_pred,
-            'y_pred_neg': neg_pred,
-        })['mrr_list'].mean().item()
+        return evaluator.eval({'y_pred_pos': pos_pred, 'y_pred_neg': neg_pred})
+        # return evaluator.eval({'y_pred_pos': pos_pred, 'y_pred_neg': neg_pred})['mrr_list'].mean().item(),
 
-    train_mrr = test_split('eval_train', neg_len)
-    valid_mrr = test_split('valid', neg_len)
-    test_mrr = test_split('test', neg_len)
+    train_results = test_split('eval_train', neg_len)
+    valid_results = test_split('valid', neg_len)
+    test_results = test_split('test', neg_len)
 
+    Hits1 = train_results['hits1_list'].mean().item(), valid_results['hits1_list'].mean().item(), test_results[
+        'hits1_list'].mean().item()
+    Hits5 = train_results['hits5_list'].mean().item(), valid_results['hits5_list'].mean().item(), test_results[
+        'hits5_list'].mean().item()
+    Hits10 = train_results['hits10_list'].mean().item(), valid_results['hits10_list'].mean().item(), test_results[
+        'hits10_list'].mean().item()
+    MRR = train_results['mrr_list'].mean().item(), valid_results['mrr_list'].mean().item(), test_results[
+        'mrr_list'].mean().item()
+    results = {
+        'Hits@1': Hits1,
+        'Hits@5': Hits5,
+        'Hits@10': Hits10,
+        'MRR': MRR
+    }
 
-    return train_mrr, valid_mrr, test_mrr
+    return results
 
 
 def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, n_running, neg_len):
@@ -88,17 +100,26 @@ def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, l
                      args.batch_size)
 
         if epoch % args.eval_steps == 0:
-            result = test(model, predictor, feat, adj_t, edge_split, evaluator,
-                           args.batch_size, neg_len=int(neg_len))
-            loggers.add_result(n_running, result)
+            results = test(model, predictor, feat, adj_t, edge_split, evaluator,
+                                                            args.batch_size, neg_len=int(neg_len))
+
+            for key in loggers.keys():
+                loggers[key].add_result(n_running, results[key])
+            # for key, result in results.items():
+            #     loggers[key].add_result(run, result)
+
+            #
+            # loggers.add_result(n_running, result)
 
             if epoch % args.log_every == 0:
-                train_mrr, valid_mrr, test_mrr = result
-                print(f'Run: {n_running + 1:02d}, '
-                      f'Epoch: {epoch:02d}, '
-                      f'Loss: {loss:.4f}, '
-                      f'Train: {train_mrr:.4f}, '
-                      f'Valid: {valid_mrr:.4f}, '
-                      f'Test: {test_mrr:.4f}')
+                for key in loggers.keys():
+                    train_result, valid_result, test_result = results[key]
+                    print(key)
+                    print(f'Run: {n_running + 1:02d}, '
+                          f'Epoch: {epoch:02d}, '
+                          f'Loss: {loss:.4f}, '
+                          f'Train: {train_result:.4f}, '
+                          f'Valid: {valid_result:.4f}, '
+                          f'Test: {test_result:.4f}')
 
     return loggers

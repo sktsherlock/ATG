@@ -128,25 +128,29 @@ def main():
                               3, args.dropout).to(device)
 
     evaluator = Evaluator()
-    logger = Logger(args.n_runs, args)
-    # loggers = {
-    #     # 'Hits@1': Logger(args.n_runs, args),
-    #     # 'Hits@5': Logger(args.n_runs, args),
-    #     # 'Hits@10': Logger(args.n_runs, args),
-    #     'MRR': Logger(args.n_runs, args),
-    # }
+    # logger = Logger(args.n_runs, args)
+    loggers = {
+        'Hits@1': Logger(args.n_runs, args),
+        'Hits@5': Logger(args.n_runs, args),
+        'Hits@10': Logger(args.n_runs, args),
+        'MRR': Logger(args.n_runs, args),
+    }
 
     for run in range(args.n_runs):
         model.reset_parameters()
         predictor.reset_parameters()
 
-        logger = linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, logger, run, args.neg_len)
+        loggers = linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, loggers, run, args.neg_len)
 
 
-        logger.print_statistics(run)
+        for key in loggers.keys():
+            print(key)
+            loggers[key].print_statistics(run)
 
 
-    logger.print_statistics()
+    for key in loggers.keys():
+        print(key)
+        loggers[key].print_statistics()
 
 
 if __name__ == "__main__":
