@@ -194,7 +194,7 @@ def main():
 
             if epoch % args.eval_steps == 0:
                 result = test(predictor, feat, edge_split, evaluator,
-                              args.batch_size)
+                              args.batch_size, int(args.neg_len))
 
                 for key in loggers.keys():
                     loggers[key].add_result(run, result[key])
