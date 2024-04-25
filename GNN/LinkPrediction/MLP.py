@@ -69,7 +69,7 @@ def train(predictor, x, split_edge, optimizer, batch_size):
 def test(predictor, x, split_edge, evaluator, batch_size, neg_len):
     predictor.eval()
 
-    def test_split(split):
+    def test_split(split, neg_length):
         source = split_edge[split]['source_node'].to(x.device)
         target = split_edge[split]['target_node'].to(x.device)
         target_neg = split_edge[split]['target_node_neg'].to(x.device)
@@ -81,12 +81,12 @@ def test(predictor, x, split_edge, evaluator, batch_size, neg_len):
         pos_pred = torch.cat(pos_preds, dim=0)
 
         neg_preds = []
-        source = source.view(-1, 1).repeat(1, 1000).view(-1)
+        source = source.view(-1, 1).repeat(1, neg_length).view(-1)
         target_neg = target_neg.view(-1)
         for perm in DataLoader(range(source.size(0)), batch_size):
             src, dst_neg = source[perm], target_neg[perm]
             neg_preds += [predictor(x[src], x[dst_neg]).squeeze().cpu()]
-        neg_pred = torch.cat(neg_preds, dim=0).view(-1, 1000)
+        neg_pred = torch.cat(neg_preds, dim=0).view(-1, neg_length)
 
         return evaluator.eval({'y_pred_pos': pos_pred, 'y_pred_neg': neg_pred})
 
