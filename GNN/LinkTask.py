@@ -73,15 +73,15 @@ def test(model, predictor, x, adj_t, edge_split, evaluator, batch_size, neg_len)
 
     Hits1 = train_results['hits@1_list'].mean().item(), valid_results['hits@1_list'].mean().item(), test_results[
         'hits@1_list'].mean().item()
-    Hits5 = train_results['hits@5_list'].mean().item(), valid_results['hits@5_list'].mean().item(), test_results[
-        'hits@5_list'].mean().item()
+    Hits3 = train_results['hits@3_list'].mean().item(), valid_results['hits@3_list'].mean().item(), test_results[
+        'hits@3_list'].mean().item()
     Hits10 = train_results['hits@10_list'].mean().item(), valid_results['hits@10_list'].mean().item(), test_results[
         'hits@10_list'].mean().item()
     MRR = train_results['mrr_list'].mean().item(), valid_results['mrr_list'].mean().item(), test_results[
         'mrr_list'].mean().item()
     results = {
         'Hits@1': Hits1,
-        'Hits@5': Hits5,
+        'Hits@3': Hits3,
         'Hits@10': Hits10,
         'MRR': MRR
     }

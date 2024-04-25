@@ -136,12 +136,12 @@ def _eval_mrr(y_pred_pos, y_pred_neg, type_info):
         pessimistic_rank = (y_pred_neg >= y_pred_pos).sum(dim=1)
         ranking_list = 0.5 * (optimistic_rank + pessimistic_rank) + 1
         hits1_list = (ranking_list <= 1).to(th.float)
-        hits5_list = (ranking_list <= 5).to(th.float)
+        hits3_list = (ranking_list <= 3).to(th.float)
         hits10_list = (ranking_list <= 10).to(th.float)
         mrr_list = 1./ranking_list.to(th.float)
 
         return {'hits@1_list': hits1_list,
-                 'hits@5_list': hits5_list,
+                 'hits@3_list': hits3_list,
                  'hits@10_list': hits10_list,
                  'mrr_list': mrr_list}
 
@@ -151,12 +151,12 @@ def _eval_mrr(y_pred_pos, y_pred_neg, type_info):
         pessimistic_rank = (y_pred_neg > y_pred_pos).sum(dim=1)
         ranking_list = 0.5 * (optimistic_rank + pessimistic_rank) + 1
         hits1_list = (ranking_list <= 1).astype(np.float32)
-        hits5_list = (ranking_list <= 5).astype(np.float32)
+        hits3_list = (ranking_list <= 3).astype(np.float32)
         hits10_list = (ranking_list <= 10).astype(np.float32)
         mrr_list = 1./ranking_list.astype(np.float32)
 
         return {'hits@1_list': hits1_list,
-                 'hits@5_list': hits5_list,
+                 'hits@3_list': hits3_list,
                  'hits@10_list': hits10_list,
                  'mrr_list': mrr_list}
 
@@ -270,13 +270,13 @@ class Logger(object):
                        f'Highest_Train_{key}_Std': float(f'{r.std():.2f}')})
             r = best_result[:, 1]
             print(f'Highest_Valid_{key}: {r.mean():.2f} ± {r.std():.2f}')
-            wandb.log({f'{key} Highest Valid Acc': float(f'{r.mean():.2f}'),
-                       f'{key} Highest Valid Std': float(f'{r.std():.2f}')})
+            wandb.log({f'Highest_Valid_{key}': float(f'{r.mean():.2f}'),
+                       f'Highest_Valid_{key}_Std': float(f'{r.std():.2f}')})
             r = best_result[:, 2]
-            print(f'{key} Final Train: {r.mean():.2f} ± {r.std():.2f}')
+            print(f'Final_Train_{key} : {r.mean():.2f} ± {r.std():.2f}')
             wandb.log(
-                {f'{key} Final Train Acc': float(f'{r.mean():.2f}'), f'{key} Final Train Std': float(f'{r.std():.2f}')})
+                {f'Final_Train_{key}': float(f'{r.mean():.2f}'), f'Final_Train_{key}_Std': float(f'{r.std():.2f}')})
             r = best_result[:, 3]
-            print(f'{key} Final Test: {r.mean():.2f} ± {r.std():.2f}')
+            print(f'Final_Test_{key}: {r.mean():.2f} ± {r.std():.2f}')
             wandb.log(
-                {f'{key} Final Test Acc': float(f'{r.mean():.2f}'), f'{key} Final Test Std': float(f'{r.std():.2f}')})
+                {f'Final_Test_{key}': float(f'{r.mean():.2f}'), f'Final_Test_{key}_Std': float(f'{r.std():.2f}')})

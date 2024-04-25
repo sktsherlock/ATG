@@ -108,7 +108,7 @@ def main():
     # logger = Logger(args.n_runs, args)
     loggers = {
         'Hits@1': Logger(args.n_runs, args),
-        'Hits@5': Logger(args.n_runs, args),
+        'Hits@3': Logger(args.n_runs, args),
         'Hits@10': Logger(args.n_runs, args),
         'MRR': Logger(args.n_runs, args),
     }
