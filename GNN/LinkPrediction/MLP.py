@@ -189,11 +189,11 @@ def main():
         optimizer = torch.optim.Adam(predictor.parameters(), lr=args.lr)
 
         for epoch in range(1, 1 + args.n_epochs):
-            loss = train(predictor, feat, split_edge, optimizer,
+            loss = train(predictor, feat, edge_split, optimizer,
                          args.batch_size)
 
             if epoch % args.eval_steps == 0:
-                result = test(predictor, feat, split_edge, evaluator,
+                result = test(predictor, feat, edge_split, evaluator,
                               args.batch_size)
 
                 for key in loggers.keys():
