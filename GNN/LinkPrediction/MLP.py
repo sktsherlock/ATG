@@ -172,7 +172,7 @@ def main():
 
     feat = torch.from_numpy(np.load(args.feature).astype(np.float32)).to(device)
 
-    predictor = LinkPredictor(args.n_hidden, args.n_hidden, 1,
+    predictor = LinkPredictor(feat.shape[1], args.n_hidden, 1,
                               3, args.dropout).to(device)
 
     evaluator = Evaluator()
