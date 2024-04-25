@@ -88,21 +88,17 @@ def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, l
                      args.batch_size)
 
         if epoch % args.eval_steps == 0:
-            results = test(model, predictor, feat, adj_t, edge_split, evaluator,
+            result = test(model, predictor, feat, adj_t, edge_split, evaluator,
                            args.batch_size, neg_len=int(neg_len))
-            for key, result in results.items():
-                loggers[key].add_result(n_running, result)
+            loggers.add_result(n_running, result)
 
-            if epoch % args.log_every == 0:
-                for key, result in results.items():
-                    train_hits, valid_hits, test_hits = result
-                    print(key)
-                    print(f'Run: {n_running + 1:02d}, '
-                          f'Epoch: {epoch:02d}, '
-                          f'Loss: {loss:.4f}, '
-                          f'Train: {100 * train_hits:.2f}%, '
-                          f'Valid: {100 * valid_hits:.2f}%, '
-                          f'Test: {100 * test_hits:.2f}%')
-                print('---')
+            if epoch % args.log_steps == 0:
+                train_mrr, valid_mrr, test_mrr = result
+                print(f'Run: {n_running + 1:02d}, '
+                      f'Epoch: {epoch:02d}, '
+                      f'Loss: {loss:.4f}, '
+                      f'Train: {train_mrr:.4f}, '
+                      f'Valid: {valid_mrr:.4f}, '
+                      f'Test: {test_mrr:.4f}')
 
     return loggers
