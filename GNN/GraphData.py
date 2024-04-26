@@ -111,7 +111,7 @@ def split_edge(graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len='10
                       'test': {'source_node': test_source, 'target_node': test_target,
                                'target_node_neg': test_target_neg}}
 
-        th.save(edge_split, os.path.join(path, 'edge_split.pt'))
+        th.save(edge_split, os.path.join(path, f'{neg_len}/edge_split.pt'))
 
     return edge_split
 
