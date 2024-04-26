@@ -217,7 +217,7 @@ def main():
 
     for key in loggers.keys():
         print(key)
-        loggers[key].print_statistics()
+        loggers[key].print_statistics(key=key)
 
 
 if __name__ == "__main__":
