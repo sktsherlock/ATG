@@ -4,7 +4,7 @@
 ```shell
 mkdir ~/ATG/Data/Movies/
 cd ~/ATG/Data/Movies/
-wget https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Movies_and_TV.json.gz
+wget --no-check-certificate https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Movies_and_TV.json.gz
 gunzip meta_Movies_and_TV.json.gz
 cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Movies/meta_Movies_and_TV.json' --name 'Movies' --class_numbers 20

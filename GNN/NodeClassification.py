@@ -36,7 +36,7 @@ def evaluate(
 
 
 def classification(
-        args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, n_running, save_path):
+        args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, n_running, save_path=None):
     if args.early_stop_patience is not None:
         stopper = EarlyStopping(patience=args.early_stop_patience)
     optimizer = optim.AdamW(
@@ -94,7 +94,8 @@ def classification(
             if val_result > best_val_result:
                 best_val_result = val_result
                 final_test_result = test_result
-                th.save(model, os.path.join(save_path, "model.pt"))
+                if save_path is not None:
+                    th.save(model, os.path.join(save_path, "model.pt"))
 
             if args.early_stop_patience is not None:
                 if stopper.step(val_result):
@@ -111,15 +112,17 @@ def classification(
     print("*" * 50)
     print(f"Best val  {args.metric}: {best_val_result}, Final test  {args.metric}: {final_test_result}")
     print("*" * 50)
-    # 加载模型并进行推理得到完整的predictions
-    load_model = th.load(os.path.join(save_path, "model.pt"))
-    load_model.eval()
-    with th.no_grad():
-        pred = load_model(graph, feat)
-    print('The prediction files is maked.')
+    if save_path is not None:
+        # 加载模型并进行推理得到完整的predictions
+        load_model = th.load(os.path.join(save_path, "model.pt"))
+        load_model.eval()
+        with th.no_grad():
+            pred = load_model(graph, feat)
+        print('The prediction files is maked.')
+        return best_val_result, final_test_result, pred
 
 
-    return best_val_result, final_test_result, pred
+    return best_val_result, final_test_result
 
 
 def mag_train(model, graph, text_feat, visual_feat, labels, train_idx, optimizer, label_smoothing):

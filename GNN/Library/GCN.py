@@ -166,7 +166,7 @@ def main():
         print(f'The save_path now is {exp_seed_path}')
         model.reset_parameters()
         val_result, test_result, predictions = classification(
-            args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1, exp_seed_path
+            args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
