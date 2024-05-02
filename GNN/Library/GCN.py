@@ -165,14 +165,14 @@ def main():
             os.makedirs(exp_seed_path)
         print(f'The save_path now is {exp_seed_path}')
         model.reset_parameters()
-        val_result, test_result, predictions = classification(
+        val_result, test_result = classification(
             args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
         test_results.append(test_result)
-        np.save(os.path.join(exp_seed_path, f"Seed{args.seed + run}.npy"), predictions.cpu())
-        print(f'Success saving predictions in the {exp_seed_path}')
+        # np.save(os.path.join(exp_seed_path, f"Seed{args.seed + run}.npy"), predictions.cpu())
+        # print(f'Success saving predictions in the {exp_seed_path}')
 
     print(f"Runned {args.n_runs} times")
     print(f"Average val {args.metric}: {np.mean(val_results)} ± {np.std(val_results)}")
