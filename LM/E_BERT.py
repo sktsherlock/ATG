@@ -27,6 +27,7 @@ from transformers import (
     AutoConfig,
     HfArgumentParser,
     set_seed,
+    BitsAndBytesConfig
 )
 
 from Task import CLSClassifier, MEANClassifier
@@ -210,6 +211,10 @@ class ModelArguments:
     label_smoothing: float = field(
         default=0.1,
         metadata={"help": "The label smoothing factor to use"}
+    )
+    model_type: str = field(
+        default=None,
+        metadata={"help": "Whether to use 8bit load the model"}
     )
     cls_head_bias: bool = field(
         default=True,
@@ -415,13 +420,32 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    encoder = AutoModel.from_pretrained(
-        model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir,
-        revision=model_args.model_revision,
-        token=model_args.token,
-        trust_remote_code=model_args.trust_remote_code,
-    )
+    if model_args.model_type == '8bit':
+        quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+        encoder = AutoModel.from_pretrained(
+            model_args.model_name_or_path,
+            cache_dir=model_args.cache_dir,
+            token=model_args.token,
+            trust_remote_code=model_args.trust_remote_code,
+            quantization_config=quantization_config,
+        )
+    elif model_args.model_type == 'bf16':
+        encoder = AutoModel.from_pretrained(
+            model_args.model_name_or_path,
+            cache_dir=model_args.cache_dir,
+            token=model_args.token,
+            trust_remote_code=model_args.trust_remote_code,
+            torch_dtype=torch.bfloat16
+        )
+    else:
+        encoder = AutoModel.from_pretrained(
+            model_args.model_name_or_path,
+            cache_dir=model_args.cache_dir,
+            revision=model_args.model_revision,
+            token=model_args.token,
+            trust_remote_code=model_args.trust_remote_code,
+        )
+
     print(encoder)
     peft_encoder = PeftModelForFeatureExtraction(encoder, config)
     peft_encoder.print_trainable_parameters()
