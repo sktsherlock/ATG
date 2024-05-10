@@ -429,13 +429,14 @@ def main():
             trust_remote_code=model_args.trust_remote_code,
             quantization_config=quantization_config,
         )
-    elif model_args.model_type == 'bf16':
+    elif model_args.model_type == '4bit':
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True)
         encoder = AutoModel.from_pretrained(
             model_args.model_name_or_path,
             cache_dir=model_args.cache_dir,
             token=model_args.token,
             trust_remote_code=model_args.trust_remote_code,
-            torch_dtype=torch.bfloat16
+            quantization_config=quantization_config,
         )
     else:
         encoder = AutoModel.from_pretrained(
