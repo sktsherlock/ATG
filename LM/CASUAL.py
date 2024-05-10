@@ -180,36 +180,9 @@ if config.prompt == 'keywords':
 else:
     prompt_dataset = dataset.map(add_summary_prompt)
 
-# for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], "TA"), do_sample=True, max_new_tokens=20, use_cache=True, repetition_penalty=2,
-#                      top_k=10, num_return_sequences=3, eos_token_id=tokenizer.eos_token_id, return_full_text=False)):
-#     print(out)
-
 # 打开CSV文件并创建写入器
 generated_text_list = []  # 创建一个列表用于存储生成的文本
 
-# for idx in tqdm(range(len(key_dataset))):
-#     data = key_dataset[idx]
-#     inputs = tokenizer(data, return_tensors="pt").to("cuda")
-#     generated_ids = model_8bit.generate(**inputs, do_sample=True, max_new_tokens=20,
-#                                         use_cache=True, repetition_penalty=2.5,
-#                                         top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id)
-#     out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True, return_full_text=False)
-#
-#
-#     generated_text = out[0]
-#     generated_text_list.append(generated_text)
-
-# df = pd.DataFrame({'Keywords': generated_text_list})
-# df.to_csv(output_file, index=False)
-
-
-# for out in tqdm(pipe(KeyDataset(prompt_dataset['train'], config.text_column), do_sample=True,
-#                      max_new_tokens=config.max_new_tokens, use_cache=True,
-#                      repetition_penalty=2.5,
-#                      top_k=10, num_return_sequences=1, eos_token_id=tokenizer.eos_token_id,
-#                      return_full_text=config.return_full_text)):
-#     generated_text = out[0]['generated_text'] if config.task_name == "text-generation" else out[0]['summary_text']
-#     generated_text_list.append(generated_text)
 
 batch_size = 1000  # 每次生成的批次大小
 
