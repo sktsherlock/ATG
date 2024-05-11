@@ -220,6 +220,7 @@ def main():
     parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the  NPY file', required=True)
     parser.add_argument('--path', type=str, default='./', help='Path to the NPY File', required=True)
     parser.add_argument('--pretrain_path', type=str, default=None, help='Path to the NPY File')
+    parser.add_argument('--output_dir', type=str, default=None, help='Path to the NPY File')
     parser.add_argument('--token_folder', type=str, default='/dataintent/local/user/v-yinju/haoyan/Token/Movies/', help='Path to the NPY File', required=True)
     parser.add_argument('--save_path', type=str, default=None, help='Path to the NPY File')
     parser.add_argument('--max_length', type=int, default=512, help='Maximum length of the text for language models')
@@ -248,8 +249,11 @@ def main():
     root_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.dirname(root_dir.rstrip('/'))
     pretrained_model_path = os.path.join(base_dir, args.path)
+    token_folder = os.path.join(base_dir, args.token_folder)
     if not os.path.exists(pretrained_model_path):
         os.makedirs(pretrained_model_path)
+    if not os.path.exists(token_folder):
+        os.makedirs(token_folder)
     data_files = os.path.join(base_dir, csv_file)
 
     # 读取CSV文件
@@ -268,8 +272,7 @@ def main():
     tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(tokenized)
     print(dataset)
-    token_folder = args.token_folder
-    mkdir_p(token_folder)
+
     for k in tokenized.data:
         with open(os.path.join(token_folder, f'{k}.npy'), 'wb') as f:
             np.save(f, tokenized.data[k])
