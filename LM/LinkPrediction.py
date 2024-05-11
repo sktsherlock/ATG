@@ -21,12 +21,22 @@ class MeanEmbInfModel(PreTrainedModel):
         super().__init__(model.config)
         self.encoder = model
 
+
+    def mean_pooling(self, token_embeddings, attention_mask):
+        # Mask out padding tokens
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size())
+        masked_token_embeddings = token_embeddings * input_mask_expanded
+        # Calculate mean pooling
+        mean_embeddings = masked_token_embeddings.sum(dim=1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+        return mean_embeddings
+
+
     @torch.no_grad()
     def forward(self, input_ids, attention_mask):
         # Extract outputs from the model
         outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
-        # Use Mean Emb as sentence emb.
-        node_mean_emb = torch.mean(outputs.last_hidden_state, dim=1)
+        outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
+        node_mean_emb = (self.mean_pooling(outputs.last_hidden_state, attention_mask))
         return TokenClassifierOutput(logits=node_mean_emb)
 
 
