@@ -225,12 +225,12 @@ def evaluate(model, labels, train_idx, val_idx, test_idx, metric, average):
     lr = LogisticRegression(
         solver="lbfgs", multi_class="auto", max_iter=200
     ).fit(x_train, labels[train_idx])
-    train_acc = lr.score(x_train, labels[train_idx])
+
     train_results = get_metric(lr.predict(x_train), labels[train_idx], metric, average=average)
     val_results = get_metric(lr.predict(x_val), labels[val_idx], metric, average=average)
     test_results = get_metric(lr.predict(x_test), labels[test_idx], metric, average=average)
 
-    return train_results, val_results, test_results, train_acc
+    return train_results, val_results, test_results
 
 
 # 参数定义模块
@@ -325,8 +325,7 @@ def main():
             train_loss = train(model, loader, optimizer, device)
 
             if epoch % args.eval_steps == 0:
-                train_result, val_result, test_result, debug_train_acc = evaluate(model, labels, train_idx, val_idx, test_idx, args.metric, args.average)
-                print(f'Train result: {train_result}, Train acc: {debug_train_acc}')
+                train_result, val_result, test_result = evaluate(model, labels, train_idx, val_idx, test_idx, args.metric, args.average)
                 wandb.log(
                     {'Train_loss': train_loss,
                      'Train_result': train_result,
