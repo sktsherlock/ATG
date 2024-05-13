@@ -245,7 +245,7 @@ def main():
     args = argparser.parse_args()
     wandb.init(config=args, reinit=True)
 
-    device = th.device('cpu')
+    device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio, val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
