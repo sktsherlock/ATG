@@ -218,13 +218,17 @@ def evaluate(model, labels, train_idx, val_idx, test_idx, metric, average):
         x_train = model(train_idx)
         x_val = model(val_idx)
         x_test = model(test_idx)
-        lr = LogisticRegression(
-            solver="lbfgs", multi_class="auto", max_iter=200
-        ).fit(x_train, labels[train_idx])
-        train_acc = lr.score(x_train, labels[train_idx])
-        train_results = get_metric(lr.predict(x_train), labels[train_idx], metric, average=average)
-        val_results = get_metric(lr.predict(x_val), labels[val_idx], metric, average=average)
-        test_results = get_metric(lr.predict(x_test), labels[test_idx], metric, average=average)
+    x_train = x_train.cpu().numpy()
+    x_val = x_val.cpu().numpy()
+    x_test = x_test.cpu().numpy()
+
+    lr = LogisticRegression(
+        solver="lbfgs", multi_class="auto", max_iter=200
+    ).fit(x_train, labels[train_idx])
+    train_acc = lr.score(x_train, labels[train_idx])
+    train_results = get_metric(lr.predict(x_train), labels[train_idx], metric, average=average)
+    val_results = get_metric(lr.predict(x_val), labels[val_idx], metric, average=average)
+    test_results = get_metric(lr.predict(x_test), labels[test_idx], metric, average=average)
 
         return train_results, val_results, test_results, train_acc
 
