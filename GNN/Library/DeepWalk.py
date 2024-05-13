@@ -1,4 +1,4 @@
-import numpy as np
+import dgl
 import argparse
 # from ge.classify import read_node_label,
 from gensim.models import Word2Vec
@@ -90,11 +90,12 @@ if __name__ == "__main__":
         graph = graph.remove_self_loop().add_self_loop()
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
 
+    nx_g = dgl.to_networkx(graph)
 
     # G = nx.read_edgelist('../data/wiki/Wiki_edgelist.txt',
     #                      create_using=nx.DiGraph(), nodetype=None, data=[('weight', int)])
 
-    model = DeepWalk(graph, walk_length=10, num_walks=80, workers=1)
+    model = DeepWalk(nx_g, walk_length=10, num_walks=80, workers=1)
     model.train(window_size=5, iter=3)
     embeddings = model.get_embeddings()
 
