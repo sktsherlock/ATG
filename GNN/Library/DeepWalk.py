@@ -43,9 +43,9 @@ def evaluate(model, labels, train_idx, val_idx, test_idx, metric, average):
         solver="lbfgs", multi_class="auto", max_iter=500
     ).fit(X[train_idx].cpu().numpy(), labels[train_idx].cpu().numpy())
 
-    train_results = get_metric(lr.predict(X[train_idx]), labels[train_idx], metric, average=average)
-    val_results = get_metric(lr.predict(X[val_idx]), labels[val_idx], metric, average=average)
-    test_results = get_metric(lr.predict(X[test_idx]), labels[test_idx], metric, average=average)
+    train_results = get_metric(lr.predict(X[train_idx].cpu().numpy()), labels[train_idx], metric, average=average)
+    val_results = get_metric(lr.predict(X[val_idx].cpu().numpy()), labels[val_idx], metric, average=average)
+    test_results = get_metric(lr.predict(X[test_idx].cpu().numpy()), labels[test_idx], metric, average=average)
 
     return train_results, val_results, test_results
 
