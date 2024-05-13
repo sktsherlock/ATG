@@ -247,8 +247,7 @@ def main():
     device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
 
     # load data
-    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                            val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
+    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio, val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
 
     # add reverse edges, tranfer to the  undirected graph
     if args.undirected:
@@ -282,9 +281,9 @@ def main():
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
         observe_graph = observe_graph.remove_self_loop().add_self_loop()
 
-    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
+    # feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
     n_classes = (labels.max()+1).item()
-    print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
+    # print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
 
     graph.create_formats_()
     observe_graph.create_formats_()
