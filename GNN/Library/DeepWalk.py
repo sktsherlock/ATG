@@ -100,7 +100,7 @@ if __name__ == "__main__":
         set_seed(args.seed + run)
 
         model = DeepWalk(nx_g, walk_length=10, num_walks=80, workers=1)
-        model.train(window_size=5, iter=3)
+        model.train(window_size=1, iter=1) # 5,3
         embeddings = model.get_embeddings()
 
         val_result, test_result = evaluate_embeddings(embeddings, labels, train_idx, val_idx, test_idx)
