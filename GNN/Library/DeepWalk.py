@@ -19,11 +19,12 @@ from GraphData import load_data, set_seed
 from Utils.model_config import add_common_args
 
 
-def train(model, loader, optimizer):
+def train(model, loader, optimizer, device):
     model.train()
 
     total_loss = 0
     for batch_walk in loader:
+        batch_walk = batch_walk.to(device)
         loss = model(batch_walk)
         optimizer.zero_grad()
         loss.backward()
@@ -132,7 +133,7 @@ def main():
         best_val_result, final_test_result = 0, 0
 
         for epoch in range(1, args.n_epochs + 1):
-            train_loss = train(model, loader, optimizer)
+            train_loss = train(model, loader, optimizer, device)
 
             if epoch % args.eval_steps == 0:
                 train_result, val_result, test_result = evaluate(model, labels, train_idx, val_idx, test_idx,
