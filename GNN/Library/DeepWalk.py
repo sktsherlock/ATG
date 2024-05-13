@@ -1,106 +1,164 @@
-import dgl
-import argparse
-# from ge.classify import read_node_label,
-from gensim.models import Word2Vec
-from walker import RandomWalker, Classifier
-from sklearn.linear_model import LogisticRegression
-import networkx as nx
 import sys
-import os
+import copy
+import torch.nn as nn
+import dgl.nn.pytorch as dglnn
+import argparse
 import wandb
+import torch as th
+import numpy as np
+import torch.nn.functional as F
+import os
+from dgl.sampling import node2vec_random_walk
+from sklearn.linear_model import LogisticRegression
+from dgl.nn.pytorch import DeepWalk
+from torch.utils.data import DataLoader
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from Utils.model_config import add_common_args
+from LossFunction import get_metric
 from GraphData import load_data, set_seed
+from Utils.model_config import add_common_args
 
 
-class DeepWalk:
-    def __init__(self, graph, walk_length, num_walks, workers=1):
+def train(model, loader, optimizer):
+    model.train()
 
-        self.graph = graph
-        self.w2v_model = None
-        self._embeddings = {}
+    total_loss = 0
+    for batch_walk in loader:
+        loss = model(batch_walk)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
 
-        self.walker = RandomWalker(
-            graph, p=1, q=1, )
-        self.sentences = self.walker.simulate_walks(
-            num_walks=num_walks, walk_length=walk_length, workers=workers, verbose=1)
-
-    def train(self, embed_size=128, window_size=5, workers=3, iter=5, **kwargs):
-
-        kwargs["sentences"] = self.sentences
-        kwargs["min_count"] = kwargs.get("min_count", 0)
-        kwargs["vector_size"] = embed_size
-        kwargs["sg"] = 1  # skip gram
-        kwargs["hs"] = 1  # deepwalk use Hierarchical Softmax
-        kwargs["workers"] = workers
-        kwargs["window"] = window_size
-        kwargs["epochs"] = iter
-
-        print("Learning embedding vectors...")
-        model = Word2Vec(**kwargs)
-        print("Learning embedding vectors done!")
-
-        self.w2v_model = model
-        return model
-
-    def get_embeddings(self, ):
-        if self.w2v_model is None:
-            print("model not train")
-            return {}
-
-        self._embeddings = {}
-        for word in self.graph.nodes():
-            self._embeddings[word] = self.w2v_model.wv[word]
-
-        return self._embeddings
+    return total_loss / len(loader)
 
 
+@th.no_grad()
+def evaluate(model, labels, train_idx, val_idx, test_idx, metric, average):
+    model.eval()
+    X = model.node_embed.weight.detach()
+
+    lr = LogisticRegression(
+        solver="lbfgs", multi_class="auto", max_iter=500
+    ).fit(X[train_idx].numpy, labels[train_idx].numpy())
+
+    train_results = get_metric(lr.predict(X[train_idx]), labels[train_idx], metric, average=average)
+    val_results = get_metric(lr.predict(X[val_idx]), labels[val_idx], metric, average=average)
+    test_results = get_metric(lr.predict(X[test_idx]), labels[test_idx], metric, average=average)
+
+    return train_results, val_results, test_results
+
+
+# 参数定义模块
 def args_init():
     argparser = argparse.ArgumentParser(
-        "DeepWalk Config",
+        "Deepwalk Config",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     add_common_args(argparser)
     return argparser
 
 
-
-def evaluate_embeddings(x, y, tid, vid, testid):
-    clf = Classifier(embeddings=embeddings, clf=LogisticRegression())
-    val_result, test_result = clf.train_evaluate(x, y, tid, vid, testid)
-    return val_result, test_result
-
-
-
-
-if __name__ == "__main__":
+def main():
     argparser = args_init()
     args = argparser.parse_args()
     wandb.init(config=args, reinit=True)
-    # load data
-    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio, val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
 
+    device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
+
+    # load data
+    graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
+                                                            val_ratio=args.val_ratio, name=args.data_name,
+                                                            fewshots=args.fewshots)
+
+    # add reverse edges, tranfer to the  undirected graph
     if args.undirected:
         print("The Graph change to the undirected graph")
         srcs, dsts = graph.all_edges()
         graph.add_edges(dsts, srcs)
+
+    # 定义可观测图数据，用于inductive实验设置；
+    observe_graph = copy.deepcopy(graph)
+
+    if args.inductive:
+        # 构造Inductive Learning 实验条件
+
+        isolated_nodes = th.cat((val_idx, test_idx))
+        sort_isolated_nodes, _ = th.sort(isolated_nodes)
+        # 从图中删除指定节点
+        observe_graph.remove_nodes(sort_isolated_nodes)
+
+        # 添加相同数量的孤立节点
+        observe_graph.add_nodes(len(sort_isolated_nodes))
+        print(observe_graph)
+        print('***************')
+        print(graph)
 
     # add self-loop
     if args.selfloop:
         print(f"Total edges before adding self-loop {graph.number_of_edges()}")
         graph = graph.remove_self_loop().add_self_loop()
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
+        observe_graph = observe_graph.remove_self_loop().add_self_loop()
 
-    nx_g = dgl.to_networkx(graph)
+    # feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
+    n_classes = (labels.max() + 1).item()
+    # print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
 
-    # G = nx.read_edgelist('../data/wiki/Wiki_edgelist.txt',
-    #                      create_using=nx.DiGraph(), nodetype=None, data=[('weight', int)])
+    graph.create_formats_()
+    observe_graph.create_formats_()
+
+    print(f'Train_idx: {len(train_idx)}')
+    print(f'Valid_idx: {len(val_idx)}')
+    print(f'Test_idx: {len(test_idx)}')
+
+    # run
+    val_results = []
+    test_results = []
+
+    # Model implementation
+    # model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
+
+
+
     for run in range(args.n_runs):
-
         set_seed(args.seed + run)
+        model = DeepWalk(observe_graph).to(device)
+        model.reset_parameters()
+        loader = DataLoader(th.arange(observe_graph.num_nodes()), batch_size=128,
+                            shuffle=True, collate_fn=model.sample)
+        optimizer = th.optim.AdamW(model.parameters(), lr=args.lr)
 
-        model = DeepWalk(nx_g, walk_length=10, num_walks=80, workers=1)
-        model.train(window_size=1, iter=1) # 5,3
-        embeddings = model.get_embeddings()
+        best_val_result, final_test_result = 0, 0
 
-        val_result, test_result = evaluate_embeddings(embeddings, labels, train_idx, val_idx, test_idx)
+        for epoch in range(1, args.n_epochs + 1):
+            train_loss = train(model, loader, optimizer)
+
+            if epoch % args.eval_steps == 0:
+                train_result, val_result, test_result = evaluate(model, labels, train_idx, val_idx, test_idx,
+                                                                 args.metric, args.average)
+                wandb.log(
+                    {'Train_loss': train_loss,
+                     'Train_result': train_result,
+                     'Val_result': val_result, 'Test_result': test_result})
+
+                if val_result > best_val_result:
+                    best_val_result = val_result
+                    final_test_result = test_result
+
+        # val_result, test_result = classification(
+        #     args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
+        # )
+
+        wandb.log({f'Val_{args.metric}': best_val_result, f'Test_{args.metric}': final_test_result})
+        val_results.append(best_val_result)
+        test_results.append(final_test_result)
+
+    print(f"Runned {args.n_runs} times")
+    print(f"Average val {args.metric}: {np.mean(val_results)} ± {np.std(val_results)}")
+    print(f"Average test {args.metric}: {np.mean(test_results)} ± {np.std(test_results)}")
+    wandb.log({f'Mean_Val_{args.metric}': np.mean(val_results), f'Mean_Test_{args.metric}': np.mean(test_results)})
+
+
+if __name__ == "__main__":
+    main()
