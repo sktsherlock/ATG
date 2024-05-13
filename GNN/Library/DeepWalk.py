@@ -128,7 +128,7 @@ def main():
         model.reset_parameters()
         loader = DataLoader(th.arange(observe_graph.num_nodes()), batch_size=128,
                             shuffle=True, collate_fn=model.sample)
-        optimizer = th.optim.AdamW(model.parameters(), lr=args.lr)
+        optimizer = th.optim.SparseAdam(model.parameters(), lr=args.lr)
 
         best_val_result, final_test_result = 0, 0
 
