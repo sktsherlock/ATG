@@ -244,7 +244,7 @@ def main():
     args = argparser.parse_args()
     wandb.init(config=args, reinit=True)
 
-    device = th.device("cuda:%d" % args.gpu if th.cuda.is_available() else 'cpu')
+    device = th.device('cpu')
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio, val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
@@ -288,14 +288,11 @@ def main():
     graph.create_formats_()
     observe_graph.create_formats_()
 
-    train_idx = train_idx.to(device)
-    val_idx = val_idx.to(device)
-    test_idx = test_idx.to(device)
+
     print(f'Train_idx: {len(train_idx)}')
     print(f'Valid_idx: {len(val_idx)}')
     print(f'Test_idx: {len(test_idx)}')
 
-    labels = labels.to(device)
 
     # run
     val_results = []
