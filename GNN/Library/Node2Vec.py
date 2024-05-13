@@ -219,7 +219,7 @@ def evaluate(model, labels, train_idx, val_idx, test_idx, metric, average):
         x_val = model(val_idx)
         x_test = model(test_idx)
         lr = LogisticRegression(
-            solver="lbfgs", multi_class="auto", max_iter=500
+            solver="lbfgs", multi_class="auto", max_iter=200
         ).fit(x_train, labels[train_idx])
         train_results = get_metric(lr.predict(x_train), labels[train_idx], metric, average=average)
         val_results = get_metric(lr.predict(x_val), labels[val_idx], metric, average=average)
@@ -308,6 +308,7 @@ def main():
 
     for run in range(args.n_runs):
         set_seed(args.seed + run)
+
 
         model.reset_parameters()
         loader = model.loader(batch_size=128)
