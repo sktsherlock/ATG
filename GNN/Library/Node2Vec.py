@@ -315,7 +315,7 @@ def main():
         set_seed(args.seed + run)
 
         model.reset_parameters()
-        loader = model.loader(batch_size=args.batch_size)
+        loader = model.loader(batch_size=128)
         optimizer = th.optim.AdamW(model.parameters(), lr=args.lr)
 
         best_val_result, final_test_result = 0, 0
