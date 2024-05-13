@@ -62,6 +62,7 @@ class Classifier(object):
         Y_test = Y[test_idx]
 
         self.train(X_train, Y_train, Y)
+        print('--------------------------------')
 
         return self.evaluate(X_val, Y_val), self.evaluate(X_test, Y_test)
 

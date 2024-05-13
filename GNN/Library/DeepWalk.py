@@ -67,7 +67,8 @@ def args_init():
 
 def evaluate_embeddings(x, y, tid, vid, testid):
     clf = Classifier(embeddings=embeddings, clf=LogisticRegression())
-    clf.train_evaluate(x, y, tid, vid, testid)
+    val_result, test_result = clf.train_evaluate(x, y, tid, vid, testid)
+    return val_result, test_result
 
 
 
@@ -94,9 +95,12 @@ if __name__ == "__main__":
 
     # G = nx.read_edgelist('../data/wiki/Wiki_edgelist.txt',
     #                      create_using=nx.DiGraph(), nodetype=None, data=[('weight', int)])
+    for run in range(args.n_runs):
 
-    model = DeepWalk(nx_g, walk_length=10, num_walks=80, workers=1)
-    model.train(window_size=5, iter=3)
-    embeddings = model.get_embeddings()
+        set_seed(args.seed + run)
 
-    evaluate_embeddings(embeddings, labels, train_idx, val_idx, test_idx)
+        model = DeepWalk(nx_g, walk_length=10, num_walks=80, workers=1)
+        model.train(window_size=5, iter=3)
+        embeddings = model.get_embeddings()
+
+        val_result, test_result = evaluate_embeddings(embeddings, labels, train_idx, val_idx, test_idx)
