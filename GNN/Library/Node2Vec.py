@@ -230,7 +230,7 @@ def evaluate(model, labels, train_idx, val_idx, test_idx, metric, average):
     val_results = get_metric(lr.predict(x_val), labels[val_idx], metric, average=average)
     test_results = get_metric(lr.predict(x_test), labels[test_idx], metric, average=average)
 
-        return train_results, val_results, test_results, train_acc
+    return train_results, val_results, test_results, train_acc
 
 
 # 参数定义模块
