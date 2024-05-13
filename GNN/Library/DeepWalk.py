@@ -102,6 +102,5 @@ if __name__ == "__main__":
         model = DeepWalk(nx_g, walk_length=10, num_walks=80, workers=1)
         model.train(window_size=5, iter=3)
         embeddings = model.get_embeddings()
-        print(embeddings.size)
 
         val_result, test_result = evaluate_embeddings(embeddings, labels, train_idx, val_idx, test_idx)
