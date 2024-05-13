@@ -305,7 +305,7 @@ def main():
 
     # Model implementation
     # model = GCN(feat.shape[1], args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
-    model = Node2vec(graph, 128, 5, args.p, args.q, 10, 5, 5, False, None)
+    model = Node2vec(graph, 128, 5, 0.25, 4.0, 10, 5, 5, False, None)
     TRAIN_NUMBERS = sum(
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
