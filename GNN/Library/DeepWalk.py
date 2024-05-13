@@ -41,7 +41,7 @@ def evaluate(model, labels, train_idx, val_idx, test_idx, metric, average):
 
     lr = LogisticRegression(
         solver="lbfgs", multi_class="auto", max_iter=500
-    ).fit(X[train_idx].numpy(), labels[train_idx].numpy())
+    ).fit(X[train_idx].cpu().numpy(), labels[train_idx].cpu().numpy())
 
     train_results = get_metric(lr.predict(X[train_idx]), labels[train_idx], metric, average=average)
     val_results = get_metric(lr.predict(X[val_idx]), labels[val_idx], metric, average=average)
