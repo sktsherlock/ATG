@@ -53,6 +53,9 @@ class Classifier(object):
         return Y
 
     def train_evaluate(self, X, Y, train_idx, val_idx, test_idx):
+        print('-------------------')
+        print(X)
+        print(train_idx)
         Y = Y.numpy()
         train_idx = train_idx.numpy()
         val_idx = val_idx.numpy()
