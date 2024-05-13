@@ -53,9 +53,12 @@ class Classifier(object):
         return Y
 
     def train_evaluate(self, X, Y, train_idx, val_idx, test_idx):
+        print(X.shape, Y.shape)
 
-        X_train = X[train_idx]
         Y_train = Y[train_idx]
+        print(Y_train)
+        print(X)
+        X_train = X[train_idx]
         X_val = X[train_idx]
         Y_val = Y[val_idx]
         X_test = X[test_idx]
