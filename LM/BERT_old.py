@@ -149,14 +149,15 @@ class Sequence:
 
 
 class SeqDataset(torch.utils.data.Dataset):
-    def __init__(self, data: Sequence):
+    def __init__(self, data: Sequence, topology: bool):
         super().__init__()
         self.d = data
+        self.topology = topology
 
-    def __getitem__(self, node_id, topology=False):
+    def __getitem__(self, node_id):
         item = self.d.get_tokens(node_id)
         item['labels'] = self.d.node_label(node_id)
-        if topology:
+        if self.topology:
             neighbours = self.d.neighbours[node_id]
             if neighbours:
                 k = np.random.choice(neighbours, 1)[0]
@@ -319,6 +320,10 @@ class ModelArguments:
     save_path: Optional[str] = field(
         default=None,
         metadata={"help": "Where do you want to store the tuning language models"},
+    )
+    topology: bool = field(
+        default=False,
+        metadata={"help": "Whether to use the neighbor information for node classification."},
     )
     use_fast_tokenizer: bool = field(
         default=True,
@@ -496,7 +501,7 @@ def main():
 
     # 创建数据集 Sequence
     d = Sequence(cf).init()
-    full_data = SeqDataset(d)
+    full_data = SeqDataset(d, topology=model_args.topology)
 
     subset_data = lambda sub_idx: torch.utils.data.Subset(full_data, sub_idx)
     Data = {_: subset_data(getattr(d, f'{_}_x'))
