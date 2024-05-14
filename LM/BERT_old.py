@@ -485,6 +485,7 @@ def main():
     # 创建数据集 Sequence
     d = Sequence(cf).init()
     full_data = SeqDataset(d)
+    print(full_data)
     train_data = full_data.select(d.train_x)
     eval_data = full_data.select(d.val_x)
     test_data = full_data.select(d.test_x)
