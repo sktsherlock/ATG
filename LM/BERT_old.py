@@ -491,8 +491,10 @@ def main():
                      for _ in ['train', 'val', 'test']}
     if data_args.shuffle_train_dataset:
         logger.info("Shuffling the training dataset")
-        shuffle_train_x = d.train_x.shuffle(seed=data_args.shuffle_seed)
-        Data['train'] = subset_data(shuffle_train_x)
+        print(f'Before shuffling the training dataset:{d.train_x}')
+        np.random.shuffle(d.train_x)
+        print(f'After shuffling the training dataset:{d.train_x}')
+        Data['train'] = subset_data(d.train_x)
 
     train_data = Data['train']
     eval_dataset = Data['val']
