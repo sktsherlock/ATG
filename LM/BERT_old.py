@@ -13,7 +13,7 @@ import evaluate
 import numpy as np
 import torch
 from datasets import DatasetDict, Dataset
-
+import torch.nn.functional as F
 
 import transformers
 from transformers import (
@@ -108,6 +108,7 @@ class Sequence:
         self.train_x = train_idx
         self.val_x = val_idx
         self.test_x = test_idx
+        self.num_labels = (labels.max() + 1).item()
 
         self.ndata['labels'] = labels
 
@@ -153,7 +154,7 @@ class SeqDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, node_id):
         item = self.d.get_tokens(node_id)
-        item['labels'] = torch.from_numpy(self.d.ndata['labels'][node_id])
+        item['labels'] = F.one_hot(torch.from_numpy(self.d.ndata['labels'][node_id]), num_classes=self.d.num_labels).type(torch.FloatTensor)
         return item
 
     def __len__(self):
