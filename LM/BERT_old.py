@@ -97,7 +97,7 @@ class Sequence:
         self._load_data_fields()
         # 加载图相关信息，如节点标签，数据集划分
         g = dgl.load_graphs(self.graph_path)[0][0]
-        labels = g.ndata['label'].numpy()
+        labels = g.ndata['label']
         train_idx, val_idx, test_idx = split_graph(g.num_nodes(), self.train_ratio, self.val_ratio, labels,
                                                    fewshots=self.fewshots)
         # 转为无向图后 获取邻居
@@ -117,9 +117,10 @@ class Sequence:
 
         return self
 
-    # def y_gold(self, nodes):
-    #     labels = torch.from_numpy(self.ndata['labels'][nodes]).to(torch.int64)
-    #     return F.one_hot(labels, num_classes=self.n_labels).type(torch.FloatTensor)
+
+    def node_label(self, node_id):
+        labels = self.ndata['labels'][node_id]
+        return F.one_hot(labels, num_classes=self.num_labels).type(torch.FloatTensor)
 
     def _load_data_fields(self):
         for k in self.info:
@@ -154,7 +155,8 @@ class SeqDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, node_id):
         item = self.d.get_tokens(node_id)
-        item['labels'] = F.one_hot(torch.from_numpy(self.d.ndata['labels'][node_id]), num_classes=self.d.num_labels).type(torch.FloatTensor)
+        item['labels'] = self.d.node_label(node_id)
+        # item['labels'] = F.one_hot(torch.from_numpy(self.d.ndata['labels'][node_id]), num_classes=self.d.num_labels).type(torch.FloatTensor)
         return item
 
     def __len__(self):
