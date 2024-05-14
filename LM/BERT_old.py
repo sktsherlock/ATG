@@ -81,6 +81,9 @@ class Sequence:
         self.inductive = False
         self.graph_path = cf['graph_path']
         self.token_folder = cf['token_folder']
+        self.train_ratio = cf['train_ratio']
+        self.val_ratio = cf['val_ratio']
+        self.fewshots = cf['fewshots']
 
         self.info = {
             'input_ids': SN(shape=(self.n_nodes, self.max_length), type=np.uint16),
@@ -96,8 +99,8 @@ class Sequence:
         # 加载图相关信息，如节点标签，数据集划分
         g = dgl.load_graphs(self.graph_path)[0][0]
         labels = g.ndata['label'].numpy()
-        train_idx, val_idx, test_idx = split_graph(g.num_nodes(), cf.train_ratio, cf.val_ratio, labels,
-                                                   fewshots=cf.fewshots)
+        train_idx, val_idx, test_idx = split_graph(g.num_nodes(), self.train_ratio, self.val_ratio, labels,
+                                                   fewshots=self.fewshots)
         # 转为无向图后 获取邻居
         g = dgl.to_bidirected(g)
 
