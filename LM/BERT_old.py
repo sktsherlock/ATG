@@ -413,6 +413,7 @@ def main():
     token_folder = os.path.join(base_dir, data_args.token_folder)
 
     if not os.path.exists(token_folder):
+        print(f'The token folder {token_folder} does not exist')
         os.makedirs(token_folder)
     data_files = os.path.join(base_dir, csv_file)
 
