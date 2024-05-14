@@ -140,8 +140,8 @@ class Sequence:
 
     def get_nb_tokens(self, item, node_id):
         _load = lambda k: torch.IntTensor(np.array(self.ndata[k][node_id]))
-        item['nb_attention_mask'] = _load('attention_mask')
         item['nb_input_ids'] = torch.IntTensor(np.array(self['input_ids'][node_id]).astype(np.int32))
+        item['nb_attention_mask'] = _load('attention_mask')
         return item
 
     def __getitem__(self, k):
@@ -153,9 +153,18 @@ class SeqDataset(torch.utils.data.Dataset):
         super().__init__()
         self.d = data
 
-    def __getitem__(self, node_id):
+    def __getitem__(self, node_id, topology=False):
         item = self.d.get_tokens(node_id)
         item['labels'] = self.d.node_label(node_id)
+        if topology:
+            neighbours = self.d.neighbours[node_id]
+            if neighbours:
+                k = np.random.choice(neighbours, 1)[0]
+                item = self.d.get_nb_tokens(item, k)
+            else:
+                # 防止孤立点报错
+                k = node_id
+                item = self.d.get_nb_tokens(item, k)
         # item['labels'] = F.one_hot(torch.from_numpy(self.d.ndata['labels'][node_id]), num_classes=self.d.num_labels).type(torch.FloatTensor)
         return item
 

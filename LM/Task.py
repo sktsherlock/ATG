@@ -40,11 +40,17 @@ class MEANClassifier(PreTrainedModel):
         hidden_dim = model.config.hidden_size
         self.classifier = nn.Linear(hidden_dim, n_labels)
 
-    def forward(self, input_ids, attention_mask, labels):
+    def forward(self, input_ids, attention_mask, labels, nb_input_ids=None, nb_attention_mask=None):
         # Extract outputs from the model
-        outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
-        mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, attention_mask))
-        # mean_emb = self.dropout(torch.mean(outputs.last_hidden_state, dim=1))
+        if nb_input_ids is not None:
+            topology_ids = torch.cat([input_ids, nb_input_ids])
+            topology_attention_mask = torch.cat([attention_mask, nb_attention_mask])
+            outputs = self.encoder(topology_ids, topology_attention_mask, output_hidden_states=True)
+            mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, topology_attention_mask))
+        else:
+            outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
+            mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, attention_mask))
+            # mean_emb = self.dropout(torch.mean(outputs.last_hidden_state, dim=1))
         logits = self.classifier(mean_emb)
         if labels.shape[-1] == 1:
             labels = labels.squeeze()
