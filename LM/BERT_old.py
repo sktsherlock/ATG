@@ -153,7 +153,7 @@ class SeqDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, node_id):
         item = self.d.get_tokens(node_id)
-        item['labels'] = torch.from_numpy(self.d.ndata['labels'][node_id]).to(torch.int64)
+        item['labels'] = torch.from_numpy(self.d.ndata['labels'][node_id])
         return item
 
     def __len__(self):
