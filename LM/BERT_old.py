@@ -209,6 +209,14 @@ class DataTrainingArguments:
             "help": "The ratio of validation"
         },
     )
+    fewshots: int = field(
+        default=None,
+        metadata={
+            "help": (
+                "The fewshots number; if None, dont use fewshots"
+            )
+        },
+    )
     overwrite_cache: bool = field(
         default=False, metadata={"help": "Overwrite the cached preprocessed datasets or not."}
     )
@@ -470,7 +478,7 @@ def main():
             pass
     # 将本地token file读入到数据集中
     cf = {'n_nodes': len(df), 'max_length': max_seq_length, 'graph_path': data_args.graph_path,
-          'token_folder': token_folder}
+          'token_folder': token_folder, 'train_ratio': data_args.train_ratio, 'val_ratio': data_args.val_ratio, 'fewshots': data_args.fewshots}
 
     # 创建数据集 Sequence
     d = Sequence(cf).init()
