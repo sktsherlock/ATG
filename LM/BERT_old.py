@@ -93,7 +93,6 @@ class Sequence:
             info.path = f'{self.token_folder}{k}.npy'
 
     def init(self):
-        cf = self.cf
         # 加载token相关信息
         self._load_data_fields()
         # 加载图相关信息，如节点标签，数据集划分
@@ -488,9 +487,9 @@ def main():
     full_data = SeqDataset(d)
     subset_data = lambda sub_idx: torch.utils.data.Subset(full_data, sub_idx)
     Data = {_: subset_data(getattr(d, f'{_}_x'))
-                     for _ in ['train', 'valid', 'test']}
+                     for _ in ['train', 'val', 'test']}
     train_data = Data['train']
-    eval_dataset = Data['valid']
+    eval_dataset = Data['val']
     predict_dataset = Data['test']
     num_labels = (d.ndata['labels'].max() + 1).item()
 
@@ -556,6 +555,9 @@ def main():
             result["combined_score"] = np.mean(list(result.values())).item()
         return result
 
+    if data_args.shuffle_train_dataset:
+        logger.info("Shuffling the training dataset")
+        train_data = train_data.shuffle(seed=data_args.shuffle_seed)
 
     # Initialize our Trainer
     trainer = Trainer(
