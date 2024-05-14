@@ -410,11 +410,7 @@ def main():
     csv_file = data_args.csv_file
     root_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.dirname(root_dir.rstrip('/'))
-    token_folder = os.path.join(base_dir, data_args.token_folder)
 
-    if not os.path.exists(token_folder):
-        print(f'The token folder {token_folder} does not exist')
-        os.makedirs(token_folder)
     data_files = os.path.join(base_dir, csv_file)
 
     # 读取CSV文件
@@ -451,6 +447,11 @@ def main():
             f"model ({tokenizer.model_max_length}). Using max_seq_length={tokenizer.model_max_length}."
         )
     max_seq_length = min(data_args.max_seq_length, tokenizer.model_max_length)
+
+    token_folder = data_args.token_folder + model_args.model_name_or_path.split('/')[-1].replace("-", "_") + '/' + f'len_{max_seq_length}'
+    if not os.path.exists(token_folder):
+        print(f'The token folder {token_folder} does not exist')
+        os.makedirs(token_folder)
     # 编码文本数据并转为数据集
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
