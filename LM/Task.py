@@ -43,8 +43,8 @@ class MEANClassifier(PreTrainedModel):
     def forward(self, input_ids, attention_mask, labels, nb_input_ids=None, nb_attention_mask=None):
         # Extract outputs from the model
         if nb_input_ids is not None:
-            topology_ids = torch.cat([input_ids, nb_input_ids])
-            topology_attention_mask = torch.cat([attention_mask, nb_attention_mask])
+            topology_ids = torch.cat([input_ids, nb_input_ids], dim=1)
+            topology_attention_mask = torch.cat([attention_mask, nb_attention_mask], dim=1)
             outputs = self.encoder(topology_ids, topology_attention_mask, output_hidden_states=True)
             mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, topology_attention_mask))
         else:
