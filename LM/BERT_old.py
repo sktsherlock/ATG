@@ -448,7 +448,7 @@ def main():
         )
     max_seq_length = min(data_args.max_seq_length, tokenizer.model_max_length)
 
-    token_folder = data_args.token_folder + model_args.model_name_or_path.split('/')[-1].replace("-", "_") + '/' + f'len_{max_seq_length}'
+    token_folder = data_args.token_folder + model_args.model_name_or_path.split('/')[-1].replace("-", "_") + '/' + f'len_{max_seq_length}/'
     if not os.path.exists(token_folder):
         print(f'The token folder {token_folder} does not exist')
         os.makedirs(token_folder)
