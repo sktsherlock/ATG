@@ -452,17 +452,22 @@ def main():
     if not os.path.exists(token_folder):
         print(f'The token folder {token_folder} does not exist')
         os.makedirs(token_folder)
-    # 编码文本数据并转为数据集
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-    tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_seq_length, return_tensors='pt')
-    dataset = Dataset.from_dict(tokenized)
-    print(dataset)
 
-    for k in tokenized.data:
-        with open(os.path.join(token_folder, f'{k}.npy'), 'wb') as f:
-            np.save(f, tokenized.data[k])
+    if os.path.isdir(token_folder):
+        file_list = os.listdir(token_folder)
+        if len(file_list) != 3:
+            # 编码文本数据并转为数据集
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+            tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_seq_length, return_tensors='pt')
+            dataset = Dataset.from_dict(tokenized)
+            print(dataset)
 
+            for k in tokenized.data:
+                with open(os.path.join(token_folder, f'{k}.npy'), 'wb') as f:
+                    np.save(f, tokenized.data[k])
+        else:
+            pass
     # 将本地token file读入到数据集中
     cf = {'n_nodes': len(df), 'max_length': max_seq_length, 'graph_path': data_args.graph_path,
           'token_folder': token_folder}
