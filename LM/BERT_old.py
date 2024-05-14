@@ -485,24 +485,18 @@ def main():
     # 创建数据集 Sequence
     d = Sequence(cf).init()
     full_data = SeqDataset(d)
-    print(full_data)
-    train_data = full_data.select(d.train_x)
-    eval_data = full_data.select(d.val_x)
-    test_data = full_data.select(d.test_x)
 
-    raw_datasets = DatasetDict({
-        "train": train_data,
-        "validation": eval_data,
-        "test": test_data
-    })
+    subset_data = lambda sub_idx: torch.utils.data.Subset(full_data, sub_idx)
+    Data = {_: subset_data(getattr(d, f'{_}_x'))
+                     for _ in ['train', 'val', 'test']}
+    if data_args.shuffle_train_dataset:
+        logger.info("Shuffling the training dataset")
+        shuffle_train_x = d.train_x.shuffle(seed=data_args.shuffle_seed)
+        Data['train'] = subset_data(shuffle_train_x)
 
-
-    # subset_data = lambda sub_idx: torch.utils.data.Subset(full_data, sub_idx)
-    # Data = {_: subset_data(getattr(d, f'{_}_x'))
-    #                  for _ in ['train', 'val', 'test']}
-    # train_data = Data['train']
-    # eval_dataset = Data['val']
-    # predict_dataset = Data['test']
+    train_data = Data['train']
+    eval_dataset = Data['val']
+    predict_dataset = Data['test']
     num_labels = (d.ndata['labels'].max() + 1).item()
 
     # 创建用于分类的模型
@@ -567,19 +561,11 @@ def main():
             result["combined_score"] = np.mean(list(result.values())).item()
         return result
 
-    train_dataset = raw_datasets["train"]
-    if data_args.shuffle_train_dataset:
-        logger.info("Shuffling the training dataset")
-        train_dataset = train_dataset.shuffle(seed=data_args.shuffle_seed)
-    if training_args.do_eval:
-        eval_dataset = raw_datasets["validation"]
-    if training_args.do_predict:
-        predict_dataset = raw_datasets["test"]
     # Initialize our Trainer
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=train_dataset if training_args.do_train else None,
+        train_dataset=train_data if training_args.do_train else None,
         eval_dataset=eval_dataset if training_args.do_eval else None,
         compute_metrics=compute_metrics,
     )
