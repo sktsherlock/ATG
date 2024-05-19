@@ -216,6 +216,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', type=str, help='Path to the data file', required=True)
     parser.add_argument('--name', type=str, help='Dataset short name parameter', required=True)
+    parser.add_argument('--methods', type=str, help='Dataset short name parameter', default='Max')
     parser.add_argument('--class_numbers', type=int, help='Dataset class numbers', required=True)
     parser.add_argument('--sampling', type=int, help='Dataset class numbers', default=15000)
     parser.add_argument('--download_image', action='store_true', help='whether to download the image')
@@ -257,7 +258,7 @@ if __name__ == '__main__':
 
         # 记录代码开始执行的时间
         start_time = time.time()
-        data = data_filter_for_reddit(data, class_numbers, args.sampling)
+        data = data_filter_for_reddit(data, class_numbers, args.sampling, methods=args.methods)
         # 记录代码执行结束的时间
         end_time = time.time()
         # 计算代码执行的时间
