@@ -16,5 +16,5 @@ def check_image_files(image_folder):
                 print('无法识别的图像文件:', filename)
 
 # 指定图像文件夹路径
-image_folder = 'Reddit/RedditImages/'
+image_folder = 'RedditS/RedditSImages/'
 check_image_files(image_folder)
