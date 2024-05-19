@@ -69,6 +69,7 @@ def data_filter_for_reddit(df, category_number=50, sampling=15000, methods='Max'
         # 获取所有类别列表
         subreddit_list = df['subreddit'].unique().tolist()
         # 从所有类别中随机选择采样数量的类别
+        random.seed(42)
         sampled_subreddits = random.sample(subreddit_list, category_number)
         subreddit_to_keep = pd.Index(sampled_subreddits)
     else:
