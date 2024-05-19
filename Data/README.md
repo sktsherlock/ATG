@@ -10,6 +10,16 @@ cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Movies/meta_Movies_and_TV.json' --name 'Movies' --class_numbers 20
 ```
 
+
+## Reddit
+mkdir ~/ATG/Data/Reddit/
+cd ~/ATG/Data/Reddit/
+wget "https://www.dropbox.com/s/cqtdpsl4hewlli1/redcaps_v1.0_annotations.zip?dl=1" -O filename.zip
+unzip filename.zip
+rm -rf  ~/ATG/Data/Reddit/annotations/.ipynb_checkpoints/
+python data_processing_for_reddit.py 
+
+
 ## Magazine 
 ```shell
 mkdir ~/ATG/Data/Magazines/

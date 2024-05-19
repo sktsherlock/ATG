@@ -4,6 +4,7 @@ import os
 import time
 import pandas as pd
 import requests
+import random
 import warnings
 import argparse
 import torch
@@ -46,7 +47,7 @@ def count_data(df):
 
 
 # 数据过滤
-def data_filter_for_reddit(df, category_number=50, sampling=15000):
+def data_filter_for_reddit(df, category_number=50, sampling=15000, methods='Max'):
     # 过滤含有缺失数据和重复的记录
     df = df.drop_duplicates(subset=['image_id'])
     df = df.dropna()
@@ -59,10 +60,20 @@ def data_filter_for_reddit(df, category_number=50, sampling=15000):
     # 删除url 包含imgur的行
     df = df[~df['url'].str.contains('imgur')]
 
-    # 选择类别数最多的几个帖子
-    subreddit_counts = df['subreddit'].value_counts()
-    subreddit_to_keep = subreddit_counts.nlargest(category_number).index
-    print(f'The large subreddit are: {subreddit_to_keep}')
+
+    if methods == 'Max':
+        # 选择类别数最多的几个帖子
+        subreddit_counts = df['subreddit'].value_counts()
+        subreddit_to_keep = subreddit_counts.nlargest(category_number).index
+    elif methods == 'Random':
+        # 获取所有类别列表
+        subreddit_list = df['subreddit'].unique().tolist()
+        # 从所有类别中随机选择采样数量的类别
+        sampled_subreddits = random.sample(subreddit_list, category_number)
+        subreddit_to_keep = pd.Index(sampled_subreddits)
+    else:
+        raise ValueError('Invalid method')
+    print(f'The remain subreddit are: {subreddit_to_keep}')
     df['subreddit'] = df['subreddit'].apply(lambda x: x if x in subreddit_to_keep else None)
     df.dropna(subset=['subreddit'], inplace=True)
 
