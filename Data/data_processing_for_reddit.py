@@ -79,7 +79,10 @@ def data_filter_for_reddit(df, category_number=50, sampling=15000, methods='Max'
 
     # 定义函数来对每个subreddit进行采样
     def subreddit_sampling(group):
-        return group.sample(n=sampling, random_state=42)
+        if len(group) > sampling:
+            return group.sample(n=sampling, random_state=42)
+        else:
+            return group
 
     # 对每个subreddit进行采样
     new_df = df.groupby('subreddit', group_keys=False).apply(subreddit_sampling)
