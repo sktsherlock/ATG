@@ -378,14 +378,6 @@ class ModelArguments:
             "help": "The layers to unfreeze"
         },
     )
-    alpha: float = field(
-        default=1.0,
-        metadata={"help": "The alpha parameter means the weight of neighbors"}
-    )
-    mode: str = field(
-        default="GA",
-        metadata={"help": "GA means text augmentation, GEA means using tensor."}
-    )
 
 
 def print_trainable_parameters(model):
@@ -562,9 +554,7 @@ def main():
         model = MEANClassifier(
             encoder, num_labels,
             dropout=model_args.drop_out,
-            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
-            mode=model_args.mode,
-            alpha=model_args.alpha
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
         )
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
