@@ -70,10 +70,11 @@ class MEANClassifier(PreTrainedModel):
 
 
 class DualClassifier(PreTrainedModel):
-    def __init__(self, model, n_labels, loss_func, inputs_dim, dropout=0.0):
+    def __init__(self, model, n_labels, loss_func, inputs_dim, dropout=0.0, mode='VGA'):
         super().__init__(model.config)
         self.encoder, self.loss_func = model, loss_func
         self.dropout = nn.Dropout(dropout)
+        self.mode = mode
         hidden_dim = model.config.hidden_size
         self.alignment = nn.Linear(inputs_dim, hidden_dim)
         self.classifier = nn.Linear(hidden_dim, n_labels)

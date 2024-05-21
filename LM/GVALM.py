@@ -27,7 +27,7 @@ from transformers import (
     set_seed,
 )
 
-from Task import CLSClassifier, MEANClassifier
+from Task import CLSClassifier, DualClassifier
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
 
@@ -551,10 +551,13 @@ def main():
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
         )
     elif model_args.training_objective == 'Mean':
-        model = MEANClassifier(
+        model = DualClassifier(
             encoder, num_labels,
+            inputs_dim=data_args.image_dim,
             dropout=model_args.drop_out,
-            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
+            mode=model_args.mode,
+            loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
+
         )
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
