@@ -206,7 +206,7 @@ def main():
             train_g = SparseTensor.from_edge_index(edge_index).t()
             train_g = train_g.to_symmetric()
             train_g = dgl.graph((train_g.coo()[0], train_g.coo()[1]))
-            neighbours = list(train_g.adjacency_matrix_scipy().tolil().rows)
+            neighbours = list(train_g.adjacency_matrix().tolil().rows)
             return neighbours
 
         def _load_data_fields(self):

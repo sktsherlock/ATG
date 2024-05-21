@@ -103,7 +103,7 @@ class Sequence:
         # 转为无向图后 获取邻居
         g = dgl.to_bidirected(g)
 
-        self.neighbours = list(g.adjacency_matrix_scipy().tolil().rows)
+        self.neighbours = list(g.adjacency_matrix().tolil().rows)
 
         self.train_x = train_idx
         self.val_x = val_idx
@@ -559,6 +559,8 @@ def main():
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
 
         )
+        # Todo
+        # 把数据集那改一下，加载进别的embedding
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
 
