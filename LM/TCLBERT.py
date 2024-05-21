@@ -131,7 +131,7 @@ class Sequence:
         g = dgl.load_graphs(self.graph_path)[0][0]
         g = dgl.to_bidirected(g)
 
-        neighbours = list(g.adjacency_matrix().tolil().rows)
+        neighbours = list(g.adjacency_matrix_scipy().tolil().rows)
         return neighbours
 
 

@@ -66,7 +66,7 @@ def ncontrast(x_dis, sub_graph, device, tau=1):
     """
     x_dis = torch.exp( tau * x_dis)
     x_dis_sum = torch.sum(x_dis, 1)
-    x_dis_sum_pos = torch.sum(x_dis*sub_graph.adjacency_matrix().to_dense().to(device), 1)
+    x_dis_sum_pos = torch.sum(x_dis*sub_graph.adjacency_matrix_scipy().to_dense().to(device), 1)
     loss = -torch.log(x_dis_sum_pos * (x_dis_sum**(-1))+1e-8).mean()
     return loss
 

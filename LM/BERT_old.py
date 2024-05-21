@@ -103,7 +103,7 @@ class Sequence:
         # 转为无向图后 获取邻居
         g = dgl.to_bidirected(g)
 
-        self.neighbours = list(g.adjacency_matrix().tolil().rows)
+        self.neighbours = list(g.adjacency_matrix_scipy().tolil().rows)
 
         self.train_x = train_idx
         self.val_x = val_idx
