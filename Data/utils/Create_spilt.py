@@ -103,9 +103,9 @@ def main(csv_path, photos_path, save_path, train_ratio=0.6, val_ratio=0.2):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script for dataset organization')
-    parser.add_argument('--csv_path', type=str, help='Path to the output csv file')
-    parser.add_argument('--photos_path', type=str, help='Path to the photos folder')
-    parser.add_argument('--save_path', type=str, help='Path to the output photos folder')
+    parser.add_argument('--csv_path', type=str, help='Path to the output csv file', required=True)
+    parser.add_argument('--photos_path', type=str, help='Path to the photos folder', required=True)
+    parser.add_argument('--save_path', type=str, help='Path to the output photos folder', required=True)
     parser.add_argument('--train_ratio', type=float, default=0.6, help='Ratio of training data')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='Ratio of validation data')
     args = parser.parse_args()
