@@ -103,7 +103,7 @@ class DualClassifier(PreTrainedModel):
                 nb_outputs = self.encoder(nb_input_ids, nb_attention_mask, output_hidden_states=True)
                 nb_emb = self.dropout(mean_pooling(nb_outputs.last_hidden_state, nb_attention_mask))
                 Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
-                Visual_embedding = self.layer_norm(Visual_embedding)
+                Visual_embedding = self.dropout(self.layer_norm(Visual_embedding))
                 mean_emb = center_emb + self.alpha * nb_emb + self.beta * Visual_embedding
             else:
                 raise ValueError
@@ -120,7 +120,7 @@ class DualClassifier(PreTrainedModel):
                 center_outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
                 center_emb = self.dropout(mean_pooling(center_outputs.last_hidden_state, attention_mask))
                 Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
-                Visual_embedding = self.layer_norm(Visual_embedding)
+                Visual_embedding = self.dropout(self.layer_norm(Visual_embedding))
                 mean_emb = center_emb + self.beta * Visual_embedding
             else:
                 raise ValueError
