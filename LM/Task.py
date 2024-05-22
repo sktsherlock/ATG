@@ -112,7 +112,7 @@ class DualClassifier(PreTrainedModel):
                 text_embedding = self.encoder.embeddings(input_ids)
                 Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
                 VA_embedding = torch.cat([Visual_embedding.unsqueeze(1), text_embedding], dim=1)
-                VA_attention_mask = torch.cat([torch.ones(VA_embedding.size(0), 1), attention_mask], dim=1).to(attention_mask.device())
+                VA_attention_mask = torch.cat([torch.ones(VA_embedding.size(0), 1, device=VA_embedding.device), attention_mask], dim=1)
                 outputs = self.encoder(inputs_embeds=VA_embedding, attention_mask=VA_attention_mask,
                                        output_hidden_states=True)
                 mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, attention_mask))
