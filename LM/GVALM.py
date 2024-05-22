@@ -120,6 +120,7 @@ class Sequence:
 
         if self.visual:
             self.ndata['visual_feat'] = torch.from_numpy(np.load(self.visual_feat).astype(np.float32)).to(self.device)
+            self.image_shape = self.ndata['visual_feat'].shape[0]
 
 
         return self
@@ -583,7 +584,7 @@ def main():
     elif model_args.training_objective == 'Mean':
         model = DualClassifier(
             encoder, num_labels,
-            inputs_dim=data_args.image_dim,
+            inputs_dim=d.image_shape,
             dropout=model_args.drop_out,
             mode=model_args.mode,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
