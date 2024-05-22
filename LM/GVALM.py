@@ -79,7 +79,9 @@ class Sequence:
         self.n_nodes = cf['n_nodes']
         self.max_length = cf['max_length']
         self.inductive = False
+        self.visual = cf['visual']
         self.graph_path = cf['graph_path']
+        self.visual_feat = cf['visual_feat_path']
         self.token_folder = cf['token_folder']
         self.train_ratio = cf['train_ratio']
         self.val_ratio = cf['val_ratio']
@@ -115,6 +117,10 @@ class Sequence:
         if self.inductive:
             self.edge_index = self.get_train_edge()
 
+        if self.visual:
+            self.ndata['visual_feat'] = torch.from_numpy(np.load(self.visual_feat).astype(np.float32))
+
+
         return self
 
 
@@ -149,10 +155,11 @@ class Sequence:
 
 
 class SeqDataset(torch.utils.data.Dataset):
-    def __init__(self, data: Sequence, topology: bool):
+    def __init__(self, data: Sequence, topology: bool, visual: bool):
         super().__init__()
         self.d = data
         self.topology = topology
+        self.visual = visual
 
     def __getitem__(self, node_id):
         item = self.d.get_tokens(node_id)
@@ -166,6 +173,9 @@ class SeqDataset(torch.utils.data.Dataset):
                 # 防止孤立点报错
                 k = node_id
                 item = self.d.get_nb_tokens(item, k)
+        if self.visual:
+            item['visual_feat'] = self.d.ndata['visual_feat'][node_id]
+
         # item['labels'] = F.one_hot(torch.from_numpy(self.d.ndata['labels'][node_id]), num_classes=self.d.num_labels).type(torch.FloatTensor)
         return item
 
@@ -184,6 +194,9 @@ class DataTrainingArguments:
     """
     csv_file: Optional[str] = field(
         default=None, metadata={"help": "Path to the CSV File."}
+    )
+    visual_feat_path: Optional[str] = field(
+        default=None, metadata={"help": "Path to the visual feat path."}
     )
     data_name: Optional[str] = field(
         default=None, metadata={"help": "The dataname to be used for splitting dataaset. like ogbn-arxiv"}
@@ -325,6 +338,10 @@ class ModelArguments:
         default=False,
         metadata={"help": "Whether to use the neighbor information for node classification."},
     )
+    visual: bool = field(
+        default=False,
+        metadata={"help": "Whether to use the image information."},
+    )
     use_fast_tokenizer: bool = field(
         default=True,
         metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
@@ -377,6 +394,18 @@ class ModelArguments:
         metadata={
             "help": "The layers to unfreeze"
         },
+    )
+    alpha: float = field(
+        default=1.0,
+        metadata={"help": "The alpha parameter means the weight of neighbors"}
+    )
+    beta: float = field(
+        default=1.0,
+        metadata={"help": "The beta parameter means the weight of visual embedding"}
+    )
+    mode: str = field(
+        default="VGA",
+        metadata={"help": "GA means text augmentation, GEA means using tensor."}
     )
 
 
@@ -496,12 +525,12 @@ def main():
         else:
             pass
     # 将本地token file读入到数据集中
-    cf = {'n_nodes': len(df), 'max_length': max_seq_length, 'graph_path': data_args.graph_path,
+    cf = {'n_nodes': len(df), 'max_length': max_seq_length, 'graph_path': data_args.graph_path, 'visual': model_args.visual, 'visual_feat_path': data_args.visual_feat_path,
           'token_folder': token_folder, 'train_ratio': data_args.train_ratio, 'val_ratio': data_args.val_ratio, 'fewshots': data_args.fewshots}
 
     # 创建数据集 Sequence
     d = Sequence(cf).init()
-    full_data = SeqDataset(d, topology=model_args.topology)
+    full_data = SeqDataset(d, topology=model_args.topology, visual=model_args.visual)
 
     subset_data = lambda sub_idx: torch.utils.data.Subset(full_data, sub_idx)
     Data = {_: subset_data(getattr(d, f'{_}_x'))
@@ -557,7 +586,8 @@ def main():
             dropout=model_args.drop_out,
             mode=model_args.mode,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
-
+            alpha=model_args.alpha,
+            beta=model_args.beta
         )
         # Todo
         # 把数据集那改一下，加载进别的embedding

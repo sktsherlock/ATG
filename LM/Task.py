@@ -70,17 +70,20 @@ class MEANClassifier(PreTrainedModel):
 
 
 class DualClassifier(PreTrainedModel):
-    def __init__(self, model, n_labels, loss_func, inputs_dim, dropout=0.0, mode='VGA'):
+    def __init__(self, model, n_labels, loss_func, inputs_dim, dropout=0.0, mode='VGA', alpha=1.0, beta=1.0):
         super().__init__(model.config)
         self.encoder, self.loss_func = model, loss_func
         self.dropout = nn.Dropout(dropout)
         self.mode = mode
+        self.alpha = alpha
+        self.beta = beta
         hidden_dim = model.config.hidden_size
         self.alignment = nn.Linear(inputs_dim, hidden_dim)
+        self.layer_norm = nn.LayerNorm(hidden_dim)
         self.classifier = nn.Linear(hidden_dim, n_labels)
 
     def forward(self, input_ids, attention_mask, labels, nb_input_ids=None, nb_attention_mask=None,
-                image_embedding=None):
+                visual_feat=None):
         # Extract outputs from the model
         if nb_input_ids is not None:
             if self.mode == 'VGA':
@@ -88,21 +91,40 @@ class DualClassifier(PreTrainedModel):
                 topology_attention_mask = torch.cat([attention_mask, nb_attention_mask], dim=1)
                 GA_embedding = self.encoder.embeddings(topology_ids)  # batch_size * token_num * hidden_dim
                 # 在它的第一位添加一个表征
-                Visual_embedding = self.alignment(image_embedding)  # batch_size * hidden_dim
+                Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
+                Visual_embedding = self.layer_norm(Visual_embedding)
                 GVA_embedding = torch.cat([Visual_embedding.unsqueeze(1), GA_embedding], dim=1)
                 GVA_attention_mask = torch.cat([torch.ones(GA_embedding.size(0), 1), topology_attention_mask], dim=1)
                 outputs = self.encoder(inputs_embeds=GVA_embedding, attention_mask=GVA_attention_mask, output_hidden_states=True)
                 mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, GVA_attention_mask))
+            elif self.mode == 'VGEA':
+                center_outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
+                center_emb = self.dropout(mean_pooling(center_outputs.last_hidden_state, attention_mask))
+                nb_outputs = self.encoder(nb_input_ids, nb_attention_mask, output_hidden_states=True)
+                nb_emb = self.dropout(mean_pooling(nb_outputs.last_hidden_state, attention_mask))
+                Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
+                Visual_embedding = self.layer_norm(Visual_embedding)
+                mean_emb = center_emb + self.alpha * nb_emb + self.beta * Visual_embedding
             else:
                 raise ValueError
         else:
-            text_embedding = self.encoder.embeddings(input_ids)
-            Visual_embedding = self.alignment(image_embedding)  # batch_size * hidden_dim
-            VA_embedding = torch.cat([Visual_embedding.unsqueeze(1), text_embedding], dim=1)
-            VA_attention_mask = torch.cat([torch.ones(VA_embedding.size(0), 1), attention_mask], dim=1)
-            outputs = self.encoder(inputs_embeds=VA_embedding, attention_mask=VA_attention_mask,
-                                   output_hidden_states=True)
-            mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, attention_mask))
+            if self.mode == 'VA':
+                text_embedding = self.encoder.embeddings(input_ids)
+                Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
+                VA_embedding = torch.cat([Visual_embedding.unsqueeze(1), text_embedding], dim=1)
+                VA_attention_mask = torch.cat([torch.ones(VA_embedding.size(0), 1), attention_mask], dim=1)
+                outputs = self.encoder(inputs_embeds=VA_embedding, attention_mask=VA_attention_mask,
+                                       output_hidden_states=True)
+                mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, attention_mask))
+            elif self.mode == 'VEA':
+                center_outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
+                center_emb = self.dropout(mean_pooling(center_outputs.last_hidden_state, attention_mask))
+                Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
+                Visual_embedding = self.layer_norm(Visual_embedding)
+                mean_emb = center_emb + self.beta * Visual_embedding
+            else:
+                raise ValueError
+
             # mean_emb = self.dropout(torch.mean(outputs.last_hidden_state, dim=1))
         logits = self.classifier(mean_emb)
         if labels.shape[-1] == 1:
