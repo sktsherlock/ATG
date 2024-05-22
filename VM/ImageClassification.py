@@ -1,4 +1,5 @@
 import argparse
+import random
 from pathlib import Path
 
 import timm
@@ -8,13 +9,86 @@ import timm.optim
 import timm.utils
 import torch
 import torchmetrics
-from timm.scheduler import CosineLRScheduler
-
 from pytorch_accelerated.callbacks import SaveBestModelCallback
 from pytorch_accelerated.trainer import Trainer, DEFAULT_CALLBACKS
+from timm.scheduler import CosineLRScheduler
 
 
-def create_datasets(image_size, data_mean, data_std, train_path, val_path):
+# _logger = logging.getLogger(__name__)
+#
+# _ERROR_RETRY = 50
+#
+#
+# class ImageDataset(data.Dataset):
+#
+#     def __init__(
+#             self,
+#             root,
+#             graph_path,
+#             reader=None,
+#             split='train',
+#             class_map=None,
+#             load_bytes=False,
+#             input_img_mode='RGB',
+#             transform=None,
+#             target_transform=None,
+#     ):
+#         self.graph_path = graph_path
+#         if reader is None or isinstance(reader, str):
+#             reader = create_reader(
+#                 reader or '',
+#                 root=root,
+#                 split=split,
+#                 class_map=class_map
+#             )
+#         self.reader = reader
+#         self.load_bytes = load_bytes
+#         self.input_img_mode = input_img_mode
+#         self.transform = transform
+#         self.target_transform = target_transform
+#         self._consecutive_errors = 0
+#
+#     def __getitem__(self, index):
+#         graph = dgl.load_graphs(self.graph_path)[0]['0']
+#         # labels = graph.ndata['label']
+#         # neighbors = list(graph.adjacency_matrix().tolil().rows)
+#
+#         img, target = self.reader[index]
+#
+#         try:
+#             img = img.read() if self.load_bytes else Image.open(img)
+#         except Exception as e:
+#             _logger.warning(f'Skipped sample (index {index}, file {self.reader.filename(index)}). {str(e)}')
+#             self._consecutive_errors += 1
+#             if self._consecutive_errors < _ERROR_RETRY:
+#                 return self.__getitem__((index + 1) % len(self.reader))
+#             else:
+#                 raise e
+#         self._consecutive_errors = 0
+#
+#         if self.input_img_mode and not self.load_bytes:
+#             img = img.convert(self.input_img_mode)
+#         if self.transform is not None:
+#             img = self.transform(img)
+#
+#         if target is None:
+#             target = -1
+#         elif self.target_transform is not None:
+#             target = self.target_transform(target)
+#
+#         return img, target, neighbor_image
+#
+#     def __len__(self):
+#         return len(self.reader)
+#
+#     def filename(self, index, basename=False, absolute=False):
+#         return self.reader.filename(index, basename, absolute)
+#
+#     def filenames(self, basename=False, absolute=False):
+#         return self.reader.filenames(basename, absolute)
+
+
+def create_datasets(image_size, data_mean, data_std, train_path, val_path, test_path):
     train_transforms = timm.data.create_transform(
         input_size=image_size,
         is_training=True,
@@ -27,12 +101,15 @@ def create_datasets(image_size, data_mean, data_std, train_path, val_path):
         input_size=image_size, mean=data_mean, std=data_std
     )
 
-    train_dataset = timm.data.dataset.ImageDataset(
-        train_path, transform=train_transforms
+    test_transforms = timm.data.create_transform(
+        input_size=image_size, mean=data_mean, std=data_std
     )
-    eval_dataset = timm.data.dataset.ImageDataset(val_path, transform=eval_transforms)
 
-    return train_dataset, eval_dataset
+    train_dataset = timm.data.dataset.ImageDataset(train_path, transform=train_transforms)
+    eval_dataset = timm.data.dataset.ImageDataset(val_path, transform=eval_transforms)
+    test_dataset = timm.data.dataset.ImageDataset(test_path, transform=test_transforms)
+
+    return train_dataset, eval_dataset, test_dataset
 
 
 class TimmMixupTrainer(Trainer):
@@ -42,8 +119,8 @@ class TimmMixupTrainer(Trainer):
         self.num_updates = None
         self.mixup_fn = timm.data.Mixup(**mixup_args)
 
-        self.accuracy = torchmetrics.Accuracy(num_classes=num_classes)
-        self.ema_accuracy = torchmetrics.Accuracy(num_classes=num_classes)
+        self.accuracy = torchmetrics.Accuracy(num_classes=num_classes, task='multiclass')
+        self.ema_accuracy = torchmetrics.Accuracy(num_classes=num_classes, task='multiclass')
         self.ema_model = None
 
     def create_scheduler(self):
@@ -76,7 +153,7 @@ class TimmMixupTrainer(Trainer):
         return super().calculate_train_batch_loss((mixup_xb, mixup_yb))
 
     def train_epoch_end(
-        self,
+            self,
     ):
         self.ema_model.update(self.model)
         self.ema_model.eval()
@@ -115,21 +192,14 @@ class TimmMixupTrainer(Trainer):
         self.ema_accuracy.reset()
 
 
-def main(data_path):
-
-    # Set training arguments, hardcoded here for clarity
-    image_size = (224, 224)
-    lr = 5e-3
-    smoothing = 0.1
-    mixup = 0.2
-    cutmix = 1.0
-    batch_size = 32
-    bce_target_thresh = 0.2
-    num_epochs = 40
+def main(data_path, model_name, image_size, lr, smoothing, mixup, cutmix, batch_size, bce_target_thresh, num_epochs):
+    image_size = (image_size, image_size)
+    random.seed(2024)
 
     data_path = Path(data_path)
     train_path = data_path / "train"
     val_path = data_path / "val"
+    test_path = data_path / "test"
     num_classes = len(list(train_path.iterdir()))
 
     mixup_args = dict(
@@ -141,7 +211,8 @@ def main(data_path):
 
     # Create model using timm
     model = timm.create_model(
-        "resnet50d", pretrained=False, num_classes=num_classes, drop_path_rate=0.05
+        model_name=model_name, pretrained=False, num_classes=num_classes,
+        drop_path_rate=0.05
     )
 
     # Load data config associated with the model to use in data augmentation pipeline
@@ -150,9 +221,10 @@ def main(data_path):
     data_std = data_config["std"]
 
     # Create training and validation datasets
-    train_dataset, eval_dataset = create_datasets(
+    train_dataset, eval_dataset, test_dataset = create_datasets(
         train_path=train_path,
         val_path=val_path,
+        test_path=test_path,
         image_size=image_size,
         data_mean=data_mean,
         data_std=data_std,
@@ -191,9 +263,22 @@ def main(data_path):
         create_scheduler_fn=trainer.create_scheduler,
     )
 
+    trainer.evaluate(dataset=test_dataset, per_device_batch_size=batch_size)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simple example of training script using timm.")
-    parser.add_argument("--data_dir", required=True, help="The data folder on disk.")
+    parser.add_argument("--data_path", type=str, required=True, help="The data folder on disk.")
+    parser.add_argument("--model_name", type=str, default="swinv2_large_window12to24_192to384.ms_in22k_ft_in1k",
+                        help="Model name.")
+    parser.add_argument("--image_size", type=int, default=384, help="The width or the height of images.")
+    parser.add_argument("--lr", type=float, default=5e-3, help="Learning rate.")
+    parser.add_argument("--smoothing", type=float, default=0.1, help="")
+    parser.add_argument("--mixup", type=float, default=0.2, help="")
+    parser.add_argument("--cutmix", type=float, default=1.0, help="")
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size.")
+    parser.add_argument("--bce_target_thresh", type=float, default=0.2, help="")
+    parser.add_argument("--num_epochs", type=int, default=40, help="The number of epochs.")
     args = parser.parse_args()
-    main(args.data_dir)
+    main(args.data_path, args.model_name, args.image_size, args.lr, args.smoothing, args.mixup,
+         args.cutmix, args.batch_size, args.bce_target_thresh, args.num_epochs)
