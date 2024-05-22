@@ -94,7 +94,7 @@ class DualClassifier(PreTrainedModel):
                 Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
                 Visual_embedding = self.layer_norm(Visual_embedding)
                 GVA_embedding = torch.cat([Visual_embedding.unsqueeze(1), GA_embedding], dim=1)
-                GVA_attention_mask = torch.cat([torch.ones(GA_embedding.size(0), 1), topology_attention_mask], dim=1)
+                GVA_attention_mask = torch.cat([torch.ones(GA_embedding.size(0), 1, device=GA_embedding.device), topology_attention_mask], dim=1)
                 outputs = self.encoder(inputs_embeds=GVA_embedding, attention_mask=GVA_attention_mask, output_hidden_states=True)
                 mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, GVA_attention_mask))
             elif self.mode == 'VGEA':
