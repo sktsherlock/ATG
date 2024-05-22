@@ -54,7 +54,7 @@ class MEANClassifier(PreTrainedModel):
                 center_outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
                 center_emb = self.dropout(mean_pooling(center_outputs.last_hidden_state, attention_mask))
                 nb_outputs = self.encoder(nb_input_ids, nb_attention_mask, output_hidden_states=True)
-                nb_emb = self.dropout(mean_pooling(nb_outputs.last_hidden_state, attention_mask))
+                nb_emb = self.dropout(mean_pooling(nb_outputs.last_hidden_state, nb_attention_mask))
                 mean_emb = center_emb + self.alpha * nb_emb
             else:
                 raise ValueError
@@ -101,7 +101,7 @@ class DualClassifier(PreTrainedModel):
                 center_outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
                 center_emb = self.dropout(mean_pooling(center_outputs.last_hidden_state, attention_mask))
                 nb_outputs = self.encoder(nb_input_ids, nb_attention_mask, output_hidden_states=True)
-                nb_emb = self.dropout(mean_pooling(nb_outputs.last_hidden_state, attention_mask))
+                nb_emb = self.dropout(mean_pooling(nb_outputs.last_hidden_state, nb_attention_mask))
                 Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
                 Visual_embedding = self.layer_norm(Visual_embedding)
                 mean_emb = center_emb + self.alpha * nb_emb + self.beta * Visual_embedding
@@ -115,7 +115,7 @@ class DualClassifier(PreTrainedModel):
                 VA_attention_mask = torch.cat([torch.ones(VA_embedding.size(0), 1, device=VA_embedding.device), attention_mask], dim=1)
                 outputs = self.encoder(inputs_embeds=VA_embedding, attention_mask=VA_attention_mask,
                                        output_hidden_states=True)
-                mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, attention_mask))
+                mean_emb = self.dropout(mean_pooling(outputs.last_hidden_state, VA_attention_mask))
             elif self.mode == 'VEA':
                 center_outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
                 center_emb = self.dropout(mean_pooling(center_outputs.last_hidden_state, attention_mask))
