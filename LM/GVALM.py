@@ -119,7 +119,7 @@ class Sequence:
             self.edge_index = self.get_train_edge()
 
         if self.visual:
-            self.ndata['visual_feat'] = torch.from_numpy(np.load(self.visual_feat).astype(np.float32)).to(self.device)
+            self.ndata['visual_feat'] = torch.from_numpy(np.load(self.visual_feat).astype(np.float32))
             self.image_shape = self.ndata['visual_feat'].shape[0]
 
 
