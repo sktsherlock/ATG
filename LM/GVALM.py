@@ -120,7 +120,7 @@ class Sequence:
 
         if self.visual:
             self.ndata['visual_feat'] = torch.from_numpy(np.load(self.visual_feat).astype(np.float32))
-            self.image_shape = self.ndata['visual_feat'].shape[0]
+            self.image_shape = self.ndata['visual_feat'].shape[1]
 
 
         return self
