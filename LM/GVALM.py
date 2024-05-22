@@ -86,6 +86,7 @@ class Sequence:
         self.train_ratio = cf['train_ratio']
         self.val_ratio = cf['val_ratio']
         self.fewshots = cf['fewshots']
+        self.device = cf['device']
 
         self.info = {
             'input_ids': SN(shape=(self.n_nodes, self.max_length), type=np.uint16),
@@ -118,7 +119,7 @@ class Sequence:
             self.edge_index = self.get_train_edge()
 
         if self.visual:
-            self.ndata['visual_feat'] = torch.from_numpy(np.load(self.visual_feat).astype(np.float32))
+            self.ndata['visual_feat'] = torch.from_numpy(np.load(self.visual_feat).astype(np.float32)).to(self.device)
 
 
         return self
@@ -526,7 +527,7 @@ def main():
             pass
     # 将本地token file读入到数据集中
     cf = {'n_nodes': len(df), 'max_length': max_seq_length, 'graph_path': data_args.graph_path, 'visual': model_args.visual, 'visual_feat_path': data_args.visual_feat_path,
-          'token_folder': token_folder, 'train_ratio': data_args.train_ratio, 'val_ratio': data_args.val_ratio, 'fewshots': data_args.fewshots}
+          'token_folder': token_folder, 'train_ratio': data_args.train_ratio, 'val_ratio': data_args.val_ratio, 'fewshots': data_args.fewshots, 'device': training_args.device}
 
     # 创建数据集 Sequence
     d = Sequence(cf).init()

@@ -149,8 +149,6 @@ class TimmMixupTrainer(Trainer):
 
     def calculate_train_batch_loss(self, batch):
         xb, yb = batch
-        print(xb, xb.shape)
-        print(yb, yb.shape)
         mixup_xb, mixup_yb = self.mixup_fn(xb, yb)
         return super().calculate_train_batch_loss((mixup_xb, mixup_yb))
 
