@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 from transformers import PreTrainedModel
 from transformers.modeling_outputs import TokenClassifierOutput
-
+GenerativeLLM = {'TinyLlama/TinyLlama-1.1B-Chat-v1.0'}
 
 def mean_pooling(token_embeddings, attention_mask):
     # Mask out padding tokens
@@ -77,6 +77,7 @@ class DualClassifier(PreTrainedModel):
         self.mode = mode
         self.alpha = alpha
         self.beta = beta
+        self.name = model.config._name_or_path
         hidden_dim = model.config.hidden_size
         self.alignment = nn.Linear(inputs_dim, hidden_dim)
         self.layer_norm = nn.LayerNorm(hidden_dim)
@@ -89,7 +90,7 @@ class DualClassifier(PreTrainedModel):
             if self.mode == 'VGA':
                 topology_ids = torch.cat([input_ids, nb_input_ids], dim=1)
                 topology_attention_mask = torch.cat([attention_mask, nb_attention_mask], dim=1)
-                GA_embedding = self.encoder.embeddings(topology_ids)  # batch_size * token_num * hidden_dim
+                GA_embedding = self.encoder.embed_tokens(topology_ids) if self.name in GenerativeLLM else self.encoder.embeddings(topology_ids)  # batch_size * token_num * hidden_dim
                 # 在它的第一位添加一个表征
                 Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
                 Visual_embedding = self.layer_norm(Visual_embedding)
