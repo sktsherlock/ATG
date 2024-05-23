@@ -57,7 +57,7 @@ def data_splitting(csv_path, photos_path, save_path, train_ratio=0.6, val_ratio=
     for index, row in df.iterrows():
         hashmap[row['id']] = row['label']
 
-    np.random.seed(2024)
+    np.random.seed(42)
     indices = np.random.permutation(node_nums)  # 打乱顺序
 
     train_size = int(node_nums * train_ratio)  # 训练集大小

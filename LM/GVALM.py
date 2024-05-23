@@ -461,7 +461,7 @@ def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     training_args.output_dir = training_args.output_dir + model_args.model_name_or_path.split('/')[-1].replace("-",
-                                                                                                               "_") + '/' + f't_{data_args.train_ratio}_v_{data_args.val_ratio}_d_{model_args.drop_out}_w_{training_args.warmup_ratio}_lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}_u{model_args.unfreeze_layers}_s_{training_args.seed}_m_{model_args.mode}'
+                                                                                                               "_") + '/' + f't_{data_args.train_ratio}_v_{data_args.val_ratio}_d_{model_args.drop_out}_w_{training_args.warmup_ratio}_lr_{training_args.learning_rate}_e_{training_args.num_train_epochs}_b_{training_args.per_device_train_batch_size}_u{model_args.unfreeze_layers}_s_{training_args.seed}_m_{model_args.mode}_a_{model_args.alpha}_b_{model_args.beta}'
 
     send_example_telemetry("run_classification", model_args, data_args)
 
