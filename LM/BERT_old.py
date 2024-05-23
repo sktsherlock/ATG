@@ -118,7 +118,6 @@ class Sequence:
 
         return self
 
-
     def node_label(self, node_id):
         labels = self.ndata['labels'][node_id]
         return F.one_hot(labels, num_classes=self.num_labels).type(torch.FloatTensor)
@@ -387,6 +386,20 @@ class ModelArguments:
         default="GA",
         metadata={"help": "GA means text augmentation, GEA means using tensor."}
     )
+    peft_type: str = field(
+        default="LORA",
+        metadata={"help": "Which PEFT model to be used."},
+    )
+    lora_rank: int = field(
+        default=8,
+        metadata={"help": "The rank of LoRA."},
+    )
+    lora_train_bias: str = field(
+        default="none",
+        metadata={"help": "Whether to train bias, choices: none, lora_only and all."},
+    )
+    lora_dropout: float = field(default=0.0, metadata={"help": "Lora dropout"})
+    lora_alpha: int = field(default=8, metadata={"help": "Lora alpha"})
 
 
 def print_trainable_parameters(model):
@@ -407,8 +420,8 @@ def print_trainable_parameters(model):
 def set_peft_config(modeling_args):
     if modeling_args.peft_type in {"LORA"}:
         config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj", "k_proj", "o_proj"],
-                      'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
-                      'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+                  'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+                  'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
     else:
         config = None
         raise Exception
@@ -490,7 +503,8 @@ def main():
         )
     max_seq_length = min(data_args.max_seq_length, tokenizer.model_max_length)
 
-    token_folder = data_args.token_folder + model_args.model_name_or_path.split('/')[-1].replace("-", "_") + '/' + f'len_{max_seq_length}/'
+    token_folder = data_args.token_folder + model_args.model_name_or_path.split('/')[-1].replace("-",
+                                                                                                 "_") + '/' + f'len_{max_seq_length}/'
     if not os.path.exists(token_folder):
         print(f'The token folder {token_folder} does not exist')
         os.makedirs(token_folder)
@@ -501,7 +515,8 @@ def main():
             # 编码文本数据并转为数据集
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
-            tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_seq_length, return_tensors='pt')
+            tokenized = tokenizer(text_data, padding=True, truncation=True, max_length=max_seq_length,
+                                  return_tensors='pt')
             dataset = Dataset.from_dict(tokenized)
             print(dataset)
 
@@ -512,7 +527,8 @@ def main():
             pass
     # 将本地token file读入到数据集中
     cf = {'n_nodes': len(df), 'max_length': max_seq_length, 'graph_path': data_args.graph_path,
-          'token_folder': token_folder, 'train_ratio': data_args.train_ratio, 'val_ratio': data_args.val_ratio, 'fewshots': data_args.fewshots}
+          'token_folder': token_folder, 'train_ratio': data_args.train_ratio, 'val_ratio': data_args.val_ratio,
+          'fewshots': data_args.fewshots}
 
     # 创建数据集 Sequence
     d = Sequence(cf).init()
@@ -520,7 +536,7 @@ def main():
 
     subset_data = lambda sub_idx: torch.utils.data.Subset(full_data, sub_idx)
     Data = {_: subset_data(getattr(d, f'{_}_x'))
-                     for _ in ['train', 'val', 'test']}
+            for _ in ['train', 'val', 'test']}
     if data_args.shuffle_train_dataset:
         logger.info("Shuffling the training dataset")
         print(f'Before shuffling the training dataset:{d.train_x}')
@@ -578,7 +594,6 @@ def main():
     else:
         raise ValueError("Training objective should be either CLS or Mean.")
 
-
     if data_args.metric_name is not None:
         if data_args.metric_name == 'f1':
             metric = (evaluate.load(data_args.metric_name, average='macro'))
@@ -594,7 +609,8 @@ def main():
         preds = np.argmax(preds, axis=1)
         result = metric.compute(predictions=preds, references=p.label_ids.argmax(1),
                                 average='macro') if data_args.metric_name == 'f1' else metric.compute(predictions=preds,
-                                                                                                      references=p.label_ids.argmax(1))
+                                                                                                      references=p.label_ids.argmax(
+                                                                                                          1))
         if len(result) > 1:
             result["combined_score"] = np.mean(list(result.values())).item()
         return result
