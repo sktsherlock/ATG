@@ -13,6 +13,7 @@ import evaluate
 import numpy as np
 import torch
 from datasets import DatasetDict, Dataset
+from peft import PeftModelForFeatureExtraction, get_peft_config
 import torch.nn.functional as F
 
 import transformers
@@ -403,6 +404,18 @@ def print_trainable_parameters(model):
     )
 
 
+def set_peft_config(modeling_args):
+    if modeling_args.peft_type in {"LORA"}:
+        config = {'peft_type': modeling_args.peft_type, 'target_modules': ["q_proj", "v_proj", "k_proj", "o_proj"],
+                      'r': modeling_args.lora_rank, 'bias': modeling_args.lora_train_bias,
+                      'lora_alpha': modeling_args.lora_alpha, 'lora_dropout': modeling_args.lora_dropout}
+    else:
+        config = None
+        raise Exception
+    peft_config = get_peft_config(config)
+    return peft_config
+
+
 def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
@@ -455,14 +468,8 @@ def main():
     # Load pretrained model and tokenizer
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
-    config = AutoConfig.from_pretrained(
-        model_args.config_name if model_args.config_name else model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir,
-        revision=model_args.model_revision,
-        token=model_args.token,
-        trust_remote_code=model_args.trust_remote_code,
-    )
 
+    config = set_peft_config(model_args)
     config.cls_head_bias = model_args.cls_head_bias
     config.problem_type = "single_label_classification"
     logger.info("setting problem type to single label classification")
@@ -535,6 +542,8 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
+    peft_encoder = PeftModelForFeatureExtraction(encoder, config)
+    peft_encoder.print_trainable_parameters()
 
     if model_args.unfreeze_layers is not None:
         for param in encoder.parameters():
@@ -554,13 +563,13 @@ def main():
 
     if model_args.training_objective == "CLS":
         model = CLSClassifier(
-            encoder, num_labels,
+            peft_encoder, num_labels,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean')
         )
     elif model_args.training_objective == 'Mean':
         model = MEANClassifier(
-            encoder, num_labels,
+            peft_encoder, num_labels,
             dropout=model_args.drop_out,
             loss_func=torch.nn.CrossEntropyLoss(label_smoothing=model_args.label_smoothing, reduction='mean'),
             mode=model_args.mode,
