@@ -7,6 +7,7 @@ from ogb.nodeproppred import DglNodePropPredDataset
 import wandb
 from torch_geometric.utils import from_dgl
 
+
 def split_graph(nodes_num, train_ratio, val_ratio, labels, fewshots=None):
     np.random.seed(42)
     indices = np.random.permutation(nodes_num)
