@@ -85,13 +85,13 @@ def data_splitting(csv_path, photos_path, save_path, gpth, train_ratio=0.6, val_
     graph = dgl.load_graphs(gpth)[0][0]
     labels = graph.ndata['label']
 
-    train_size, val_size, train_idx, val_idx, test_idx = split_graph(nodes_num=node_nums, train_ratio=train_ratio, val_ratio=val_ratio, labels=labels, fewshots=None)
+    train_size, val_size, train_idx, val_idx, test_idx = split_graph(nodes_num=node_nums, train_ratio=train_ratio,
+                                                                     val_ratio=val_ratio, labels=labels, fewshots=None)
     test_size = node_nums - train_size - val_size
 
     train_labels = [hashmap[x] for x in train_idx]  # 训练集 label
     val_labels = [hashmap[x] for x in val_idx]  # 验证集 label
     test_labels = [hashmap[x] for x in test_idx]  # 测试集 label
-    print(train_labels, val_labels, test_labels)
 
     for i in range(category_numbers):
         os.makedirs(os.path.join(save_path, 'train', str(i)), exist_ok=True)
