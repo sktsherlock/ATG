@@ -110,7 +110,7 @@ class DualClassifier(PreTrainedModel):
                 raise ValueError
         else:
             if self.mode == 'VA':
-                text_embedding = self.encoder.embeddings(input_ids)
+                text_embedding = self.encoder.embed_tokens(input_ids) if self.name in GenerativeLLM else self.encoder.embeddings(input_ids)
                 Visual_embedding = self.alignment(visual_feat)  # batch_size * hidden_dim
                 VA_embedding = torch.cat([Visual_embedding.unsqueeze(1), text_embedding], dim=1)
                 VA_attention_mask = torch.cat([torch.ones(VA_embedding.size(0), 1, device=VA_embedding.device), attention_mask], dim=1)
