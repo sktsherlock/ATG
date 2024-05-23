@@ -29,5 +29,6 @@ if __name__ == '__main__':
         trust_remote_code=True,
         token='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',
     )
+    print(model)
     print_trainable_parameters(model)
 
