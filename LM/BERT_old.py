@@ -386,6 +386,10 @@ class ModelArguments:
         default="GA",
         metadata={"help": "GA means text augmentation, GEA means using tensor."}
     )
+    efficient_tuning: bool = field(
+        default=False,
+        metadata={"help": "Whether full tuning the model"}
+    )
     peft_type: str = field(
         default="LORA",
         metadata={"help": "Which PEFT model to be used."},
@@ -558,8 +562,11 @@ def main():
         token=model_args.token,
         trust_remote_code=model_args.trust_remote_code,
     )
-    peft_encoder = PeftModelForFeatureExtraction(encoder, config)
-    peft_encoder.print_trainable_parameters()
+    if model_args.efficient_tuning:
+        peft_encoder = PeftModelForFeatureExtraction(encoder, config)
+        peft_encoder.print_trainable_parameters()
+    else:
+        peft_encoder = encoder
 
     if model_args.unfreeze_layers is not None:
         for param in encoder.parameters():
