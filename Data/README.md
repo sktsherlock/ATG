@@ -10,6 +10,9 @@ cd ~/ATG/Data/
 python data_processing_utils.py --data_path 'Movies/meta_Movies_and_TV.json' --name 'Movies' --class_numbers 20
 ```
 
+```python
+python utils/Create_spilt.py --csv_path  Movies/Movies.csv --graph_path Movies/MoviesGraph.pt  --photos_path Movies/MoviesImages/ --save_path Movies/MoviesImageTasks/
+```
 
 ## Reddit
 mkdir ~/ATG/Data/Reddit/
