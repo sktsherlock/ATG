@@ -263,7 +263,7 @@ def main(data_path, model_name, image_size, lr, smoothing, mixup, cutmix, batch_
         create_scheduler_fn=trainer.create_scheduler,
     )
 
-    trainer.evaluate(dataset=test_dataset, per_device_batch_size=batch_size)
+    trainer.evaluate(dataset=test_dataset, per_device_batch_size=batch_size*10)
 
 
 if __name__ == "__main__":
