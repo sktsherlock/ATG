@@ -13,6 +13,56 @@ import torchmetrics
 from pytorch_accelerated.callbacks import SaveBestModelCallback
 from pytorch_accelerated.trainer import Trainer, DEFAULT_CALLBACKS
 from timm.scheduler import CosineLRScheduler
+from timm.data.dataset import ImageDataset
+
+
+class TAImageDataset(ImageDataset):
+    def __init__(
+        self,
+        root,
+        reader=None,
+        split='train',
+        class_map=None,
+        load_bytes=False,
+        img_mode='RGB',
+        transform=None,
+        target_transform=None,
+        additional_feature_transform=None,
+    ):
+        super().__init__(
+            root,
+            reader,
+            split,
+            class_map,
+            load_bytes,
+            img_mode,
+            transform,
+            target_transform,
+        )
+        self.additional_feature_transform = additional_feature_transform
+
+    def __getitem__(self, index):
+        img, target = super().__getitem__(index)
+
+        # 获取其他表征
+        additional_feature = self.get_additional_feature(index)
+
+        # 应用其他表征的转换
+        if self.additional_feature_transform is not None:
+            additional_feature = self.additional_feature_transform(additional_feature)
+
+        return img, target, additional_feature
+
+    def get_additional_feature(self, index):
+        """
+        你需要在这里实现获取其他表征的逻辑。
+        这可能需要读取其他文件或者计算一些特征。
+        """
+        # 示例:
+        # return some_additional_feature
+        raise NotImplementedError
+
+
 
 
 def create_datasets(image_size, data_mean, data_std, train_path, val_path, test_path):
@@ -21,7 +71,7 @@ def create_datasets(image_size, data_mean, data_std, train_path, val_path, test_
         is_training=True,
         mean=data_mean,
         std=data_std,
-        auto_augment="rand-m7-mstd0.5",
+        auto_augment="rand-m3-mstd0.5",
         # 结果为 RandAugment 的幅度为 7，mstd 为 0.5; m（整数）： rand 增强的大小;n（整数）：每个图像选择的变换操作的数量，这是可选的，默认设置为 2; mstd （浮点数）：所应用噪声幅度的标准偏差
     )
     # 上述为训练集中图像进行一些变化，但又不至于扰动太多；
