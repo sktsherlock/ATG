@@ -143,12 +143,12 @@ def main(cf):
     test_path = data_path / "test"
     num_classes = len(list(train_path.iterdir()))
 
-    mixup_args = dict(
-        mixup_alpha=cf.mixup,
-        cutmix_alpha=cf.cutmix,
-        label_smoothing=cf.smoothing,
-        num_classes=num_classes,
-    )
+    # mixup_args = dict(
+    #     mixup_alpha=cf.mixup,
+    #     cutmix_alpha=cf.cutmix,
+    #     label_smoothing=cf.smoothing,
+    #     num_classes=num_classes,
+    # )
 
     # Create model using timm
     model = timm.create_model(
