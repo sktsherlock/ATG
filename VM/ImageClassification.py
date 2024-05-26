@@ -202,7 +202,7 @@ def main(cf):
 
     # Create model using timm
     model = timm.create_model(
-        model_name=model_name, pretrained=False, num_classes=num_classes,
+        model_name=model_name, pretrained=True, num_classes=num_classes,
         drop_path_rate=0.05
     )
 
