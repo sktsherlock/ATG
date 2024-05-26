@@ -231,5 +231,6 @@ if __name__ == "__main__":
     parser.add_argument("--bce_target_thresh", type=float, default=0.2, help="")
     parser.add_argument("--num_epochs", type=int, default=40, help="The number of epochs.")
     arguments = parser.parse_args()
+    wandb.init(config=arguments, reinit=True)
 
     main(arguments)
