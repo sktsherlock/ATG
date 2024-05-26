@@ -223,6 +223,7 @@ if __name__ == "__main__":
     parser.add_argument("--smoothing", type=float, default=0.1, help="")
     # parser.add_argument("--mixup", type=float, default=0.2, help="")
     # parser.add_argument("--cutmix", type=float, default=1.0, help="")
+    # Please tune the right lr
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size.")
     parser.add_argument("--bce_target_thresh", type=float, default=0.2, help="")
     parser.add_argument("--num_epochs", type=int, default=40, help="The number of epochs.")
