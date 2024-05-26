@@ -41,12 +41,11 @@ def create_datasets(image_size, data_mean, data_std, train_path, val_path, test_
     return train_dataset, eval_dataset, test_dataset
 
 
-class TimmMixupTrainer(Trainer):
-    def __init__(self, eval_loss_fn, mixup_args, num_classes, warmup_lr_init, *args, **kwargs):
+class TimmTrainer(Trainer):
+    def __init__(self, eval_loss_fn, num_classes, warmup_lr_init, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.eval_loss_fn = eval_loss_fn
         self.num_updates = None
-        self.mixup_fn = timm.data.Mixup(**mixup_args)
 
         self.accuracy = torchmetrics.Accuracy(num_classes=num_classes, task='multiclass')
         self.ema_accuracy = torchmetrics.Accuracy(num_classes=num_classes, task='multiclass')
@@ -81,8 +80,7 @@ class TimmMixupTrainer(Trainer):
 
     def calculate_train_batch_loss(self, batch):
         xb, yb = batch
-        mixup_xb, mixup_yb = self.mixup_fn(xb, yb)
-        return super().calculate_train_batch_loss((mixup_xb, mixup_yb))
+        return super().calculate_train_batch_loss((xb, yb))
 
     def train_epoch_end(
             self,
@@ -180,23 +178,21 @@ def main(cf):
     # Lookahead 是一种有趣的优化算法,它可以与其他常用的优化算法(如 SGD、Adam 等)结合使用,以提高模型训练的稳定性和收敛速度。
 
     # As we are using Mixup, we can use BCE during training and CE for evaluation
-    train_loss_fn = timm.loss.BinaryCrossEntropy(
-        target_threshold=cf.bce_target_thresh, smoothing=cf.smoothing
-    )
+    train_loss_fn = torch.nn.CrossEntropyLoss(label_smoothing=cf.smoothing)
     validate_loss_fn = torch.nn.CrossEntropyLoss()
 
     # Create trainer and start training
-    trainer = TimmMixupTrainer(
+    trainer = TimmTrainer(
         model=model,
         optimizer=optimizer,
         loss_func=train_loss_fn,
         eval_loss_fn=validate_loss_fn,
-        mixup_args=mixup_args,
+        # mixup_args=mixup_args,
         num_classes=num_classes,
         warmup_lr_init=cf.warmup_lr_init,
         callbacks=[
             *DEFAULT_CALLBACKS,
-            SaveBestModelCallback(watch_metric=f"{cf.metric}", greater_is_better=True),
+            SaveBestModelCallback(watch_metric="eval_loss_epoch", greater_is_better=False),
         ],
     )
     # DEFAULT_CALLBACKS: 这是一组默认的回调函数,可能包括了诸如记录训练loss、验证loss等基础功能。
@@ -225,8 +221,8 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=5e-3, help="Learning rate.")
     parser.add_argument("--warmup_lr_init", type=float, default=1e-5, help="Initial warmup Learning rate.")
     parser.add_argument("--smoothing", type=float, default=0.1, help="")
-    parser.add_argument("--mixup", type=float, default=0.2, help="")
-    parser.add_argument("--cutmix", type=float, default=1.0, help="")
+    # parser.add_argument("--mixup", type=float, default=0.2, help="")
+    # parser.add_argument("--cutmix", type=float, default=1.0, help="")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size.")
     parser.add_argument("--bce_target_thresh", type=float, default=0.2, help="")
     parser.add_argument("--num_epochs", type=int, default=40, help="The number of epochs.")
