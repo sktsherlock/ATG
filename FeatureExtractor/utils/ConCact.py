@@ -19,7 +19,8 @@ def main():
 
     # 保存新特征文件
     np.save(args.output_file, combined_features)
-
+    print(f'The text feature is {args.text_file}')
+    print(f'The image feature is {args.image_file}')
     print(f'Combined features saved to: {args.output_file}')
 
 
