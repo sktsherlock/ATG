@@ -10,6 +10,11 @@ CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/M
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'meta-llama/Meta-Llama-3-8B' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 ```
 
+```python
+python FeatureExtractor/utils/ConCact.py --text-file Data/Movies/TextFeature/Movies_Mistral_7B_v0.1_256_mean.npy  --image-file  Data/Movies/ImageFeature/Movies_openai_clip-vit-large-patch14.npy --output-file  Movies_Mistral7B_CLIP.npy
+python FeatureExtractor/utils/ConCact.py --text-file Data/Movies/TextFeature/Movies_gemma_7b_256_mean.npy  --image-file  Data/Movies/ImageFeature/Movies_openai_clip-vit-large-patch14.npy --output-file  Movies_Gemma7B_CLIP.npy
+```
+
 ## Photo Text Feature
 ```python
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Photo/Photo.csv --model_name 'meta-llama/Llama-2-7b-hf' --name 'Photo' --path 'Data/Photo/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text'  --fp16 True
@@ -65,11 +70,17 @@ CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name $datain/llama3-8b/ --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 /scratch/azureml/cr/j/4f81cb2ec77945d89e62c1956f8689a6/cap/data-capability/wd/INPUT_datain/
 ```
+```python
 CUDA_VISIBLE_DEVICES=0 python CLIP.py --name Toys --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --path /home/aiscuser/ATG/Data/Toys/ToysImages/ --feature_path /home/aiscuser/ATG/Data/Toys/ImageFeature
 CUDA_VISIBLE_DEVICES=0  python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518
 python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 64 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
 python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 512 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
+```
 
+```python
+python FeatureExtractor/utils/ConCact.py --text-file Data/Toys/TextFeature/Toys_Mistral_7B_v0.1_256_mean.npy  --image-file  Data/Toys/ImageFeature/Toys_openai_clip-vit-large-patch14.npy --output-file  Toys_Mistral7B_CLIP.npy
+python FeatureExtractor/utils/ConCact.py --text-file Data/Toys/TextFeature/Toys_gemma_7b_256_mean.npy  --image-file  Data/Toys/ImageFeature/Toys_openai_clip-vit-large-patch14.npy --output-file  Toys_Gemma7B_CLIP.npy
+```
 
 
 ## Reddit Text Feature
@@ -80,10 +91,24 @@ CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Reddit/R
 CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 500 --text_column 'text' --fp16 True --norm True
 CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name $datain/llama3-8b/ --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 80 --text_column 'text' --fp16 True 
 ```
+```python
 CUDA_VISIBLE_DEVICES=4 python CLIP.py --name Reddit --csv_path /home/aiscuser/ATG/Data/Reddit/Reddit.csv --path /home/aiscuser/ATG/Data/Reddit/RedditImages/ --feature_path /home/aiscuser/ATG/Data/Reddit/ImageFeature
 CUDA_VISIBLE_DEVICES=5  python ImageExtract.py  --data_dir Data/Reddit/RedditImages/ --name Reddit --path Data/Reddit/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518
 python ImageExtract.py  --data_dir Data/Reddit/RedditImages/ --name Reddit --path Data/Reddit/ImageFeature/ --batch_size 128 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384 
 python ImageExtract.py  --data_dir Data/Reddit/RedditImages/ --name Reddit --path Data/Reddit/ImageFeature/ --batch_size 512 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
+```
+
+```python
+python FeatureExtractor/utils/ConCact.py --text-file Data/Reddit/TextFeature/Reddit_Mistral_7B_v0.1_100_mean.npy  --image-file  Data/Reddit/ImageFeature/Reddit_openai_clip-vit-large-patch14.npy --output-file  Reddit_Mistral7B_CLIP.npy
+python FeatureExtractor/utils/ConCact.py --text-file Data/Reddit/TextFeature/Reddit_gemma_7b_100_mean.npy  --image-file  Data/Reddit/ImageFeature/Reddit_openai_clip-vit-large-patch14.npy --output-file  Reddit_Gemma7B_CLIP.npy
+```
+
+
+```python
+python FeatureExtractor/utils/ConCact.py --text-file Data/RedditS/TextFeature/RedditS_Mistral_7B_v0.1_64_mean.npy  --image-file  Data/RedditS/ImageFeature/RedditS_openai_clip-vit-large-patch14.npy  --output-file  RedditS_Mistral7B_CLIP.npy
+python FeatureExtractor/utils/ConCact.py --text-file Data/RedditS/TextFeature/RedditS_gemma_7b_64_mean.npy  --image-file  Data/RedditS/ImageFeature/RedditS_openai_clip-vit-large-patch14.npy  --output-file  RedditS_Gemma7B_CLIP.npy
+```
+
 
 
 ## Arts Text Feature

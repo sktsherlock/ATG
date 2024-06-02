@@ -395,7 +395,7 @@ class ModelArguments:
         metadata={"help": "Which PEFT model to be used."},
     )
     lora_rank: int = field(
-        default=8,
+        default=32,
         metadata={"help": "The rank of LoRA."},
     )
     lora_train_bias: str = field(
