@@ -95,19 +95,19 @@ graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=args.graph_pa
 
 def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM', dataname=None):
     # 对 PLM_feat 进行采样和获取标签
-    feat1_sample = feat1[:sample_size]
-    print(feat1_sample)
+    # feat1_sample = feat1[:sample_size]
+    # print(feat1_sample)
     feat1_test = feat1[test_idx]
-    print(feat1_test)
+    # print(feat1_test)
     # 对 LLM_feat 进行采样和获取标签
-    feat2_sample = feat2[:sample_size]
-    label_list = label[:sample_size]
+    feat2_test = feat2[test_idx]
+    label_list = label[test_idx]
 
     # 对 feat1 进行 TSNE 降维
-    tsne_feat1 = TSNE(n_components=2).fit_transform(feat1_sample)
+    tsne_feat1 = TSNE(n_components=2).fit_transform(feat1_test)
 
     # 对 feat2 进行 TSNE 降维
-    tsne_feat2 = TSNE(n_components=2).fit_transform(feat2_sample)
+    tsne_feat2 = TSNE(n_components=2).fit_transform(feat2_test)
 
     # 绘制 t-SNE 可视化结果并保存
     plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
