@@ -96,6 +96,7 @@ graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=args.graph_pa
 def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM', dataname=None):
     # 对 PLM_feat 进行采样和获取标签
     feat1_sample = feat1[:sample_size]
+    print(feat1_sample)
     feat1_test = feat1[test_idx]
     print(feat1_test)
     # 对 LLM_feat 进行采样和获取标签
