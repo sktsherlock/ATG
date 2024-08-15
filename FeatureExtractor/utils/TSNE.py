@@ -145,6 +145,27 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2=
     plt.show()
 
 
+    # 计算类内距离和类间距离
+    class_center1 = [tsne_feat1[label_list == i].mean(axis=0) for i in np.unique(label_list)]
+    class_center2 = [tsne_feat2[label_list == i].mean(axis=0) for i in np.unique(label_list)]
+    intra_dist1 = np.mean([np.linalg.norm(tsne_feat1[label_list == i] - class_center1[j], axis=1).mean() for i, j in enumerate(np.unique(label_list))])
+    intra_dist2 = np.mean([np.linalg.norm(tsne_feat2[label_list == i] - class_center2[j], axis=1).mean() for i, j in enumerate(np.unique(label_list))])
+    inter_dist1 = np.mean([np.linalg.norm(class_center1[i] - class_center1[j]) for i in range(len(class_center1)) for j in range(i+1, len(class_center1))])
+    inter_dist2 = np.mean([np.linalg.norm(class_center2[i] - class_center2[j]) for i in range(len(class_center2)) for j in range(i+1, len(class_center2))])
+    print(f"Intra-class distance for {label1}: {intra_dist1:.2f}")
+    print(f"Intra-class distance for {label2}: {intra_dist2:.2f}")
+    print(f"Inter-class distance for {label1}: {inter_dist1:.2f}")
+    print(f"Inter-class distance for {label2}: {inter_dist2:.2f}")
+
+    # 计算轮廓系数
+    from sklearn.metrics import silhouette_score
+    silhouette1 = silhouette_score(tsne_feat1, label_list)
+    silhouette2 = silhouette_score(tsne_feat2, label_list)
+    print(f"Silhouette Coefficient for {label1}: {silhouette1:.2f}")
+    print(f"Silhouette Coefficient for {label2}: {silhouette2:.2f}")
+
+
+
 Feature1 = th.from_numpy(np.load(args.feat1).astype(np.float32))
 
 Feature2 = th.from_numpy(np.load(args.feat2).astype(np.float32))
