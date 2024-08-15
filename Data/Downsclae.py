@@ -16,19 +16,21 @@ def calculate_target_size(input_path):
     target_size (tuple): 目标图像尺寸(宽, 高)
     """
     try:
-        # 读取输入图像
+        # 尝试读取图像
         image = cv2.imread(input_path)
 
-        # 获取原始图像的宽和高
-        original_height, original_width, _ = image.shape
-
-        # 计算目标图像大小
-        target_width = original_width // 2
-        target_height = original_height // 2
-
-        return (target_width, target_height)
-    except (cv2.error, IOError) as e:
-        print(f"Error reading image {input_path}: {e}")
+        # 检查图像是否成功读取
+        if image is not None:
+            original_height, original_width, _ = image.shape
+            target_width = original_width // 2
+            target_height = original_height // 2
+            target_size = (target_width, target_height)
+            return target_size
+        else:
+            # 如果图像无法读取,返回 None
+            return None
+    except (cv2.error, AttributeError):
+        # 捕获可能的异常并返回 None
         return None
 
 
