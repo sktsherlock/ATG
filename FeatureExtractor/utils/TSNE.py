@@ -92,6 +92,7 @@ args = argparser.parse_args()
 
 graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=args.graph_path)
 print(labels.shape)
+print(labels[:20])
 
 
 def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM', dataname=None):
