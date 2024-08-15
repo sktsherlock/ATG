@@ -69,6 +69,8 @@ def process_images(input_dir, output_dir):
     # 创建输出目录(如果不存在)
     os.makedirs(output_dir, exist_ok=True)
 
+    # 添加计数器变量
+    processed_count = 0
     # 遍历输入目录中的所有图像文件
     for filename in os.listdir(input_dir):
         if filename.endswith('.jpg') or filename.endswith('.png'):
@@ -77,7 +79,12 @@ def process_images(input_dir, output_dir):
 
             # 调用下采样函数
             downscale_image(input_path, output_path)
-            print(f'已将 {filename} 下采样至原始图像一半大小并保存至 {output_path}')
+            # 增加计数器
+            processed_count += 1
+
+            # 每处理500个图像后输出一次消息
+            if processed_count % 500 == 0:
+                print(f'已将前 {processed_count} 个图像下采样至原始图像一半大小并保存')
 
 
 if __name__ == "__main__":
