@@ -91,13 +91,13 @@ argparser.add_argument(
 args = argparser.parse_args()
 
 graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=args.graph_path)
-print(labels.shape)
-print(labels[:20])
 
 
 def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM', dataname=None):
     # 对 PLM_feat 进行采样和获取标签
     feat1_sample = feat1[:sample_size]
+    feat1_test = feat1[test_idx]
+    print(feat1_test)
     # 对 LLM_feat 进行采样和获取标签
     feat2_sample = feat2[:sample_size]
     label_list = label[:sample_size]
