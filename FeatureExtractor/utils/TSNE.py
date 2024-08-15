@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
+from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score
 from sklearn.decomposition import PCA
 import dgl
 import torch as th
@@ -96,7 +97,9 @@ args = argparser.parse_args()
 
 graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=args.graph_path)
 # 根据test_idx 进行采样
-test_idx = test_idx[:args.sample]
+sample = min(args.sample, len(test_idx))  # 确保不超过列表长度
+sample = max(sample, 0)  # 确保是正数
+test_idx = test_idx[:sample]
 
 
 def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM', dataname=None):
@@ -163,6 +166,18 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2=
     silhouette2 = silhouette_score(tsne_feat2, label_list)
     print(f"Silhouette Coefficient for {label1}: {silhouette1:.2f}")
     print(f"Silhouette Coefficient for {label2}: {silhouette2:.2f}")
+
+    # 计算 Calinski-Harabasz Index
+    ch1 = calinski_harabasz_score(tsne_feat1, label_list)
+    ch2 = calinski_harabasz_score(tsne_feat2, label_list)
+    print(f"Calinski-Harabasz Index for {label1}: {ch1:.2f}")
+    print(f"Calinski-Harabasz Index for {label2}: {ch2:.2f}")
+
+    # 计算 Davies-Bouldin Index
+    db1 = davies_bouldin_score(tsne_feat1, label_list)
+    db2 = davies_bouldin_score(tsne_feat2, label_list)
+    print(f"Davies-Bouldin Index for {label1}: {db1:.2f}")
+    print(f"Davies-Bouldin Index for {label2}: {db2:.2f}")
 
 
 
