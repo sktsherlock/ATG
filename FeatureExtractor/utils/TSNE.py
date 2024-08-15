@@ -69,6 +69,10 @@ argparser.add_argument(
     help="The datasets to be implemented."
 )
 argparser.add_argument(
+    "--sample", type=int, default=1000,
+    help="The sample size of test idx."
+)
+argparser.add_argument(
     "--dataname", type=str, default='History',
     help="The datasets name."
 )
@@ -91,6 +95,8 @@ argparser.add_argument(
 args = argparser.parse_args()
 
 graph, labels, train_idx, val_idx, test_idx = load_data(graph_path=args.graph_path)
+# 根据test_idx 进行采样
+test_idx = test_idx[:args.sample]
 
 
 def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2='LLM', dataname=None):
