@@ -87,7 +87,8 @@ if not os.path.exists(output_image_feature):
             clip_image_features[i] = image_outputs.squeeze().detach().cpu().numpy()
 
             # 处理文本
-            text_inputs = processor(text=text, return_tensors="pt", padding=True).to(device)
+            max_length = model.config.text_config.max_position_embeddings
+            text_inputs = processor(text=text, return_tensors="pt", padding=True, truncation=True, max_length=max_length).to(device)
             text_outputs = model.get_text_features(**text_inputs)
             clip_text_features[i] = text_outputs.squeeze().detach().cpu().numpy()
 
