@@ -50,65 +50,68 @@ if args.name in {'RedditS', 'Reddit'}:
 else:
     categories = df['second_category'].unique().tolist()
 num_classes = len(categories)
+
+# 获取文本描述
+image_texts = df['text'].tolist()  # 假设文本列名为'text'
+
 if not os.path.exists(args.feature_path):
     os.makedirs(args.feature_path)
-# print(categories)
-
 
 # 获取文件夹中的所有图像文件
 image_files = [filename for filename in os.listdir(picture_path) if filename.endswith((".jpg", ".png"))]
 # 按照文件名的数字顺序排序
 sorted_files = sorted(image_files, key=lambda x: int(os.path.splitext(x)[0]))
 
-clip_features = np.zeros((len(sorted_files), args.feature_size))  # 这里的feature_size是特征的维度
+clip_image_features = np.zeros((len(sorted_files), args.feature_size))
+clip_text_features = np.zeros((len(sorted_files), args.feature_size))
 clip_probs = np.zeros((len(sorted_files), num_classes))
 all_labels = []
 
 train_ids, val_ids, test_ids = split_data(len(sorted_files), train_ratio=0.6, val_ratio=0.2)
-output_feature = f'{args.feature_path}/{args.name}_openai_clip-vit-large-patch14.npy'
+output_image_feature = f'{args.feature_path}/{args.name}_openai_clip-vit-large-patch14_image.npy'
+output_text_feature = f'{args.feature_path}/{args.name}_openai_clip-vit-large-patch14_text.npy'
 output_probs = f'{args.feature_path}/{args.name}_clip_probs.npy'
 output_labels = f'{args.feature_path}/{args.name}_clip_labels.npy'
-print(f'The output file is {output_feature}')
-# print(train_ids, val_ids)
-# val_labels = np.array(labels)[val_ids]
+print(f'The output files are {output_image_feature} and {output_text_feature}')
 
-if not os.path.exists(output_feature):
+if not os.path.exists(output_image_feature):
     for i, filename in tqdm(enumerate(sorted_files), total=len(sorted_files)):
         if filename.endswith(".jpg") or filename.endswith(".png"):
-            # print(filename)
             image_path = os.path.join(picture_path, filename)
             image = Image.open(image_path)
+            text = image_texts[i]  # 获取对应的文本描述
 
-            inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], images=image, return_tensors="pt", padding=True).to(device)
-            # print(f"a {args.name} belonging to the '{category}'" for category in categories)
-            outputs = model(**inputs)
-            feature = outputs.image_embeds
+            # 处理图像
+            image_inputs = processor(images=image, return_tensors="pt").to(device)
+            image_outputs = model.get_image_features(**image_inputs)
+            clip_image_features[i] = image_outputs.squeeze().detach().cpu().numpy()
 
-            # 将当前图像的特征添加到特征矩阵中
-            clip_features[i] = feature.squeeze().detach().cpu().numpy()
+            # 处理文本
+            text_inputs = processor(text=text, return_tensors="pt", padding=True).to(device)
+            text_outputs = model.get_text_features(**text_inputs)
+            clip_text_features[i] = text_outputs.squeeze().detach().cpu().numpy()
 
-            logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
+            # 计算类别概率
+            category_inputs = processor(text=[f"a {args.name} belonging to the '{category}'" for category in categories], return_tensors="pt", padding=True).to(device)
+            category_outputs = model.get_text_features(**category_inputs)
+            logits_per_image = image_outputs @ category_outputs.T
             probs = logits_per_image.softmax(dim=1).detach().cpu().numpy()
-            # print(probs)
-            # print('--------------------------------')
             clip_probs[i] = probs.squeeze()
-            # 使用argmax获取预测的类别，并将其添加到类别列表中
+
             predicted_label = logits_per_image.argmax(dim=1).item()
-            # print(predicted_label, '---------------')
             all_labels.append(predicted_label)
 
-
-    print("已从文件夹中的所有图像中提取特征.")
-    # 保存特征矩阵和概率矩阵为npy文件
-    np.save(output_feature, clip_features)
+    print("已从文件夹中的所有图像和文本中提取特征.")
+    np.save(output_image_feature, clip_image_features)
+    np.save(output_text_feature, clip_text_features)
     np.save(output_probs, clip_probs)
 
-    # 将标签列表转换为NumPy数组并保存为npy文件
     clip_labels = np.array(all_labels)
     np.save(output_labels, clip_labels)
 else:
     print('Existing features, please load!')
-    clip_features = np.load(output_feature)
+    clip_image_features = np.load(output_image_feature)
+    clip_text_features = np.load(output_text_feature)
     clip_labels = np.load(output_labels)
 
 
