@@ -75,6 +75,7 @@ CUDA_VISIBLE_DEVICES=0 python CLIP.py --name Toys --csv_path /home/aiscuser/ATG/
 CUDA_VISIBLE_DEVICES=0  python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 64 --model_name vit_large_patch14_dinov2.lvd142m --size 518
 python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 64 --model_name swinv2_large_window12to24_192to384.ms_in22k_ft_in1k --size 384
 python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 512 --model_name convnextv2_huge.fcmae_ft_in22k_in1k_384
+python ImageExtract.py  --data_dir Data/Toys/ToysImages/ --name Toys --path Data/Toys/ImageFeature/ --batch_size 512 --model_name beitv2_large_patch16_224.in1k_ft_in22k_in1k --size 224
 ```
 
 ```python
