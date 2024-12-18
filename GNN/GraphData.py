@@ -77,12 +77,9 @@ def set_seed(seed: int):
     th.manual_seed(seed)
     th.cuda.manual_seed(seed)
     th.cuda.manual_seed_all(seed)
+    th.backends.cudnn.deterministic = True
+    th.backends.cudnn.benchmark = True
 
-
-# def fix_seed(seed):
-#
-#     torch.backends.cudnn.deterministic = True
-#     torch.backends.cudnn.benchmark = True
 
 
 def split_edge(graph, test_ratio=0.2, val_ratio=0.1, random_seed=42, neg_len='1000', path=None):
