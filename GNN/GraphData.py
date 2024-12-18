@@ -78,7 +78,9 @@ def set_seed(seed: int):
     th.cuda.manual_seed(seed)
     th.cuda.manual_seed_all(seed)
     th.backends.cudnn.deterministic = True
-    th.backends.cudnn.benchmark = True
+    th.backends.cudnn.benchmark = False
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    th.use_deterministic_algorithms(True)
 
 
 
