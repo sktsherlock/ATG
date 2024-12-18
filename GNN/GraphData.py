@@ -80,7 +80,6 @@ def set_seed(seed: int):
     th.backends.cudnn.deterministic = True
     th.backends.cudnn.benchmark = False
     os.environ['PYTHONHASHSEED'] = str(seed)
-    th.use_deterministic_algorithms(True)
 
 
 
