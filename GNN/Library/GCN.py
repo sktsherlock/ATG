@@ -151,19 +151,9 @@ def main():
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
-    # 确定所训练的模型保存的地址
-    parts = args.feature.split("/")
-    data_name = parts[1]
-    feature_type = parts[2]
-    save_path = os.path.join(args.exp_path, f'{data_name}/GCN/{feature_type}/{args.metric}/')
-
 
     for run in range(args.n_runs):
         set_seed(args.seed + run)
-        exp_seed_path = os.path.join(save_path, f'Seed{args.seed + run}/')
-        if not os.path.exists(exp_seed_path):
-            os.makedirs(exp_seed_path)
-        print(f'The save_path now is {exp_seed_path}')
         model.reset_parameters()
         val_result, test_result = classification(
             args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
@@ -171,8 +161,6 @@ def main():
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
         test_results.append(test_result)
-        # np.save(os.path.join(exp_seed_path, f"Seed{args.seed + run}.npy"), predictions.cpu())
-        # print(f'Success saving predictions in the {exp_seed_path}')
 
     print(f"Runned {args.n_runs} times")
     print(f"Average val {args.metric}: {np.mean(val_results)} ± {np.std(val_results)}")
