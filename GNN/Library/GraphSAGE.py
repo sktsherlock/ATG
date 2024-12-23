@@ -156,7 +156,7 @@ def main():
     save_path = os.path.join(args.exp_path, f'{data_name}/SAGE/{feature_type}/{args.metric}/')
 
     for run in range(args.n_runs):
-        set_seed(args.seed + run)
+        set_seed(args.seed)
         model.reset_parameters()
         val_result, test_result = classification(
             args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1, None
