@@ -9,8 +9,6 @@ import numpy as np
 import torch.nn.functional as F
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 from GNN.GraphData import load_data, set_seed
 import GNN.NodeClassification
 from GNN.Utils.model_config import add_common_args
