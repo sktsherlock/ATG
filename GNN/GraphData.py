@@ -70,6 +70,7 @@ def set_seed(seed: int):
     np.random.seed(seed)
     th.manual_seed(seed)
     th.cuda.manual_seed(seed)
+    th.cuda.manual_seed_all(seed)
     th.backends.cudnn.deterministic = True
     th.backends.cudnn.benchmark = False
     os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'

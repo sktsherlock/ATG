@@ -15,6 +15,8 @@ from GraphData import load_data, set_seed
 from NodeClassification import classification
 from Utils.model_config import add_common_args
 
+set_seed(42)
+
 
 # 模型定义模块
 class GCN(nn.Module):
