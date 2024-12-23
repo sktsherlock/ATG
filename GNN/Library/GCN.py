@@ -15,8 +15,6 @@ from GraphData import load_data, set_seed
 from NodeClassification import classification
 from Utils.model_config import add_common_args
 
-set_seed(42)
-
 
 # 模型定义模块
 class GCN(nn.Module):
@@ -91,7 +89,8 @@ def main():
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                            val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
+                                                            val_ratio=args.val_ratio, name=args.data_name,
+                                                            fewshots=args.fewshots)
 
     # add reverse edges, tranfer to the  undirected graph
     if args.undirected:
@@ -101,7 +100,6 @@ def main():
 
     # 定义可观测图数据，用于inductive实验设置；
     observe_graph = copy.deepcopy(graph)
-
 
     if args.inductive:
         # 构造Inductive Learning 实验条件
@@ -117,7 +115,6 @@ def main():
         print('***************')
         print(graph)
 
-
     # add self-loop
     if args.selfloop:
         print(f"Total edges before adding self-loop {graph.number_of_edges()}")
@@ -125,8 +122,9 @@ def main():
         print(f"Total edges after adding self-loop {graph.number_of_edges()}")
         observe_graph = observe_graph.remove_self_loop().add_self_loop()
 
-    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
-    n_classes = (labels.max()+1).item()
+    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else \
+    graph.ndata['feat'].to(device)
+    n_classes = (labels.max() + 1).item()
     print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
 
     graph.create_formats_()
@@ -155,10 +153,10 @@ def main():
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
 
     for run in range(args.n_runs):
-        set_seed(args.seed)
+        set_seed(args.seed + run)
         model.reset_parameters()
         val_result, test_result = classification(
-            args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
+            args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run + 1
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)
