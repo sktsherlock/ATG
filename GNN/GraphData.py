@@ -71,7 +71,7 @@ def set_seed(seed: int):
     th.manual_seed(seed)
     th.cuda.manual_seed(seed)
     th.cuda.manual_seed_all(seed)
-    th.use_deterministic_algorithms(True)
+    # th.use_deterministic_algorithms(True)
 
 
 
