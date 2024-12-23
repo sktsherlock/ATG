@@ -11,7 +11,7 @@ import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from GNN.LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
+from GNN.Utils.LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
 from GNN.GraphData import load_data, set_seed
 from GNN.Utils.model_config import add_common_args
 

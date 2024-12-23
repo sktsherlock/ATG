@@ -7,7 +7,7 @@ from torch_geometric.nn import CorrectAndSmooth
 from torch_geometric.transforms import ToSparseTensor
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ..GraphData import load_data
-from ..LossFunction import get_metric
+from GNN.Utils.LossFunction import get_metric
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--text_logits", type=str, default='Exp/Transductive/Movies/GCN/TextFeature/', help="The logits generated from the text feature for ensembling")

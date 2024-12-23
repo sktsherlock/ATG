@@ -1,14 +1,10 @@
 import sys
 import copy
-import torch.nn as nn
-import dgl.nn.pytorch as dglnn
 import argparse
 import wandb
 import torch as th
 import numpy as np
-import torch.nn.functional as F
 import os
-from dgl.sampling import node2vec_random_walk
 from sklearn.linear_model import LogisticRegression
 from dgl.nn.pytorch import DeepWalk
 from torch.utils.data import DataLoader
@@ -17,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from GNN.GraphData import load_data, set_seed
 from GNN.Utils.model_config import add_common_args
-from GNN.LossFunction import get_metric
+from GNN.Utils.LossFunction import get_metric
 
 
 
