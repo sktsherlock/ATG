@@ -2,7 +2,7 @@ import torch.nn.functional as F
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from fusions.MultiBench import *
+from ..fusions.MultiBench import *
 
 
 
@@ -165,6 +165,7 @@ def add_appnp_args(argparser):
     argparser.add_argument(
         "--input_dropout", type=float, default=0.5, help="dropout rate"
     )
+
 
 
 def gen_model(args, device, n_classes, t_dim, v_dim):

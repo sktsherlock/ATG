@@ -1,5 +1,5 @@
 from tqdm import  tqdm
-from GraphData import load_data
+from ..GraphData import load_data
 from collections import Counter
 import argparse
 
