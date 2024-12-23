@@ -3,7 +3,7 @@ import wandb
 import os
 import torch as th
 import torch.optim as optim
-from LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
+from .LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
 
 
 def train(model, graph, feat, labels, train_idx, optimizer, label_smoothing):
