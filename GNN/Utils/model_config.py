@@ -1,9 +1,9 @@
 import torch.nn.functional as F
 import sys
 import os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from GNN.fusions.MultiBench import *
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from GNN.fusions.MultiBench import *
 
 
 def add_common_args(argparser):
@@ -41,7 +41,8 @@ def add_common_args(argparser):
         "--eval_steps", type=int, default=1, help="eval in every epochs"
     )
     argparser.add_argument(
-        "--early_stop_patience", type=int, default=None, help="when to stop the  training loop to be aviod of the overfiting"
+        "--early_stop_patience", type=int, default=None,
+        help="when to stop the  training loop to be aviod of the overfiting"
     )
     argparser.add_argument(
         "--warmup_epochs", type=int, default=None, help="The warmup epochs"
@@ -133,7 +134,8 @@ def add_gat_args(argparser):
 
 def add_sage_args(argparser):
     argparser.add_argument(
-        "--aggregator", type=str, default="mean", choices=["mean", "gcn", "pool", "lstm"], help="Specify the aggregator option"
+        "--aggregator", type=str, default="mean", choices=["mean", "gcn", "pool", "lstm"],
+        help="Specify the aggregator option"
     )
 
 
@@ -167,7 +169,6 @@ def add_appnp_args(argparser):
     )
 
 
-
 def gen_model(args, device, n_classes, t_dim, v_dim):
     if args.model_name == 'GCN':
         from Library.GCN import GCN
@@ -178,9 +179,11 @@ def gen_model(args, device, n_classes, t_dim, v_dim):
     elif args.model_name == 'SAGE':
         from Library.GraphSAGE import GraphSAGE
         if args.fusion_name == 'Concat':
-            model = GraphSAGE(t_dim + v_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout, aggregator_type=args.aggregator).to(device)
+            model = GraphSAGE(t_dim + v_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout,
+                              aggregator_type=args.aggregator).to(device)
         else:
-            model = GraphSAGE(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout, aggregator_type=args.aggregator).to(device)
+            model = GraphSAGE(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout,
+                              aggregator_type=args.aggregator).to(device)
     elif args.model_name == 'SGC':
         from dgl.nn.pytorch.conv import SGConv
         if args.fusion_name == 'Concat':
@@ -190,9 +193,10 @@ def gen_model(args, device, n_classes, t_dim, v_dim):
     elif args.model_name == 'RevGAT':
         from Library.RevGAT.model import RevGAT
         if args.fusion_name == 'Concat':
-            model = RevGAT(t_dim + v_dim, n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu, dropout=args.dropout,
-               attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False,
-               use_symmetric_norm=args.use_symmetric_norm).to(device)
+            model = RevGAT(t_dim + v_dim, n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu,
+                           dropout=args.dropout,
+                           attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False,
+                           use_symmetric_norm=args.use_symmetric_norm).to(device)
         else:
             model = RevGAT(args.output_dim, n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu,
                            dropout=args.dropout,
@@ -201,14 +205,16 @@ def gen_model(args, device, n_classes, t_dim, v_dim):
     elif args.model_name == 'APPNP':
         from Library.APPNP import APPNP
         if args.fusion_name == 'Concat':
-            model = APPNP(t_dim + v_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.input_dropout, args.edge_drop, args.alpha, args.k_ps).to(device)
+            model = APPNP(t_dim + v_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.input_dropout,
+                          args.edge_drop, args.alpha, args.k_ps).to(device)
         else:
             model = APPNP(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.input_dropout,
                           args.edge_drop, args.alpha, args.k_ps).to(device)
     elif args.model_name == 'GAT':
         from Library.GAT import GAT
         if args.fusion_name == 'Concat':
-            model = GAT(t_dim + v_dim, n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu, args.dropout, args.attn_drop, args.edge_drop, not args.no_attn_dst).to(device)
+            model = GAT(t_dim + v_dim, n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu, args.dropout,
+                        args.attn_drop, args.edge_drop, not args.no_attn_dst).to(device)
         else:
             model = GAT(args.output_dim, n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu, args.dropout,
                         args.attn_drop, args.edge_drop, not args.no_attn_dst).to(device)
@@ -229,4 +235,3 @@ def gen_fusion(args, device, t_dim, v_dim):
     else:
         raise ValueError('Fusion must be in the implementrary.')
     return fusion
-
