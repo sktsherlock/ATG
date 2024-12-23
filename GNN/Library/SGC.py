@@ -99,9 +99,8 @@ def main():
         [np.prod(p.size()) for p in model.parameters() if p.requires_grad]
     )
     print(f"Number of the all GNN model params: {TRAIN_NUMBERS}")
-
+    set_seed(args.seed)
     for run in range(args.n_runs):
-        set_seed(args.seed + run)
         model.reset_parameters()
         val_result, test_result = classification(
             args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run+1
