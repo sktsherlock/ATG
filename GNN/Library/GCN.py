@@ -9,9 +9,9 @@ import numpy as np
 import torch.nn.functional as F
 import os
 
-from GNN.GraphData import load_data, set_seed
-import GNN.NodeClassification
-from GNN.Utils.model_config import add_common_args
+from ..GraphData import load_data, set_seed
+from .. import NodeClassification
+from ..Utils.model_config import add_common_args
 
 
 # 模型定义模块
