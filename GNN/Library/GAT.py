@@ -12,11 +12,11 @@ import numpy as np
 import torch.nn.functional as F
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from GraphData import load_data, set_seed
-from NodeClassification import classification
-from Utils.model_config import add_common_args
+from GNN.GraphData import load_data, set_seed
+from GNN.NodeClassification import classification
+from GNN.Utils.model_config import add_common_args
 
 
 class ElementWiseLinear(nn.Module):

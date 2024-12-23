@@ -13,10 +13,13 @@ from sklearn.linear_model import LogisticRegression
 from dgl.nn.pytorch import DeepWalk
 from torch.utils.data import DataLoader
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from LossFunction import get_metric
-from GraphData import load_data, set_seed
-from Utils.model_config import add_common_args
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from GNN.GraphData import load_data, set_seed
+from GNN.Utils.model_config import add_common_args
+from GNN.LossFunction import get_metric
+
+
 
 
 def train(model, loader, optimizer, device):

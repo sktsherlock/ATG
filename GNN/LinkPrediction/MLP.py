@@ -11,11 +11,12 @@ from ogb.nodeproppred import DglNodePropPredDataset
 
 from torch.utils.data import DataLoader
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from GraphData import Evaluator, split_edge, Logger, load_data
-from LinkTask import linkprediction
-from Utils.model_config import add_common_args
+
+from ..GraphData import Evaluator, split_edge, Logger, load_data
+from ..LinkTask import linkprediction
+from ..Utils.model_config import add_common_args
 
 
 def args_init():

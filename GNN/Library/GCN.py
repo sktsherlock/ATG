@@ -11,7 +11,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from GNN.GraphData import load_data, set_seed
-from GNN import NodeClassification
+from GNN.NodeClassification import classification
 from GNN.Utils.model_config import add_common_args
 
 
@@ -154,7 +154,7 @@ def main():
     for run in range(args.n_runs):
         set_seed(args.seed + run)
         model.reset_parameters()
-        val_result, test_result = NodeClassification.classification(
+        val_result, test_result = classification(
             args, graph, observe_graph, model, feat, labels, train_idx, val_idx, test_idx, run + 1
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})

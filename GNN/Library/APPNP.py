@@ -1,10 +1,3 @@
-"""
-APPNP implementation in DGL.
-References
-----------
-Paper: https://arxiv.org/abs/1810.05997
-Author's code: https://github.com/klicperajo/ppnp
-"""
 import sys
 import copy
 import torch.nn as nn
@@ -16,10 +9,11 @@ import numpy as np
 import torch.nn.functional as F
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from GraphData import load_data, set_seed
-from NodeClassification import classification
-from Utils.model_config import add_common_args
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from GNN.GraphData import load_data, set_seed
+from GNN.NodeClassification import classification
+from GNN.Utils.model_config import add_common_args
 from dgl.nn.pytorch.conv import APPNPConv
 
 
