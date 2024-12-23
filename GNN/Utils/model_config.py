@@ -171,13 +171,13 @@ def add_appnp_args(argparser):
 
 def gen_model(args, device, n_classes, t_dim, v_dim):
     if args.model_name == 'GCN':
-        from Library.GCN import GCN
+        from ..Library.GCN import GCN
         if args.fusion_name == 'Concat':
             model = GCN(t_dim + v_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
         else:
             model = GCN(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout).to(device)
     elif args.model_name == 'SAGE':
-        from Library.GraphSAGE import GraphSAGE
+        from ..Library.GraphSAGE import GraphSAGE
         if args.fusion_name == 'Concat':
             model = GraphSAGE(t_dim + v_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.dropout,
                               aggregator_type=args.aggregator).to(device)
@@ -191,7 +191,7 @@ def gen_model(args, device, n_classes, t_dim, v_dim):
         else:
             model = SGConv(args.output_dim, n_classes, args.k, cached=True, bias=args.bias).to(device)
     elif args.model_name == 'RevGAT':
-        from Library.RevGAT.model import RevGAT
+        from ..Library.RevGAT.model import RevGAT
         if args.fusion_name == 'Concat':
             model = RevGAT(t_dim + v_dim, n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu,
                            dropout=args.dropout,
@@ -203,7 +203,7 @@ def gen_model(args, device, n_classes, t_dim, v_dim):
                            attn_drop=args.attn_drop, edge_drop=args.edge_drop, use_attn_dst=False,
                            use_symmetric_norm=args.use_symmetric_norm).to(device)
     elif args.model_name == 'APPNP':
-        from Library.APPNP import APPNP
+        from ..Library.APPNP import APPNP
         if args.fusion_name == 'Concat':
             model = APPNP(t_dim + v_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.input_dropout,
                           args.edge_drop, args.alpha, args.k_ps).to(device)
@@ -211,7 +211,7 @@ def gen_model(args, device, n_classes, t_dim, v_dim):
             model = APPNP(args.output_dim, args.n_hidden, n_classes, args.n_layers, F.relu, args.input_dropout,
                           args.edge_drop, args.alpha, args.k_ps).to(device)
     elif args.model_name == 'GAT':
-        from Library.GAT import GAT
+        from ..Library.GAT import GAT
         if args.fusion_name == 'Concat':
             model = GAT(t_dim + v_dim, n_classes, args.n_hidden, args.n_layers, args.n_heads, F.relu, args.dropout,
                         args.attn_drop, args.edge_drop, not args.no_attn_dst).to(device)

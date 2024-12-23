@@ -5,6 +5,8 @@ import wandb
 import torch as th
 import numpy as np
 import os
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="onnxruntime")
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
