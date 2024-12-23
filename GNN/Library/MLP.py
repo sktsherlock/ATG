@@ -6,14 +6,14 @@ import numpy as np
 import torch.nn.functional as F
 import sys
 import os
-import torch.optim as optim
 import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from GNN.Utils.LossFunction import cross_entropy, get_metric, EarlyStopping, adjust_learning_rate
+from GNN.Utils.LossFunction import cross_entropy, get_metric
 from GNN.GraphData import load_data, set_seed
 from GNN.Utils.model_config import add_common_args
+from GNN.Utils.NodeClassification import initialize_early_stopping, initialize_optimizer_and_scheduler, adjust_learning_rate_if_needed,log_results_to_wandb, log_progress, print_final_results
 
 
 def train(model, feat, labels, train_idx, optimizer, label_smoothing):
@@ -45,83 +45,64 @@ def evaluate(
     return train_results, val_results, test_results, val_loss, test_loss
 
 
-def classification(
-        args, model, feat, labels, train_idx, val_idx, test_idx, n_running):
-    if args.early_stop_patience is not None:
-        stopper = EarlyStopping(patience=args.early_stop_patience)
-    optimizer = optim.AdamW(
-        model.parameters(), lr=args.lr, weight_decay=args.wd
-    )
-    lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode="min",
-        factor=0.5,
-        patience=100,
-        verbose=True,
-        min_lr=args.min_lr,
-    )
+def classification(args, model, feat, labels, train_idx, val_idx, test_idx, n_running):
+    stopper = initialize_early_stopping(args)
+    optimizer, lr_scheduler = initialize_optimizer_and_scheduler(args, model)
 
-    # training loop
     total_time = 0
     best_val_result, final_test_result, best_val_loss = 0, 0, float("inf")
 
     for epoch in range(1, args.n_epochs + 1):
         tic = time.time()
 
-        if args.warmup_epochs is not None:
-            adjust_learning_rate(optimizer, args.lr, epoch, args.warmup_epochs)
+        adjust_learning_rate_if_needed(args, optimizer, epoch)
 
-        train_loss, pred = train(
-            model, feat, labels, train_idx, optimizer, label_smoothing=args.label_smoothing
-        )
+        train_loss, train_result = train_model(model, feat, labels, train_idx, optimizer, args)
+
         if epoch % args.eval_steps == 0:
-            (
-                train_result,
-                val_result,
-                test_result,
-                val_loss,
-                test_loss,
-            ) = evaluate(
-                model,
-                feat,
-                labels,
-                train_idx,
-                val_idx,
-                test_idx,
-                args.metric,
-                args.label_smoothing,
-                args.average
-            )
-            wandb.log(
-                {'Train_loss': train_loss, 'Val_loss': val_loss, 'Test_loss': test_loss, 'Train_result': train_result,
-                 'Val_result': val_result, 'Test_result': test_result})
+            val_loss, val_result, test_result, test_loss = evaluate_model(args, model, feat, labels, train_idx, val_idx,
+                                                                          test_idx)
+            log_results_to_wandb(train_loss, val_loss, test_loss, train_result, val_result, test_result)
             lr_scheduler.step(train_loss)
 
-            toc = time.time()
-            total_time += toc - tic
+            total_time += time.time() - tic
 
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                best_val_result = val_result
-                final_test_result = test_result
+            best_val_loss, best_val_result, final_test_result = update_best_results(val_loss, val_result, test_result,
+                                                                                    best_val_loss, best_val_result,
+                                                                                    final_test_result)
 
-            if args.early_stop_patience is not None:
-                if stopper.step(val_loss):
-                    break
+            if should_early_stop(stopper, val_loss):
+                break
 
-            if epoch % args.log_every == 0:
-                print(
-                    f"Run: {n_running}/{args.n_runs}, Epoch: {epoch}/{args.n_epochs}, Average epoch time: {total_time / epoch:.2f}\n"
-                    f"Loss: {train_loss.item():.4f}\n"
-                    f"Train/Val/Test loss: {train_loss:.4f}/{val_loss:.4f}/{test_loss:.4f}\n"
-                    f"Train/Val/Test/Best Val/Final Test {args.metric}: {train_result:.4f}/{val_result:.4f}/{test_result:.4f}/{best_val_result:.4f}/{final_test_result:.4f}"
-                )
+            log_progress(args, epoch, n_running, total_time, train_loss, val_loss, test_loss, train_result, val_result,
+                         test_result, best_val_result, final_test_result)
 
-    print("*" * 50)
-    print(f"Best val acc: {best_val_result}, Final test acc: {final_test_result}")
-    print("*" * 50)
-
+    print_final_results(best_val_result, final_test_result)
     return best_val_result, final_test_result
+
+
+def train_model(model, feat, labels, train_idx, optimizer, args):
+    train_loss, train_result = train(model, feat, labels, train_idx, optimizer, label_smoothing=args.label_smoothing)
+    return train_loss, train_result
+
+
+def evaluate_model(args, model, feat, labels, train_idx, val_idx, test_idx):
+    train_result, val_result, test_result, val_loss, test_loss = evaluate(
+        model, feat, labels, train_idx, val_idx, test_idx, args.metric, args.label_smoothing, args.average
+    )
+    return val_loss, val_result, test_result, test_loss
+
+
+
+def update_best_results(val_loss, val_result, test_result, best_val_loss, best_val_result, final_test_result):
+    if val_loss < best_val_loss:
+        return val_loss, val_result, test_result
+    return best_val_loss, best_val_result, final_test_result
+
+
+def should_early_stop(stopper, val_loss):
+
+    return stopper and stopper.step(val_loss)
 
 
 class MLP(nn.Module):
@@ -189,9 +170,11 @@ def main():
 
     # load data
     graph, labels, train_idx, val_idx, test_idx = load_data(args.graph_path, train_ratio=args.train_ratio,
-                                                        val_ratio=args.val_ratio, name=args.data_name, fewshots=args.fewshots)
+                                                            val_ratio=args.val_ratio, name=args.data_name,
+                                                            fewshots=args.fewshots)
 
-    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else graph.ndata['feat'].to(device)
+    feat = th.from_numpy(np.load(args.feature).astype(np.float32)).to(device) if args.feature is not None else \
+    graph.ndata['feat'].to(device)
     n_classes = (labels.max() + 1).item()
     print(f"Number of classes {n_classes}, Number of features {feat.shape[1]}")
 
@@ -228,7 +211,7 @@ def main():
         set_seed(args.seed + run)
         model.reset_parameters()
         val_result, test_result = classification(
-            args, model, feat, labels, train_idx, val_idx, test_idx, run+1
+            args, model, feat, labels, train_idx, val_idx, test_idx, run + 1
         )
         wandb.log({f'Val_{args.metric}': val_result, f'Test_{args.metric}': test_result})
         val_results.append(val_result)

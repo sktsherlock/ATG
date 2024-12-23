@@ -5,7 +5,6 @@ from dgl.utils import expand_as_pair
 from dgl import function as fn
 from dgl.ops import edge_softmax
 import sys
-import dgl.nn.pytorch as dglnn
 import argparse
 import wandb
 import numpy as np
@@ -15,7 +14,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from GNN.GraphData import load_data, set_seed
-from GNN.NodeClassification import classification
+from GNN.Utils.NodeClassification import classification
 from GNN.Utils.model_config import add_common_args
 
 

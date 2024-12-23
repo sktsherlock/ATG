@@ -1,7 +1,6 @@
 import sys
 import copy
 import torch.nn as nn
-import dgl.nn.pytorch as dglnn
 import argparse
 import wandb
 import torch as th
@@ -12,7 +11,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from GNN.GraphData import load_data, set_seed
-from GNN.NodeClassification import classification
+from GNN.Utils.NodeClassification import classification
 from GNN.Utils.model_config import add_common_args
 from dgl.nn.pytorch.conv import APPNPConv
 

@@ -1,17 +1,12 @@
-import sys
 import copy
 import torch.nn as nn
-import dgl.nn.pytorch as dglnn
 import argparse
 import wandb
 import torch as th
 import numpy as np
-import torch.nn.functional as F
-import os
 
-from fusions.MultiBench import TensorFusion
 from GraphData import load_data, set_seed
-from NodeClassification import mag_classification
+from GNN.Utils.NodeClassification import mag_classification
 from Utils.model_config import add_common_args, add_revgat_args, add_sage_args, add_gat_args, add_sgc_args, add_appnp_args, gen_model, gen_fusion, add_fusion_args
 
 

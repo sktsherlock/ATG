@@ -1,7 +1,6 @@
 import argparse
 import torch
 import sys
-import os
 import dgl
 import numpy as np
 import wandb
@@ -11,8 +10,8 @@ from ogb.nodeproppred import DglNodePropPredDataset
 from torch_sparse import SparseTensor
 from torch_geometric.nn import SAGEConv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from ..GraphData import Evaluator, split_edge, Logger, load_data
-from ..LinkTask import linkprediction
+from ..GraphData import Evaluator, split_edge, Logger
+from GNN.Utils.LinkTask import linkprediction
 from ..Utils.model_config import add_common_args
 
 
