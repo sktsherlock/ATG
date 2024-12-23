@@ -68,7 +68,6 @@ CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'google/gemma-7b' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True 
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name 'sentence-transformers/all-MiniLM-L12-v2' --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 512 --batch_size 500 --text_column 'text' --fp16 True --norm True
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Toys/Toys.csv --model_name $datain/llama3-8b/ --name 'Toys' --path 'Data/Toys/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
-/scratch/azureml/cr/j/4f81cb2ec77945d89e62c1956f8689a6/cap/data-capability/wd/INPUT_datain/
 ```
 ```python
 CUDA_VISIBLE_DEVICES=0 python CLIP.py --name Toys --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --path /home/aiscuser/ATG/Data/Toys/ToysImages/ --feature_path /home/aiscuser/ATG/Data/Toys/ImageFeature
