@@ -2,7 +2,7 @@ import torch.nn.functional as F
 import sys
 import os
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ..fusions.MultiBench import *
+from GNN.fusions.MultiBench import *
 
 
 
