@@ -7,7 +7,7 @@ PROJ_DIR = osp.abspath(osp.dirname(__file__))
 print(PROJ_DIR)
 PROJ_NAME = 'ATG'
 LINUX_HOME = str(Path.home())
-CONDA_ENV_NAME = 'ct'
+CONDA_ENV_NAME = 'MAG'
 CONDA_PATH = f'{LINUX_HOME}/miniconda/envs/{CONDA_ENV_NAME}'
 HTOP_FILE = f"{CONDA_PATH}/bin/nvidia-htop.py"
 SV_INIT_CMDS = [
