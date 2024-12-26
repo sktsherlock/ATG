@@ -97,12 +97,12 @@ def build_wiki_subgraph(center_page, G, max_depth=3):
             G.add_node(current_page, **page_data)
 
         if depth < max_depth:
-            for ref in page_data['references']:
-                if ref not in visited:
-                    queue.append((ref, depth + 1))
-                if ref not in G:
-                    G.add_node(ref)
-                G.add_edge(current_page, ref)
+            for link in page_data['links']:
+                if link not in visited:
+                    queue.append((link, depth + 1))
+                if link not in G:
+                    G.add_node(link)
+                G.add_edge(current_page, link)
 
     return G
 
