@@ -19,7 +19,8 @@ def get_page_content(title):
         page_data = {
             'title': page.title,
             'content': page.content,
-            'links': page.links
+            'links': page.links,
+            'categories': page.categories  # 添加这一行来获取页面类别
         }
 
         # 打印页面信息
@@ -27,6 +28,7 @@ def get_page_content(title):
         print(f"Content (first 100 characters): {page_data['content'][:100]}...")
         print(f"Number of links: {len(page_data['links'])}")
         print(f"First 5 links: {page_data['links'][:5]}")
+        print(f"Categories: {page_data['categories']}")  # 打印类别
         print("-" * 50)  # 分隔线
 
         return page_data
