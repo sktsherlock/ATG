@@ -16,11 +16,20 @@ def get_page_content(title):
     """获取指定标题的Wikipedia页面内容"""
     try:
         page = wikipedia.page(title)
-        return {
+        page_data = {
             'title': page.title,
             'content': page.content,
             'links': page.links
         }
+
+        # 打印页面信息
+        print(f"Title: {page_data['title']}")
+        print(f"Content (first 100 characters): {page_data['content'][:100]}...")
+        print(f"Number of links: {len(page_data['links'])}")
+        print(f"First 5 links: {page_data['links'][:5]}")
+        print("-" * 50)  # 分隔线
+
+        return page_data
     except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError):
         return None
 
@@ -51,7 +60,7 @@ def build_wiki_graph(num_pages=10, verbose=False):
 
 def main():
     parser = argparse.ArgumentParser(description="Build a Wikipedia graph")
-    parser.add_argument("--num_pages", type=int, default=100, help="Number of pages to fetch")
+    parser.add_argument("--num_pages", type=int, default=10, help="Number of pages to fetch")
     parser.add_argument("--verbose", action="store_true", help="Print detailed information")
     args = parser.parse_args()
 
