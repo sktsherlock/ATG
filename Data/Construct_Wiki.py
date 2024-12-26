@@ -67,6 +67,8 @@ def get_page_content(title):
         print(f"Title: {page_data['title']}")
         print(f"Number of categories: {len(page_data['categories'])}")
         print(f"Number of links: {len(page_data['links'])}")
+        print(f"First 5 links: {page_data['links'][:5]}")
+        print(f"Categories: {page_data['categories']}")  # 打印类别
         print("-" * 50)
 
         return page_data
