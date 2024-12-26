@@ -39,6 +39,30 @@ def get_random_wiki_page():
         return None
 
 
+# def get_page_content(title):
+#     """获取指定标题的Wikipedia页面内容"""
+#     try:
+#         page = wikipedia.page(title)
+#         page_data = {
+#             'title': page.title,
+#             'content': page.content,
+#             'links': page.links,
+#             'references': page.references,
+#             'categories': page.categories  # 直接使用所有类别，不进行过滤
+#         }
+#
+#         print(f"Title: {page_data['title']}")
+#         print(f"Number of categories: {len(page_data['categories'])}")
+#         print(f"Number of links: {len(page_data['links'])}")
+#         print(f"First 5 links: {page_data['links'][:5]}")
+#         print(f"Categories: {page_data['categories']}")  # 打印类别
+#         print("-" * 50)
+#
+#         return page_data
+#     except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError):
+#         return None
+
+
 def get_page_content(title):
     """获取指定标题的Wikipedia页面内容"""
     try:
@@ -47,17 +71,8 @@ def get_page_content(title):
             'title': page.title,
             'content': page.content,
             'links': page.links,
-            'references': page.references,
-            'categories': page.categories  # 直接使用所有类别，不进行过滤
+            'categories': page.categories
         }
-
-        print(f"Title: {page_data['title']}")
-        print(f"Number of categories: {len(page_data['categories'])}")
-        print(f"Number of links: {len(page_data['links'])}")
-        print(f"First 5 links: {page_data['links'][:5]}")
-        print(f"Categories: {page_data['categories']}")  # 打印类别
-        print("-" * 50)
-
         return page_data
     except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError):
         return None
