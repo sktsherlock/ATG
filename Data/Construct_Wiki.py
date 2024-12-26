@@ -47,6 +47,7 @@ def get_page_content(title):
             'title': page.title,
             'content': page.content,
             'links': page.links,
+            'references': page.references,
             'categories': page.categories  # 直接使用所有类别，不进行过滤
         }
 
