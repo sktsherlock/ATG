@@ -132,7 +132,7 @@ def save_graph_and_labels(G, filename_prefix):
 
 def main():
     parser = argparse.ArgumentParser(description="Build a Wikipedia graph for science and technology")
-    parser.add_argument("w", type=int, default=1000, help="Number of pages to fetch")
+    parser.add_argument("--num_pages", type=int, default=10, help="Number of pages to fetch")
     parser.add_argument("--verbose", action="store_true", help="Print detailed information")
     parser.add_argument("--output", type=str, default="wiki_science_tech", help="Output file prefix")
     args = parser.parse_args()
@@ -150,7 +150,6 @@ def main():
     print(f"Graph saved to {args.output}_graph.gexf")
     print(f"Labels saved to {args.output}_labels.json")
     print(f"Node info saved to {args.output}_node_info.json")
-
 
 if __name__ == "__main__":
     main()
