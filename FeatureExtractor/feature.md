@@ -19,6 +19,10 @@ CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Movies/Mov
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'mistralai/Ministral-8B-Instruct-2410' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 40 --text_column 'text' --f16 True --fp16 True
 ```
 
+```python
+upload_file(path_or_fileobj="Movies_Llama_3.1_8B_Instruct_512_mean.npy", path_in_repo="Movies/TextFeature/Movies_Llama_3.1_8B_Instruct_512_mean.npy", repo_id="Sherirto/MAG")
+```
+
 
 ## Toys Text Feature 
 ```python
