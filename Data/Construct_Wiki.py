@@ -79,7 +79,7 @@ def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5, ma
                 link_id = node_id_map[link]
                 if link_id not in G:
                     G.add_node(link_id, **link_data)
-                    # print(f"Added linked page: '{link}' with node ID: {link_id}")
+                    print(f"Added linked page: '{link}' with node ID: {link_id}")
                 G.add_edge(node_id, link_id)
 
                 if link not in visited:
