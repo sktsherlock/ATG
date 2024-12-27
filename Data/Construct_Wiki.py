@@ -13,7 +13,7 @@ def get_page_content(title):
         page = wikipedia.page(title, auto_suggest=False)
         images = [img for img in page.images if img.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
         if not images:  # 如果没有有效的图像链接，返回 None
-            print(f"Skipping page '{title}' due to lack of images.")
+            # print(f"Skipping page '{title}' due to lack of images.")
             return None
         page_data = {
             'title': page.title,
@@ -46,7 +46,7 @@ def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
 
         # 检查是否有图像
         if not page_data.get('images'):
-            print(f"Skipping page '{current_page}' due to lack of images.")
+            # print(f"Skipping page '{current_page}' due to lack of images.")
             continue
 
         if current_page not in node_id_map:
@@ -64,7 +64,7 @@ def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
             for link in page_data['links']:
                 link_data = get_page_content(link)
                 if not link_data or not link_data.get('images'):
-                    print(f"Skipping linked page '{link}' due to lack of images or content.")
+                    # print(f"Skipping linked page '{link}' due to lack of images or content.")
                     continue
 
                 if link not in node_id_map:
