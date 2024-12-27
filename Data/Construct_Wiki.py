@@ -101,7 +101,10 @@ def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
 
         node_id = node_id_map[current_page]
         if node_id not in G:
-            G.add_node(node_id, title=current_page, **page_data)
+            # 确保不会重复添加 'title' 属性
+            if 'title' not in page_data:
+                page_data['title'] = current_page
+            G.add_node(node_id, **page_data)
 
         if order < max_order:
             for link in page_data['links']:
@@ -117,6 +120,7 @@ def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
                     queue.append((link, order + 1))
 
     return G, current_id
+
 
 
 
