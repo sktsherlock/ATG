@@ -29,7 +29,7 @@ def get_page_content(title):
         return None
 
 
-def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
+def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5, max_links=300):
     """构建以给定页面为中心的5阶邻居子图"""
     queue = deque([(center_page, 0)])
     visited = set()
@@ -61,7 +61,13 @@ def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
             print(f"Added page: '{current_page}' with node ID: {node_id}")
 
         if order < max_order:
-            for link in page_data['links']:
+            # 预处理链接：如果链接数量超过 max_links，随机采样
+            links = page_data['links']
+            if len(links) > max_links:
+                print(f"Page '{current_page}' has {len(links)} links. Sampling {max_links} links.")
+                links = random.sample(links, max_links)
+
+            for link in links:
                 link_data = get_page_content(link)
                 if not link_data or not link_data.get('images'):
                     # print(f"Skipping linked page '{link}' due to lack of images or content.")
