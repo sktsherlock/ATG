@@ -29,7 +29,7 @@ def get_page_content(title):
         return None
 
 
-def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5, max_links=300):
+def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5, max_links=50):
     """构建以给定页面为中心的5阶邻居子图"""
     queue = deque([(center_page, 0)])
     visited = set()
