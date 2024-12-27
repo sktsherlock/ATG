@@ -64,28 +64,30 @@ def get_random_wiki_page():
 
 
 def get_page_content(title):
-    """获取指定标题的Wikipedia页面内容"""
+    """获取指定标题的Wikipedia页面内容，包括图像链接"""
     try:
-        page = wikipedia.page(title)
+        page = wikipedia.page(title, auto_suggest=False)
         page_data = {
             'title': page.title,
             'content': page.content,
             'links': page.links,
-            'categories': page.categories
+            'categories': page.categories,
+            'images': page.images  # 添加图像链接
         }
         return page_data
-    except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError):
+    except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError, KeyError) as e:
+        print(f"Error fetching page '{title}': {str(e)}")
         return None
 
 
-def build_wiki_subgraph(center_page, G, max_depth=3):
-    """构建以给定页面为中心的子图"""
+def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
+    """构建以给定页面为中心的5阶邻居子图"""
     queue = deque([(center_page, 0)])
     visited = set()
 
     while queue:
-        current_page, depth = queue.popleft()
-        if current_page in visited or depth > max_depth:
+        current_page, order = queue.popleft()
+        if current_page in visited or order > max_order:
             continue
 
         visited.add(current_page)
@@ -93,41 +95,54 @@ def build_wiki_subgraph(center_page, G, max_depth=3):
         if not page_data:
             continue
 
-        if current_page not in G:
-            G.add_node(current_page, **page_data)
+        if current_page not in node_id_map:
+            node_id_map[current_page] = current_id
+            current_id += 1
 
-        if depth < max_depth:
+        node_id = node_id_map[current_page]
+        if node_id not in G:
+            G.add_node(node_id, title=current_page, **page_data)
+
+        if order < max_order:
             for link in page_data['links']:
+                if link not in node_id_map:
+                    node_id_map[link] = current_id
+                    current_id += 1
+                link_id = node_id_map[link]
+                if link_id not in G:
+                    G.add_node(link_id, title=link)
+                G.add_edge(node_id, link_id)
+
                 if link not in visited:
-                    queue.append((link, depth + 1))
-                if link not in G:
-                    G.add_node(link)
-                G.add_edge(current_page, link)
+                    queue.append((link, order + 1))
 
-    return G
+    return G, current_id
 
 
 
-def build_wiki_graph(num_center_pages=100, max_depth=3, verbose=False):
+def build_wiki_graph(num_center_pages=100, max_order=5, verbose=False):
     """构建Wikipedia图"""
     G = nx.Graph()
     center_pages = set()
+    node_id_map = {}
+    current_id = 0
 
     while len(center_pages) < num_center_pages:
-        center_page = wikipedia.random(1)
-        if center_page not in center_pages:
+        center_page = get_random_wiki_page()
+        if center_page and center_page not in center_pages:
             center_pages.add(center_page)
-            G = build_wiki_subgraph(center_page, G, max_depth)
+            G, current_id = build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order)
 
             if verbose:
                 print(f"Added subgraph centered at: {center_page}")
                 print(f"Current graph size: Nodes={G.number_of_nodes()}, Edges={G.number_of_edges()}")
 
-    return G
+    return G, node_id_map
 
 
-def save_graph_and_labels(G, filename_prefix):
-    """保存图结构和节点标签"""
+
+def save_graph_and_labels(G, node_id_map, filename_prefix):
+    """保存图结构、节点标签和节点信息，包括图像链接"""
     # 保存图结构
     nx.write_gexf(G, f"{filename_prefix}_graph.gexf")
 
@@ -136,35 +151,42 @@ def save_graph_and_labels(G, filename_prefix):
     with open(f"{filename_prefix}_labels.json", 'w') as f:
         json.dump(labels, f)
 
-    # 保存额外的节点信息
+    # 保存额外的节点信息，包括图像链接和原始标题
     node_info = {node: {
+        'id': node,
         'title': data.get('title', ''),
-        'categories': data.get('categories', [])
+        'categories': data.get('categories', []),
+        'images': data.get('images', [])
     } for node, data in G.nodes(data=True)}
     with open(f"{filename_prefix}_node_info.json", 'w') as f:
         json.dump(node_info, f)
 
+    # 保存节点ID映射
+    with open(f"{filename_prefix}_node_id_map.json", 'w') as f:
+        json.dump(node_id_map, f)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Build a Wikipedia graph")
-    parser.add_argument("--num_center_pages", type=int, default=100, help="Number of center pages")
-    parser.add_argument("--max_depth", type=int, default=3, help="Maximum depth for each subgraph")
+    parser.add_argument("--num_center_pages", type=int, default=1, help="Number of center pages")
+    parser.add_argument("--max_order", type=int, default=5, help="Maximum order for each subgraph")
     parser.add_argument("--verbose", action="store_true", help="Print detailed information")
     parser.add_argument("--output", type=str, default="wiki_graph", help="Output file prefix")
     args = parser.parse_args()
 
     # 构建图
-    wiki_graph = build_wiki_graph(args.num_center_pages, args.max_depth, args.verbose)
+    wiki_graph, node_id_map = build_wiki_graph(args.num_center_pages, args.max_order, args.verbose)
 
     # 打印基本信息
     print(f"Final graph size: Nodes={wiki_graph.number_of_nodes()}, Edges={wiki_graph.number_of_edges()}")
 
     # 保存图和标签
-    save_graph_and_labels(wiki_graph, args.output)
+    save_graph_and_labels(wiki_graph, node_id_map, args.output)
 
     print(f"Graph saved to {args.output}_graph.gexf")
     print(f"Labels saved to {args.output}_labels.json")
     print(f"Node info saved to {args.output}_node_info.json")
+    print(f"Node ID map saved to {args.output}_node_id_map.json")
 
 
 if __name__ == "__main__":
