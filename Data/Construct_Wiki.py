@@ -142,7 +142,7 @@ def main():
     parser = argparse.ArgumentParser(description="Build a Wikipedia graph")
     parser.add_argument("--initial_page", type=str, required=True, help="Initial center page title")
     parser.add_argument("--num_iterations", type=int, default=5, help="Number of iterations")
-    parser.add_argument("--max_order", type=int, default=5, help="Maximum order for each subgraph")
+    parser.add_argument("--max_order", type=int, default=2, help="Maximum order for each subgraph")
     parser.add_argument("--verbose", action="store_true", help="Print detailed information")
     parser.add_argument("--output", type=str, default="wiki_graph", help="Output file prefix")
     args = parser.parse_args()
