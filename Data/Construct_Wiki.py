@@ -11,12 +11,17 @@ def get_page_content(title):
     """获取指定标题的Wikipedia页面内容，包括图像链接"""
     try:
         page = wikipedia.page(title, auto_suggest=False)
+        images = [img for img in page.images if img.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
+        if not images:  # 如果没有有效的图像链接，返回 None
+            print(f"Skipping page '{title}' due to lack of images.")
+            return None
         page_data = {
             'title': page.title,
+            'pageid': page.pageid,
             'content': page.content,
             'links': page.links,
             'categories': page.categories,
-            'images': page.images  # 添加图像链接
+            'images': images
         }
         return page_data
     except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError, KeyError) as e:
@@ -39,6 +44,11 @@ def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
         if not page_data:
             continue
 
+        # 检查是否有图像
+        if not page_data.get('images'):
+            print(f"Skipping page '{current_page}' due to lack of images.")
+            continue
+
         if current_page not in node_id_map:
             node_id_map[current_page] = current_id
             current_id += 1
@@ -52,13 +62,18 @@ def build_wiki_subgraph(center_page, G, node_id_map, current_id, max_order=5):
 
         if order < max_order:
             for link in page_data['links']:
+                link_data = get_page_content(link)
+                if not link_data or not link_data.get('images'):
+                    print(f"Skipping linked page '{link}' due to lack of images or content.")
+                    continue
+
                 if link not in node_id_map:
                     node_id_map[link] = current_id
                     current_id += 1
                 link_id = node_id_map[link]
                 if link_id not in G:
-                    G.add_node(link_id, title=link)
-                    print(f"Added linked page: '{link}' with node ID: {link_id}")
+                    G.add_node(link_id, **link_data)
+                    # print(f"Added linked page: '{link}' with node ID: {link_id}")
                 G.add_edge(node_id, link_id)
 
                 if link not in visited:
