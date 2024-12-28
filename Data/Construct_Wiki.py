@@ -114,16 +114,28 @@ def build_wiki_graph(initial_page, num_iterations=5, max_order=5, verbose=False)
 
 
 def save_graph_and_labels(G, node_id_map, filename_prefix):
-    """保存图结构、节点标签和节点信息，包括图像链接"""
-    # 保存图结构
-    nx.write_gexf(G, f"{filename_prefix}_graph.gexf")
+    """Save graph structure, node labels, and node information, including image links"""
+    # Save graph structure
+    try:
+        nx.write_gexf(G, f"{filename_prefix}_graph.gexf")
+        print(f"Graph saved to {filename_prefix}_graph.gexf")
+    except ValueError as e:
+        print(f"Error saving graph as GEXF: {str(e)}")
+        print("Attempting to save graph as GraphML...")
+        try:
+            nx.write_graphml(G, f"{filename_prefix}_graph.graphml")
+            print(f"Graph saved to {filename_prefix}_graph.graphml")
+        except Exception as e2:
+            print(f"Error saving graph as GraphML: {str(e2)}")
+            print("Unable to save graph structure. Proceeding with other data...")
 
-    # 保存节点标签（使用类别作为标签）
+    # Save node labels (using categories as labels)
     labels = {node: data.get('categories', []) for node, data in G.nodes(data=True)}
     with open(f"{filename_prefix}_labels.json", 'w') as f:
         json.dump(labels, f)
+    print(f"Labels saved to {filename_prefix}_labels.json")
 
-    # 保存额外的节点信息，包括图像链接和原始标题
+    # Save additional node information, including image links and original title
     node_info = {node: {
         'id': node,
         'title': data.get('title', ''),
@@ -132,10 +144,13 @@ def save_graph_and_labels(G, node_id_map, filename_prefix):
     } for node, data in G.nodes(data=True)}
     with open(f"{filename_prefix}_node_info.json", 'w') as f:
         json.dump(node_info, f)
+    print(f"Node info saved to {filename_prefix}_node_info.json")
 
-    # 保存节点ID映射
+    # Save node ID mapping
     with open(f"{filename_prefix}_node_id_map.json", 'w') as f:
         json.dump(node_id_map, f)
+    print(f"Node ID map saved to {filename_prefix}_node_id_map.json")
+
 
 
 def main():
