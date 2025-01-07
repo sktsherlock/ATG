@@ -78,3 +78,20 @@ upload_file(path_or_fileobj="RedditS_Llama_3.2_3B_Instruct_100_mean.npy", path_i
 upload_file(path_or_fileobj="RedditS_Llama_3.1_8B_Instruct_100_mean.npy", path_in_repo="RedditS/TextFeature/RedditS_Llama_3.1_8B_Instruct_100_mean.npy", repo_id="Sherirto/MAG")
 upload_file(path_or_fileobj="RedditS_Ministral_8B_Instruct_2410_100_mean.npy", path_in_repo="RedditS/TextFeature/RedditS_Ministral_8B_Instruct_2410_100_mean.npy", repo_id="Sherirto/MAG")
 ```
+
+## Reddit Text Feature
+```python
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'answerdotai/ModernBERT-base' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 500 --text_column 'caption' --fp16 True
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'FacebookAI/roberta-base' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 500 --text_column 'caption' --fp16 True
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'meta-llama/Llama-3.2-1B-Instruct' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 100 --text_column 'caption' --fp16 True
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'meta-llama/Llama-3.2-3B-Instruct' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 50 --text_column 'caption' --fp16 True
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'meta-llama/Llama-3.1-8B-Instruct' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 40 --text_column 'caption' --fp16 True
+CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Reddit/Reddit.csv --model_name 'mistralai/Ministral-8B-Instruct-2410' --name 'Reddit' --path 'Data/Reddit/TextFeature/' --max_length 100 --batch_size 40 --text_column 'caption' --fp16 True
+```
+
+upload_file(path_or_fileobj="Reddit_ModernBERT_base_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_ModernBERT_base_100_mean.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_roberta_base_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_roberta_base_100_mean.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_Llama_3.2_1B_Instruct_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_Llama_3.2_1B_Instruct_100_mean.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_Llama_3.2_3B_Instruct_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_Llama_3.2_3B_Instruct_100_mean.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_Llama_3.1_8B_Instruct_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_Llama_3.1_8B_Instruct_100_mean.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_Ministral_8B_Instruct_2410_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_Ministral_8B_Instruct_2410_100_mean.npy", repo_id="Sherirto/MAG")

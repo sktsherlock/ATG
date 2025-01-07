@@ -7,6 +7,7 @@ from PIL import Image
 from transformers import AutoProcessor, MllamaForConditionalGeneration
 from tqdm import tqdm
 
+
 class MultimodalLLaMAFeatureExtractor:
     def __init__(self, model_name, device):
         self.device = device
