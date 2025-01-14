@@ -15,6 +15,7 @@ class MultimodalLLaMAFeatureExtractor:
             model_name,
             torch_dtype=torch.bfloat16,
             device_map="auto",
+            attn_implementation="flash_attention_2",
         ).to(self.device)
         self.processor = AutoProcessor.from_pretrained(model_name)
 
@@ -105,8 +106,12 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    #extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
-    extractor = QWenFeatureExtractor(args.model_name, device)
+    if 'llama' in args.model_name.lower():
+        extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
+    elif 'qwen' in args.model_name.lower():
+        extractor = QWenFeatureExtractor(args.model_name, device)
+    else:
+        raise ValueError(f"Unsupported model name: {args.model_name}")
 
     picture_path = args.image_path
     df = pd.read_csv(args.csv_path)
