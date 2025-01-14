@@ -9,13 +9,12 @@ from tqdm import tqdm
 
 
 class MultimodalLLaMAFeatureExtractor:
-    def __init__(self, model_name, device):
-        self.device = device
+    def __init__(self, model_name):
         self.model = MllamaForConditionalGeneration.from_pretrained(
             model_name,
             torch_dtype=torch.bfloat16,
             device_map="auto",
-        ).to(self.device)
+        )
         self.processor = AutoProcessor.from_pretrained(model_name)
 
     def extract_features(self, image, text):
@@ -31,7 +30,7 @@ class MultimodalLLaMAFeatureExtractor:
             input_text,
             add_special_tokens=False,
             return_tensors="pt"
-        ).to(self.device)
+        )
 
         with torch.no_grad():
             outputs = self.model(**inputs, output_hidden_states=True)
@@ -54,7 +53,6 @@ def main():
     parser.add_argument('--csv_path', type=str, default='./', help='Path to the CSV file')
     parser.add_argument('--image_path', type=str, default='./', help='Path to the image directory')
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
-    # parser.add_argument('--feature_size', type=int, default=768, help='Size of the feature vectors')
     parser.add_argument('--path', type=str, default='./', help='Where to save the features')
     args = parser.parse_args()
 
@@ -66,9 +64,9 @@ def main():
     if not os.path.exists(Feature_path):
         os.makedirs(Feature_path)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
+    extractor = MultimodalLLaMAFeatureExtractor(args.model_name)
 
     picture_path = args.image_path
     df = pd.read_csv(args.csv_path)
