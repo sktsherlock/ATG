@@ -55,6 +55,7 @@ def main():
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
     parser.add_argument('--path', type=str, default='./', help='Where to save the features')
     parser.add_argument('--sample_size', type=int, default=None, help='Number of samples to process for testing')
+    parser.add_argument('--text_column', type=str, default='text', help='The name of the column containing the text data')
     args = parser.parse_args()
 
     root_dir = os.path.dirname(os.path.abspath(__file__))
@@ -72,7 +73,7 @@ def main():
     picture_path = args.image_path
     df = pd.read_csv(args.csv_path)
 
-    image_texts = df['text'].tolist()
+    image_texts = df[args.text_column].tolist()
 
     image_files = [filename for filename in os.listdir(picture_path) if filename.endswith((".jpg", ".png"))]
     sorted_files = sorted(image_files, key=lambda x: int(os.path.splitext(x)[0]))
