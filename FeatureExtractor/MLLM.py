@@ -34,9 +34,9 @@ class MultimodalLLaMAFeatureExtractor:
         ).to(self.device)
 
         with torch.no_grad():
-            outputs = self.model(**inputs) # , output_hidden_states=True
+            outputs = self.model(**inputs, output_hidden_states=True)
 
-        last_hidden_state = outputs.last_hidden_state
+        last_hidden_state = outputs.hidden_states[-1]
 
         TV_features = last_hidden_state.mean(dim=1)
         # 将 TV_features 转换为 float32 类型
