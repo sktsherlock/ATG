@@ -19,13 +19,21 @@ class MultimodalLLaMAFeatureExtractor:
         self.processor = AutoProcessor.from_pretrained(model_name)
 
     def extract_features(self, image, text):
-        messages = [
-            {"role": "user", "content": [
-                {"type": "image", "source": image},
-                {"type": "text", "text": text}
-            ]}
-        ]
-        inputs = self.processor(messages=messages, return_tensors="pt").to(self.device)
+        # messages = [
+        #     {"role": "user", "content": [
+        #         {"type": "image", "source": image},
+        #         {"type": "text", "text": text}
+        #     ]}
+        # ]
+        image_inputs = self.processor(images=image, return_tensors="pt").to(self.device)
+        text_inputs = self.processor(text=text, return_tensors="pt").to(self.device)
+
+        # Combine image and text inputs
+        inputs = {
+            "input_ids": text_inputs["input_ids"],
+            "attention_mask": text_inputs["attention_mask"],
+            "pixel_values": image_inputs["pixel_values"],
+        }
 
         with torch.no_grad():
             outputs = self.model(**inputs, output_hidden_states=True)
