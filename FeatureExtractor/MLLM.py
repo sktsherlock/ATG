@@ -38,6 +38,8 @@ class MultimodalLLaMAFeatureExtractor:
 
         last_hidden_state = outputs.hidden_states[-1]
         TV_features = last_hidden_state.mean(dim=1)
+        # 将 TV_features 转换为 float32 类型
+        TV_features = TV_features.float()
 
         return TV_features.cpu().numpy()
 
