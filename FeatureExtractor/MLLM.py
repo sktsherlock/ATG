@@ -38,9 +38,8 @@ class MultimodalLLaMAFeatureExtractor:
 
         last_hidden_state = outputs.hidden_states[-1]
         TV_features = last_hidden_state.mean(dim=1)
-        image_features = self.model.vision_model(inputs.pixel_values).last_hidden_state.mean(dim=1)
 
-        return TV_features.cpu().numpy(), image_features.cpu().numpy()
+        return TV_features.cpu().numpy()
 
 
 def main():
@@ -80,7 +79,6 @@ def main():
 
     # 初始化时不指定特征大小
     llama_tv_features = np.zeros((len(sorted_files),))
-    llama_image_features = np.zeros((len(sorted_files),))
 
     # 提取 model_name 的最后一部分
     args.model_name = args.model_name.split('/')[-1]
@@ -96,27 +94,22 @@ def main():
                 image = Image.open(image_path).convert("RGB")
                 text = image_texts[i]
                 # 提取特征
-                tv_feature, image_feature = extractor.extract_features(image, text)
+                tv_feature = extractor.extract_features(image, text)
 
                 # 检查特征维度并更新数组形状
                 if i == 0:
                     # 假设第一个样本的特征维度是正确的
                     llama_tv_features = np.zeros((len(sorted_files), tv_feature.shape[1]))
-                    llama_image_features = np.zeros((len(sorted_files), image_feature.shape[1]))
 
                 llama_tv_features[i] = tv_feature
-                llama_image_features[i] = image_feature
 
         print("Features extracted from all images and texts.")
         np.save(output_tv_feature, llama_tv_features)
-        np.save(output_image_feature, llama_image_features)
     else:
         print('Existing features, please load!')
         llama_tv_features = np.load(output_tv_feature)
-        llama_image_features = np.load(output_image_feature)
 
     print("Multimodal TV features shape:", llama_tv_features.shape)
-    print("Image features shape:", llama_image_features.shape)
 
 
 if __name__ == "__main__":
