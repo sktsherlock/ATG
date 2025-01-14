@@ -2,7 +2,7 @@ import pandas as pd
 import argparse
 
 
-def count_words(csv_file, column_name, threshold):
+def count_words(csv_file, column_name, threshold, target_row)):
     # 读取 CSV 文件为 DataFrame
     data = pd.read_csv(csv_file)
     column_names = data.columns.tolist()
@@ -56,4 +56,4 @@ if __name__ == '__main__':
     parser.add_argument('--threshold', type=int, help='The column for the text', default=512)
     parser.add_argument('--target_row', type=int, help='The row number to display text length for')
     args = parser.parse_args()
-    count_words(args.csv_file, args.column_name, args.threshold)
+    count_words(args.csv_file, args.column_name, args.threshold, args.target_row)
