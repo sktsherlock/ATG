@@ -19,12 +19,15 @@ class MultimodalLLaMAFeatureExtractor:
         self.processor = AutoProcessor.from_pretrained(model_name)
 
     def extract_features(self, image, text):
+        if not isinstance(image, Image.Image):
+            raise ValueError("Image input should be a PIL Image object")
         # Combine image and text inputs
         inputs = self.processor(
             text=text,
             images=image,
             size={"width": 128, "height": 128},
-        )
+            return_tensors="pt",  # Ensure tensors are returned
+        ).to(self.device)
 
         with torch.no_grad():
             outputs = self.model(**inputs, output_hidden_states=True)
