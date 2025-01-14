@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import torch
 from PIL import Image
-from transformers import AutoProcessor, MllamaForConditionalGeneration
+from transformers import AutoProcessor, MllamaForConditionalGeneration, Qwen2VLForConditionalGeneration
 from tqdm import tqdm
 
 
@@ -44,6 +44,43 @@ class MultimodalLLaMAFeatureExtractor:
         return TV_features.cpu().numpy()
 
 
+class QWenFeatureExtractor:
+    def __init__(self, model_name, device):
+        self.device = device
+        self.model = Qwen2VLForConditionalGeneration.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+        ).to(self.device)
+        self.processor = AutoProcessor.from_pretrained(model_name)
+
+    def extract_features(self, image, text):
+        messages = [
+            {"role": "user", "content": [
+                {"type": "image", "source": image},
+                {"type": "text", "text": text}
+            ]}
+        ]
+        input_text = self.processor.apply_chat_template(messages, add_generation_prompt=False)
+        inputs = self.processor(
+            image,
+            input_text,
+            add_special_tokens=False,
+            return_tensors="pt"
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.model(**inputs, output_hidden_states=True)
+
+        last_hidden_state = outputs.hidden_states[-1]
+
+        TV_features = last_hidden_state.mean(dim=1)
+        TV_features = TV_features.float()
+
+        return TV_features.cpu().numpy()
+
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Process text and image data and save the overall representation as NPY files.')
@@ -68,7 +105,8 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
+    #extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
+    extractor = QWenFeatureExtractor(args.model_name, device)
 
     picture_path = args.image_path
     df = pd.read_csv(args.csv_path)
