@@ -39,7 +39,13 @@ def count_words(csv_file, column_name, threshold):
     print(f"总记录数: {total_count}")
     print(f"占比: {percentage}%")
 
-
+    # 显示指定行及其上下行的文本长度
+    if target_row is not None:
+        start_row = max(0, target_row - 1)
+        end_row = min(len(data), target_row + 2)
+        print(f"\nText length for rows {start_row} to {end_row - 1}:")
+        for i in range(start_row, end_row):
+            print(f"Row {i}: {data['text_length'].iloc[i]}")
 
 
 
@@ -48,5 +54,6 @@ if __name__ == '__main__':
     parser.add_argument('--csv_file', type=str, help='Path to the csv file', required=True)
     parser.add_argument('--column_name', type=str, help='The column for the text', required=True)
     parser.add_argument('--threshold', type=int, help='The column for the text', default=512)
+    parser.add_argument('--target_row', type=int, help='The row number to display text length for')
     args = parser.parse_args()
     count_words(args.csv_file, args.column_name, args.threshold)
