@@ -15,7 +15,6 @@ class MultimodalLLaMAFeatureExtractor:
             model_name,
             torch_dtype=torch.bfloat16,
             device_map="auto",
-            attn_implementation="flash_attention_2",
         ).to(self.device)
         self.processor = AutoProcessor.from_pretrained(model_name)
 
@@ -52,6 +51,7 @@ class QWenFeatureExtractor:
             model_name,
             torch_dtype=torch.bfloat16,
             device_map="auto",
+            attn_implementation="flash_attention_2",
         ).to(self.device)
         self.processor = AutoProcessor.from_pretrained(model_name)
 
