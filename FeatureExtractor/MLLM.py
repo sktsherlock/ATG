@@ -33,6 +33,7 @@ class MultimodalLLaMAFeatureExtractor:
             "input_ids": text_inputs["input_ids"],
             "attention_mask": text_inputs["attention_mask"],
             "pixel_values": image_inputs["pixel_values"],
+            "aspect_ratio_ids": image_inputs.get("aspect_ratio_ids"),
         }
 
         with torch.no_grad():
