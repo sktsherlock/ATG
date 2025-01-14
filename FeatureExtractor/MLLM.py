@@ -52,7 +52,9 @@ class QWenFeatureExtractor:
             torch_dtype=torch.bfloat16,
             device_map="auto",
         ).to(self.device)
-        self.processor = AutoProcessor.from_pretrained(model_name)
+        max_pixels = 1280 * 28 * 28
+        self.processor = AutoProcessor.from_pretrained(model_name, max_pixels=max_pixels)
+
 
     def extract_features(self, image, text):
         messages = [
