@@ -25,7 +25,7 @@ class MultimodalLLaMAFeatureExtractor:
         #         {"type": "text", "text": text}
         #     ]}
         # ]
-        image_inputs = self.processor(images=image, return_tensors="pt").to(self.device)
+        image_inputs = self.processor(images=image, size={"width": 224, "height": 224}, return_tensors="pt").to(self.device)
         text_inputs = self.processor(text=text, return_tensors="pt").to(self.device)
 
         # Combine image and text inputs
@@ -33,7 +33,6 @@ class MultimodalLLaMAFeatureExtractor:
             "input_ids": text_inputs["input_ids"],
             "attention_mask": text_inputs["attention_mask"],
             "pixel_values": image_inputs["pixel_values"],
-            "aspect_ratio_ids": image_inputs.get("aspect_ratio_ids"),
         }
 
         with torch.no_grad():
