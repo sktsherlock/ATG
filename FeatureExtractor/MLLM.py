@@ -87,9 +87,8 @@ def main():
 
     args.model_name = args.model_name.split('/')[-1]
     output_tv_feature = f'{Feature_path}/{args.name}_{args.model_name}_tv.npy'
-    output_image_feature = f'{Feature_path}/{args.name}_{args.model_name}_image.npy'
 
-    print(f'The output files are {output_tv_feature} and {output_image_feature}')
+    print(f'The output files are {output_tv_feature}')
 
     if not os.path.exists(output_tv_feature):
         for i, filename in tqdm(enumerate(sorted_files), total=len(sorted_files)):
