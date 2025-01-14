@@ -19,15 +19,6 @@ class MultimodalLLaMAFeatureExtractor:
         self.processor = AutoProcessor.from_pretrained(model_name)
 
     def extract_features(self, image, text):
-        # messages = [
-        #     {"role": "user", "content": [
-        #         {"type": "image", "source": image},
-        #         {"type": "text", "text": text}
-        #     ]}
-        # ]
-        # image_inputs = self.processor(images=image, size={"width": 224, "height": 224}, return_tensors="pt").to(self.device)
-        # text_inputs = self.processor(text=text, return_tensors="pt").to(self.device)
-
         # Combine image and text inputs
         inputs = self.processor(
             text=text,
