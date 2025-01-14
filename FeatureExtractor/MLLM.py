@@ -36,7 +36,7 @@ class MultimodalLLaMAFeatureExtractor:
         with torch.no_grad():
             outputs = self.model(**inputs, output_hidden_states=True)
 
-        last_hidden_state = outputs.last_hidden_state
+        last_hidden_state = outputs.hidden_states[-1]
 
         TV_features = last_hidden_state.mean(dim=1)
         # 将 TV_features 转换为 float32 类型
@@ -54,7 +54,6 @@ def main():
     parser.add_argument('--csv_path', type=str, default='./', help='Path to the CSV file')
     parser.add_argument('--image_path', type=str, default='./', help='Path to the image directory')
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
-    # parser.add_argument('--feature_size', type=int, default=768, help='Size of the feature vectors')
     parser.add_argument('--path', type=str, default='./', help='Where to save the features')
     args = parser.parse_args()
 
