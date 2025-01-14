@@ -39,7 +39,6 @@ class MultimodalLLaMAFeatureExtractor:
         last_hidden_state = outputs.hidden_states[-1]
 
         TV_features = last_hidden_state.mean(dim=1)
-        # 将 TV_features 转换为 float32 类型
         TV_features = TV_features.float()
 
         return TV_features.cpu().numpy()
@@ -55,6 +54,7 @@ def main():
     parser.add_argument('--image_path', type=str, default='./', help='Path to the image directory')
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
     parser.add_argument('--path', type=str, default='./', help='Where to save the features')
+    parser.add_argument('--sample_size', type=int, default=None, help='Number of samples to process for testing')
     args = parser.parse_args()
 
     root_dir = os.path.dirname(os.path.abspath(__file__))
@@ -74,15 +74,16 @@ def main():
 
     image_texts = df['text'].tolist()
 
-    # 获取文件夹中的所有图像文件
     image_files = [filename for filename in os.listdir(picture_path) if filename.endswith((".jpg", ".png"))]
-    # 按照文件名的数字顺序排序
     sorted_files = sorted(image_files, key=lambda x: int(os.path.splitext(x)[0]))
 
-    # 初始化时不指定特征大小
+    # If sample_size is provided, use it; otherwise, use the full dataset
+    if args.sample_size:
+        sorted_files = sorted_files[:args.sample_size]
+        image_texts = image_texts[:args.sample_size]
+
     llama_tv_features = np.zeros((len(sorted_files),))
 
-    # 提取 model_name 的最后一部分
     args.model_name = args.model_name.split('/')[-1]
     output_tv_feature = f'{Feature_path}/{args.name}_{args.model_name}_tv.npy'
     output_image_feature = f'{Feature_path}/{args.name}_{args.model_name}_image.npy'
@@ -95,12 +96,9 @@ def main():
                 image_path = os.path.join(picture_path, filename)
                 image = Image.open(image_path).convert("RGB")
                 text = image_texts[i]
-                # 提取特征
                 tv_feature = extractor.extract_features(image, text)
 
-                # 检查特征维度并更新数组形状
                 if i == 0:
-                    # 假设第一个样本的特征维度是正确的
                     llama_tv_features = np.zeros((len(sorted_files), tv_feature.shape[1]))
 
                 llama_tv_features[i] = tv_feature
