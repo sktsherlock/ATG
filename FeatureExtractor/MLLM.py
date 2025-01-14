@@ -13,7 +13,7 @@ class MultimodalLLaMAFeatureExtractor:
         self.device = device
         self.model = MllamaForConditionalGeneration.from_pretrained(
             model_name,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.bfloat16,
             device_map="auto",
         ).to(self.device)
         self.processor = AutoProcessor.from_pretrained(model_name)
@@ -31,74 +31,92 @@ class MultimodalLLaMAFeatureExtractor:
             outputs = self.model(**inputs, output_hidden_states=True)
 
         last_hidden_state = outputs.hidden_states[-1]
-        text_features = last_hidden_state.mean(dim=1)
+        TV_features = last_hidden_state.mean(dim=1)
         image_features = self.model.vision_model(inputs.pixel_values).last_hidden_state.mean(dim=1)
 
-        return text_features.cpu().numpy(), image_features.cpu().numpy()
+        return TV_features.cpu().numpy(), image_features.cpu().numpy()
+
 
 def main():
     parser = argparse.ArgumentParser(
         description='Process text and image data and save the overall representation as NPY files.')
     parser.add_argument('--model_name', type=str, default='meta-llama/Llama-3.2-11B-Vision-Instruct',
-                        help='Name or path of the Huggingface model')
+                        help='Name or path of the Huggingface MLLM model')
     parser.add_argument('--name', type=str, default='Movies', help='Prefix name for the NPY file')
     parser.add_argument('--csv_path', type=str, default='./', help='Path to the CSV file')
-    parser.add_argument('--path', type=str, default='./', help='Path to the image directory')
+    parser.add_argument('--image_path', type=str, default='./', help='Path to the image directory')
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
-    parser.add_argument('--feature_size', type=int, default=768, help='Size of the feature vectors')
-    parser.add_argument('--feature_path', type=str, default='./', help='Where to save the features')
+    # parser.add_argument('--feature_size', type=int, default=768, help='Size of the feature vectors')
+    parser.add_argument('--path', type=str, default='./', help='Where to save the features')
     args = parser.parse_args()
+
+
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(root_dir.rstrip('/'))
+    Feature_path = os.path.join(base_dir, args.path)
+    print(Feature_path)
+
+    if not os.path.exists(Feature_path):
+        os.makedirs(Feature_path)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
 
-    picture_path = args.path
+    picture_path = args.image_path
     df = pd.read_csv(args.csv_path)
-    labels = df['label'].tolist()
-
-    if args.name in {'RedditS', 'Reddit'}:
-        categories = df['subreddit'].unique().tolist()
-    else:
-        categories = df['second_category'].unique().tolist()
-    num_classes = len(categories)
 
     image_texts = df['text'].tolist()
 
     if not os.path.exists(args.feature_path):
         os.makedirs(args.feature_path)
 
+    # 获取文件夹中的所有图像文件
     image_files = [filename for filename in os.listdir(picture_path) if filename.endswith((".jpg", ".png"))]
+    # 按照文件名的数字顺序排序
     sorted_files = sorted(image_files, key=lambda x: int(os.path.splitext(x)[0]))
 
-    llama_text_features = np.zeros((len(sorted_files), args.feature_size))
-    llama_image_features = np.zeros((len(sorted_files), args.feature_size))
+    # 初始化时不指定特征大小
+    llama_tv_features = np.zeros((len(sorted_files),))
+    llama_image_features = np.zeros((len(sorted_files),))
 
-    output_text_feature = f'{args.feature_path}/{args.name}_llama_text.npy'
-    output_image_feature = f'{args.feature_path}/{args.name}_llama_image.npy'
-    print(f'The output files are {output_text_feature} and {output_image_feature}')
 
-    if not os.path.exists(output_text_feature):
+    # 提取 model_name 的最后一部分
+    args.model_name = args.model_name.split('/')[-1]
+    output_tv_feature = f'{args.feature_path}/{args.name}_{args.model_name}_tv.npy'
+    output_image_feature = f'{args.feature_path}/{args.name}_{args.model_name}_image.npy'
+
+    print(f'The output files are {output_tv_feature} and {output_image_feature}')
+
+    if not os.path.exists(output_tv_feature):
         for i, filename in tqdm(enumerate(sorted_files), total=len(sorted_files)):
             if filename.endswith(".jpg") or filename.endswith(".png"):
                 image_path = os.path.join(picture_path, filename)
                 image = Image.open(image_path).convert("RGB")
                 text = image_texts[i]
+                # 提取特征
+                tv_feature, image_feature = extractor.extract_features(image, text)
 
-                text_feature, image_feature = extractor.extract_features(image, text)
-                llama_text_features[i] = text_feature
+                # 检查特征维度并更新数组形状
+                if i == 0:
+                    # 假设第一个样本的特征维度是正确的
+                    llama_tv_features = np.zeros((len(sorted_files), tv_feature.shape[1]))
+                    llama_image_features = np.zeros((len(sorted_files), image_feature.shape[1]))
+
+                llama_tv_features[i] = tv_feature
                 llama_image_features[i] = image_feature
 
         print("Features extracted from all images and texts.")
-        np.save(output_text_feature, llama_text_features)
+        np.save(output_tv_feature, llama_tv_features)
         np.save(output_image_feature, llama_image_features)
     else:
         print('Existing features, please load!')
-        llama_text_features = np.load(output_text_feature)
+        llama_tv_features = np.load(output_tv_feature)
         llama_image_features = np.load(output_image_feature)
 
-    print("Text features shape:", llama_text_features.shape)
+    print("Multimodal TV features shape:", llama_tv_features.shape)
     print("Image features shape:", llama_image_features.shape)
+
 
 if __name__ == "__main__":
     main()

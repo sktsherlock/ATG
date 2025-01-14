@@ -7,7 +7,7 @@ sweep_config = {
         "goal": "maximize",
         "name": "Mean_Test_accuracy"
     },
-    "name": "RedditS-GAT",
+    "name": "Reddit-GAT",
     "parameters": {
         "attn-drop": {
             "values": [0]
