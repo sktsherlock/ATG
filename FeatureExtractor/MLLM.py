@@ -19,14 +19,18 @@ class MultimodalLLaMAFeatureExtractor:
         self.processor = AutoProcessor.from_pretrained(model_name)
 
     def extract_features(self, image, text):
-        if not isinstance(image, Image.Image):
-            raise ValueError("Image input should be a PIL Image object")
-        # Combine image and text inputs
+        messages = [
+            {"role": "user", "content": [
+                {"type": "image", "source": image},
+                {"type": "text", "text": text}
+            ]}
+        ]
+        input_text = self.processor.apply_chat_template(messages, add_generation_prompt=True)
         inputs = self.processor(
-            text=text,
-            images=image,
-            size={"width": 128, "height": 128},
-            return_tensors="pt",  # Ensure tensors are returned
+            image,
+            input_text,
+            add_special_tokens=False,
+            return_tensors="pt"
         ).to(self.device)
 
         with torch.no_grad():
