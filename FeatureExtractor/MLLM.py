@@ -68,8 +68,6 @@ def main():
 
     image_texts = df['text'].tolist()
 
-    if not os.path.exists(args.feature_path):
-        os.makedirs(args.feature_path)
 
     # 获取文件夹中的所有图像文件
     image_files = [filename for filename in os.listdir(picture_path) if filename.endswith((".jpg", ".png"))]
