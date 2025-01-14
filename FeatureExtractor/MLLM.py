@@ -25,7 +25,7 @@ class MultimodalLLaMAFeatureExtractor:
                 {"type": "text", "text": text}
             ]}
         ]
-        input_text = self.processor.apply_chat_template(messages, add_generation_prompt=True)
+        input_text = self.processor.apply_chat_template(messages, add_generation_prompt=False)
         inputs = self.processor(
             image,
             input_text,
@@ -34,9 +34,10 @@ class MultimodalLLaMAFeatureExtractor:
         ).to(self.device)
 
         with torch.no_grad():
-            outputs = self.model(**inputs, output_hidden_states=True)
+            outputs = self.model(**inputs) # , output_hidden_states=True
 
-        last_hidden_state = outputs.hidden_states[-1]
+        last_hidden_state = outputs.last_hidden_state
+
         TV_features = last_hidden_state.mean(dim=1)
         # 将 TV_features 转换为 float32 类型
         TV_features = TV_features.float()
