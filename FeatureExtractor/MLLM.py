@@ -25,15 +25,15 @@ class MultimodalLLaMAFeatureExtractor:
         #         {"type": "text", "text": text}
         #     ]}
         # ]
-        image_inputs = self.processor(images=image, size={"width": 224, "height": 224}, return_tensors="pt").to(self.device)
-        text_inputs = self.processor(text=text, return_tensors="pt").to(self.device)
+        # image_inputs = self.processor(images=image, size={"width": 224, "height": 224}, return_tensors="pt").to(self.device)
+        # text_inputs = self.processor(text=text, return_tensors="pt").to(self.device)
 
         # Combine image and text inputs
-        inputs = {
-            "input_ids": text_inputs["input_ids"],
-            "attention_mask": text_inputs["attention_mask"],
-            "pixel_values": image_inputs["pixel_values"],
-        }
+        inputs = self.processor(
+            text=text,
+            images=image,
+            size={"width": 128, "height": 128},
+        )
 
         with torch.no_grad():
             outputs = self.model(**inputs, output_hidden_states=True)
@@ -58,7 +58,6 @@ def main():
     parser.add_argument('--path', type=str, default='./', help='Where to save the features')
     args = parser.parse_args()
 
-
     root_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.dirname(root_dir.rstrip('/'))
     Feature_path = os.path.join(base_dir, args.path)
@@ -76,7 +75,6 @@ def main():
 
     image_texts = df['text'].tolist()
 
-
     # 获取文件夹中的所有图像文件
     image_files = [filename for filename in os.listdir(picture_path) if filename.endswith((".jpg", ".png"))]
     # 按照文件名的数字顺序排序
@@ -85,7 +83,6 @@ def main():
     # 初始化时不指定特征大小
     llama_tv_features = np.zeros((len(sorted_files),))
     llama_image_features = np.zeros((len(sorted_files),))
-
 
     # 提取 model_name 的最后一部分
     args.model_name = args.model_name.split('/')[-1]
