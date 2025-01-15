@@ -21,7 +21,7 @@ class PaliGemmaFeatureExtractor:
 
     def extract_features(self, image, text):
         # Determine the number of images
-        num_images = 1 if isinstance(image, (list, tuple)) else len(image)
+        num_images = 1 # if isinstance(image, (list, tuple)) else len(image)
 
         # Add <image> tokens at the beginning of the text
         image_tokens = "<image> " * num_images
