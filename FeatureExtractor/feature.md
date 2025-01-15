@@ -95,3 +95,32 @@ upload_file(path_or_fileobj="Reddit_Llama_3.2_1B_Instruct_100_mean.npy", path_in
 upload_file(path_or_fileobj="Reddit_Llama_3.2_3B_Instruct_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_Llama_3.2_3B_Instruct_100_mean.npy", repo_id="Sherirto/MAG")
 upload_file(path_or_fileobj="Reddit_Llama_3.1_8B_Instruct_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_Llama_3.1_8B_Instruct_100_mean.npy", repo_id="Sherirto/MAG")
 upload_file(path_or_fileobj="Reddit_Ministral_8B_Instruct_2410_100_mean.npy", path_in_repo="Reddit/TextFeature/Reddit_Ministral_8B_Instruct_2410_100_mean.npy", repo_id="Sherirto/MAG")
+
+## MLLM TV Feature
+CUDA_VISIBLE_DEVICES=2 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Movies/Movies.csv --image_path /home/aiscuser/ATG/Data/Movies/MoviesImages/ --path /home/aiscuser/ATG/Data/Movies/MMFeature/  --name Movies --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
+CUDA_VISIBLE_DEVICES=3 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --image_path /home/aiscuser/ATG/Data/Toys/ToysImages/ --path /home/aiscuser/ATG/Data/Toys/MMFeature/  --name Toys  --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
+CUDA_VISIBLE_DEVICES=1 python MLLM.py --csv_path /home/aiscuser/ATG/Data/RedditS/RedditS.csv --image_path /home/aiscuser/ATG/Data/RedditS/RedditSImages/ --path /home/aiscuser/ATG/Data/RedditS/MMFeature/  --name RedditS  --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
+CUDA_VISIBLE_DEVICES=0 python MLLM.py --csv_path /home/aiscuser/ATG/Data/GroceryS/GroceryS.csv --image_path /home/aiscuser/ATG/Data/GroceryS/GrocerySImages/ --path /home/aiscuser/ATG/Data/GroceryS/MMFeature/  --name GroceryS  --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
+
+CUDA_VISIBLE_DEVICES=0 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Reddit/Reddit.csv --image_path /home/aiscuser/ATG/Data/Reddit/RedditImages/ --path /home/aiscuser/ATG/Data/Reddit/MMFeature/  --name Reddit  --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
+
+```python
+#Qwen
+CUDA_VISIBLE_DEVICES=1 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Movies/Movies.csv --image_path /home/aiscuser/ATG/Data/Movies/MoviesImages/ --path /home/aiscuser/ATG/Data/Movies/MMFeature/  --name Movies --model_name 'Qwen/Qwen2-VL-2B-Instruct' 
+CUDA_VISIBLE_DEVICES=1 python MLLM.py --csv_path /home/aiscuser/ATG/Data/GroceryS/GroceryS.csv --image_path /home/aiscuser/ATG/Data/GroceryS/GrocerySImages/ --path /home/aiscuser/ATG/Data/GroceryS/MMFeature/    --name GroceryS --model_name  'Qwen/Qwen2-VL-2B-Instruct'
+CUDA_VISIBLE_DEVICES=2 python MLLM.py --csv_path /home/aiscuser/ATG/Data/RedditS/RedditS.csv --image_path /home/aiscuser/ATG/Data/RedditS/RedditSImages/ --path /home/aiscuser/ATG/Data/RedditS/MMFeature/  --name RedditS  --model_name  'Qwen/Qwen2-VL-2B-Instruct'
+CUDA_VISIBLE_DEVICES=3 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --image_path /home/aiscuser/ATG/Data/Toys/ToysImages/ --path /home/aiscuser/ATG/Data/Toys/MMFeature/  --name Toys --model_name  'Qwen/Qwen2-VL-2B-Instruct'
+CUDA_VISIBLE_DEVICES=4 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Reddit/Reddit.csv --image_path /home/aiscuser/ATG/Data/Reddit/RedditImages/ --path /home/aiscuser/ATG/Data/Reddit/MMFeature/  --name Reddit  --model_name  'Qwen/Qwen2-VL-2B-Instruct'  --text_column 'caption' 
+
+
+```
+from huggingface_hub import upload_file
+upload_file(path_or_fileobj="RedditS_Qwen2-VL-2B-Instruct_tv.npy", path_in_repo="RedditS/MMFeature/RedditS_Qwen2-VL-2B-Instruct_tv.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Movies_Qwen2-VL-2B-Instruct_tv.npy", path_in_repo="Movies/MMFeature/Movies_Qwen2-VL-2B-Instruct_tv.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Toys_Qwen2-VL-2B-Instruct_tv.npy", path_in_repo="Toys/MMFeature/Toys_Qwen2-VL-2B-Instruct_tv.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="GroceryS_Qwen2-VL-2B-Instruct_tv.npy", path_in_repo="GroceryS/MMFeature/GroceryS_Qwen2-VL-2B-Instruct_tv.npy", repo_id="Sherirto/MAG")
+
+from huggingface_hub import upload_file
+upload_file(path_or_fileobj="RedditS_Llama-3.2-11B-Vision-Instruct_tv.npy", path_in_repo="RedditS/MMFeature/RedditS_Llama-3.2-11B-Vision-Instruct_tv.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="GroceryS_Llama-3.2-11B-Vision-Instruct_tv.npy", path_in_repo="GroceryS/MMFeature/GroceryS_Llama-3.2-11B-Vision-Instruct_tv.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Movies_Llama-3.2-11B-Vision-Instruct_tv.npy", path_in_repo="Movies/MMFeature/Movies_Llama-3.2-11B-Vision-Instruct_tv.npy", repo_id="Sherirto/MAG")

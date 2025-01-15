@@ -4,8 +4,60 @@ import pandas as pd
 import numpy as np
 import torch
 from PIL import Image
-from transformers import AutoProcessor, MllamaForConditionalGeneration, Qwen2VLForConditionalGeneration
+from transformers import AutoProcessor, MllamaForConditionalGeneration, Qwen2VLForConditionalGeneration, PaliGemmaForConditionalGeneration
 from tqdm import tqdm
+
+
+
+class MLLMFeatureExtractor:
+    def __init__(self, model_name, device):
+        self.device = device
+        if 'llama' in model_name.lower():
+            self.model = MllamaForConditionalGeneration.from_pretrained(
+                model_name,
+                torch_dtype=torch.bfloat16,
+                device_map="auto",
+            ).to(self.device)
+        elif 'qwen' in model_name.lower():
+            self.model = Qwen2VLForConditionalGeneration.from_pretrained(
+                model_name,
+                torch_dtype=torch.bfloat16,
+                device_map="auto",
+            ).to(self.device)
+        elif 'paligemma' in model_name.lower():
+            self.model = PaliGemmaForConditionalGeneration.from_pretrained(
+                model_name,
+                torch_dtype=torch.bfloat16,
+                device_map="auto",
+            ).to(self.device)
+        else:
+            raise ValueError(f"Unsupported model name: {model_name}")
+        self.processor = AutoProcessor.from_pretrained(model_name)
+
+    def extract_features(self, image, text):
+        messages = [
+            {"role": "user", "content": [
+                {"type": "image", "source": image},
+                {"type": "text", "text": text}
+            ]}
+        ]
+        input_text = self.processor.apply_chat_template(messages, add_generation_prompt=False)
+        inputs = self.processor(
+            image,
+            input_text,
+            add_special_tokens=False,
+            return_tensors="pt"
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.model(**inputs, output_hidden_states=True)
+
+        last_hidden_state = outputs.hidden_states[-1]
+
+        TV_features = last_hidden_state.mean(dim=1)
+        TV_features = TV_features.float()
+
+        return TV_features.cpu().numpy()
 
 
 class MultimodalLLaMAFeatureExtractor:
@@ -107,12 +159,14 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    if 'llama' in args.model_name.lower():
-        extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
-    elif 'qwen' in args.model_name.lower():
-        extractor = QWenFeatureExtractor(args.model_name, device)
-    else:
-        raise ValueError(f"Unsupported model name: {args.model_name}")
+    # if 'llama' in args.model_name.lower():
+    #     extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
+    # elif 'qwen' in args.model_name.lower():
+    #     extractor = QWenFeatureExtractor(args.model_name, device)
+    # else:
+    #     raise ValueError(f"Unsupported model name: {args.model_name}")
+
+    extractor = MLLMFeatureExtractor(args.model_name, device)
 
     picture_path = args.image_path
     df = pd.read_csv(args.csv_path)
