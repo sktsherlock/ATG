@@ -20,6 +20,12 @@ class PaliGemmaFeatureExtractor:
         self.processor = AutoProcessor.from_pretrained(model_name)
 
     def extract_features(self, image, text):
+        # Determine the number of images
+        num_images = 1 if isinstance(image, (list, tuple)) else len(image)
+
+        # Add <image> tokens at the beginning of the text
+        image_tokens = "<image> " * num_images
+        updated_text = image_tokens + text
         # messages = [
         #     {"role": "user", "content": [
         #         {"type": "image", "source": image},
@@ -28,7 +34,7 @@ class PaliGemmaFeatureExtractor:
         # ]
         # input_text = self.processor.apply_chat_template(messages, add_generation_prompt=False)
         inputs = self.processor(
-            text=text,
+            text=updated_text,
             images=image,
             return_tensors="pt"
         ).to(self.device)
