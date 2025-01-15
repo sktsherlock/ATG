@@ -4,48 +4,32 @@ import pandas as pd
 import numpy as np
 import torch
 from PIL import Image
-from transformers import AutoProcessor, MllamaForConditionalGeneration, Qwen2VLForConditionalGeneration, PaliGemmaForConditionalGeneration
+from transformers import AutoProcessor, MllamaForConditionalGeneration, Qwen2VLForConditionalGeneration, \
+    PaliGemmaForConditionalGeneration
 from tqdm import tqdm
 
 
-
-class MLLMFeatureExtractor:
+class PaliGemmaFeatureExtractor:
     def __init__(self, model_name, device):
         self.device = device
-        if 'llama' in model_name.lower():
-            self.model = MllamaForConditionalGeneration.from_pretrained(
-                model_name,
-                torch_dtype=torch.bfloat16,
-                device_map="auto",
-            ).to(self.device)
-        elif 'qwen' in model_name.lower():
-            self.model = Qwen2VLForConditionalGeneration.from_pretrained(
-                model_name,
-                torch_dtype=torch.bfloat16,
-                device_map="auto",
-            ).to(self.device)
-        elif 'paligemma' in model_name.lower():
-            self.model = PaliGemmaForConditionalGeneration.from_pretrained(
-                model_name,
-                torch_dtype=torch.bfloat16,
-                device_map="auto",
-            ).to(self.device)
-        else:
-            raise ValueError(f"Unsupported model name: {model_name}")
+        self.model = PaliGemmaForConditionalGeneration.from_pretrained(
+            model_name,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+        ).to(self.device)
         self.processor = AutoProcessor.from_pretrained(model_name)
 
     def extract_features(self, image, text):
-        messages = [
-            {"role": "user", "content": [
-                {"type": "image", "source": image},
-                {"type": "text", "text": text}
-            ]}
-        ]
-        input_text = self.processor.apply_chat_template(messages, add_generation_prompt=False)
+        # messages = [
+        #     {"role": "user", "content": [
+        #         {"type": "image", "source": image},
+        #         {"type": "text", "text": text}
+        #     ]}
+        # ]
+        # input_text = self.processor.apply_chat_template(messages, add_generation_prompt=False)
         inputs = self.processor(
-            image,
-            input_text,
-            add_special_tokens=False,
+            text=text,
+            images=image,
             return_tensors="pt"
         ).to(self.device)
 
@@ -107,7 +91,6 @@ class QWenFeatureExtractor:
         max_pixels = 1280 * 28 * 28
         self.processor = AutoProcessor.from_pretrained(model_name, max_pixels=max_pixels)
 
-
     def extract_features(self, image, text):
         messages = [
             {"role": "user", "content": [
@@ -134,7 +117,6 @@ class QWenFeatureExtractor:
         return TV_features.cpu().numpy()
 
 
-
 def main():
     parser = argparse.ArgumentParser(
         description='Process text and image data and save the overall representation as NPY files.')
@@ -146,7 +128,8 @@ def main():
     parser.add_argument('--max_length', type=int, default=128, help='Maximum length of the text for language models')
     parser.add_argument('--path', type=str, default='./', help='Where to save the features')
     parser.add_argument('--sample_size', type=int, default=None, help='Number of samples to process for testing')
-    parser.add_argument('--text_column', type=str, default='text', help='The name of the column containing the text data')
+    parser.add_argument('--text_column', type=str, default='text',
+                        help='The name of the column containing the text data')
     args = parser.parse_args()
 
     root_dir = os.path.dirname(os.path.abspath(__file__))
@@ -159,14 +142,14 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # if 'llama' in args.model_name.lower():
-    #     extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
-    # elif 'qwen' in args.model_name.lower():
-    #     extractor = QWenFeatureExtractor(args.model_name, device)
-    # else:
-    #     raise ValueError(f"Unsupported model name: {args.model_name}")
-
-    extractor = MLLMFeatureExtractor(args.model_name, device)
+    if 'llama' in args.model_name.lower():
+        extractor = MultimodalLLaMAFeatureExtractor(args.model_name, device)
+    elif 'qwen' in args.model_name.lower():
+        extractor = QWenFeatureExtractor(args.model_name, device)
+    elif 'paligemma' in args.model_name.lower():
+        extractor = PaliGemmaFeatureExtractor(args.model_name, device)
+    else:
+        raise ValueError(f"Unsupported model name: {args.model_name}")
 
     picture_path = args.image_path
     df = pd.read_csv(args.csv_path)
