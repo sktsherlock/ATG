@@ -24,7 +24,7 @@ class PaliGemmaFeatureExtractor:
         num_images = 1 # if isinstance(image, (list, tuple)) else len(image)
 
         # Add <image> tokens at the beginning of the text
-        image_tokens = "<image> " * num_images
+        image_tokens = "<image>" * num_images
         updated_text = image_tokens + text
         # messages = [
         #     {"role": "user", "content": [
@@ -51,7 +51,12 @@ class PaliGemmaFeatureExtractor:
 
 
     def extract_image_features(self, image):
+        num_images = 1 # if isinstance(image, (list, tuple)) else len(image)
+
+        # Add <image> tokens at the beginning of the text
+        image_tokens = "<image>" * num_images
         inputs = self.processor(
+            text=image_tokens,
             images=image,
             return_tensors="pt"
         ).to(self.device)
