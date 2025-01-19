@@ -85,6 +85,27 @@ class MultimodalLLaMAFeatureExtractor:
 
         return TV_features.cpu().numpy()
 
+    def extract_image_features(self, image):
+        inputs = self.processor(
+            image,
+            return_tensors="pt"
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.model(**inputs, output_hidden_states=True)
+
+            # 打印最后一层隐藏状态的形状
+            print(f"Extracted image features shape: {outputs.hidden_states[-1].shape}")
+
+        # 获取最后一层隐藏状态
+        last_hidden_state = outputs.hidden_states[-1]
+
+        # 计算图像特征
+        image_features = last_hidden_state.mean(dim=1)
+        image_features = image_features.float()
+
+        return image_features.cpu().numpy()
+
 
 class QWenFeatureExtractor:
     def __init__(self, model_name, device):
@@ -136,6 +157,8 @@ def main():
     parser.add_argument('--sample_size', type=int, default=None, help='Number of samples to process for testing')
     parser.add_argument('--text_column', type=str, default='text',
                         help='The name of the column containing the text data')
+    parser.add_argument('--feature_type', type=str, default='tv', choices=['text', 'visual', 'tv'],
+                        help='Type of features to extract (text, image, or multimodal)')
     args = parser.parse_args()
 
     root_dir = os.path.dirname(os.path.abspath(__file__))
@@ -170,33 +193,53 @@ def main():
         sorted_files = sorted_files[:args.sample_size]
         image_texts = image_texts[:args.sample_size]
 
-    llama_tv_features = np.zeros((len(sorted_files),))
+    output_features = np.zeros((len(sorted_files),))
 
     args.model_name = args.model_name.split('/')[-1]
-    output_tv_feature = f'{Feature_path}/{args.name}_{args.model_name}_tv.npy'
+    output_feature = f'{Feature_path}/{args.name}_{args.model_name}_{args.feature_type}.npy'
 
-    print(f'The output files are {output_tv_feature}')
+    print(f'The output files are {output_feature}')
 
-    if not os.path.exists(output_tv_feature):
-        for i, filename in tqdm(enumerate(sorted_files), total=len(sorted_files)):
-            if filename.endswith(".jpg") or filename.endswith(".png"):
-                image_path = os.path.join(picture_path, filename)
-                image = Image.open(image_path).convert("RGB")
-                text = image_texts[i]
-                tv_feature = extractor.extract_features(image, text)
+    if not os.path.exists(output_feature):
+        if args.feature_type == 'text':
+            for i, text in tqdm(enumerate(image_texts), total=len(image_texts)):
+                text_feature = extractor.extract_text_features(text)
 
                 if i == 0:
-                    llama_tv_features = np.zeros((len(sorted_files), tv_feature.shape[1]))
+                    output_features = np.zeros((len(image_texts), text_feature.shape[1]))
 
-                llama_tv_features[i] = tv_feature
+                output_features[i] = text_feature
+        elif args.feature_type == 'visual':
+            for i, filename in tqdm(enumerate(sorted_files), total=len(sorted_files)):
+                if filename.endswith(".jpg") or filename.endswith(".png"):
+                    image_path = os.path.join(picture_path, filename)
+                    image = Image.open(image_path).convert("RGB")
+                    visual_feature = extractor.extract_image_features(image)
+
+                    if i == 0:
+                        output_features = np.zeros((len(sorted_files), visual_feature.shape[1]))
+
+                    output_features[i] = visual_feature
+        elif args.feature_type == 'tv':
+            for i, filename in tqdm(enumerate(sorted_files), total=len(sorted_files)):
+                if filename.endswith(".jpg") or filename.endswith(".png"):
+                    image_path = os.path.join(picture_path, filename)
+                    image = Image.open(image_path).convert("RGB")
+                    text = image_texts[i]
+                    tv_feature = extractor.extract_features(image, text)
+
+                    if i == 0:
+                        output_features = np.zeros((len(sorted_files), tv_feature.shape[1]))
+
+                    output_features[i] = tv_feature
 
         print("Features extracted from all images and texts.")
-        np.save(output_tv_feature, llama_tv_features)
+        np.save(output_feature, output_features)
     else:
         print('Existing features, please load!')
-        llama_tv_features = np.load(output_tv_feature)
+        output_features = np.load(output_feature)
 
-    print("Multimodal TV features shape:", llama_tv_features.shape)
+    print("Multimodal TV features shape:", output_features.shape)
 
 
 if __name__ == "__main__":
