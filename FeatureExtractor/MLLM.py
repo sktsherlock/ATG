@@ -53,6 +53,7 @@ class PaliGemmaFeatureExtractor:
     def extract_text_features(self, text):
         inputs = self.processor(
             text=text,
+            images=None,
             return_tensors="pt"
         ).to(self.device)
 
