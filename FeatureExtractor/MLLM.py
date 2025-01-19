@@ -50,6 +50,23 @@ class PaliGemmaFeatureExtractor:
         return TV_features.cpu().numpy()
 
 
+    def extract_text_features(self, text):
+        inputs = self.processor(
+            text=text,
+            return_tensors="pt"
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.model(**inputs, output_hidden_states=True)
+
+        last_hidden_state = outputs.hidden_states[-1]
+
+        text_features = last_hidden_state.mean(dim=1)
+        text_features = text_features.float()
+
+        return text_features.cpu().numpy()
+
+
     def extract_image_features(self, image):
         num_images = 1 # if isinstance(image, (list, tuple)) else len(image)
 
@@ -63,9 +80,6 @@ class PaliGemmaFeatureExtractor:
 
         with torch.no_grad():
             outputs = self.model(**inputs, output_hidden_states=True)
-
-            # 打印最后一层隐藏状态的形状
-            print(f"Extracted image features shape: {outputs.hidden_states[-1].shape}")
 
         # 获取最后一层隐藏状态
         last_hidden_state = outputs.hidden_states[-1]
