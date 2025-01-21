@@ -129,7 +129,7 @@ class MultimodalLLaMAFeatureExtractor:
 
     def extract_image_features(self, image):
         inputs = self.processor(
-            image,
+            images=image,
             return_tensors="pt"
         ).to(self.device)
 
