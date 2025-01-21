@@ -211,7 +211,7 @@ class QWenFeatureExtractor:
             outputs = self.model(**inputs, output_hidden_states=True)
 
             # # 打印最后一层隐藏状态的形状
-            print(f"Extracted image features shape: {outputs.hidden_states[-1].shape}")
+            # print(f"Extracted image features shape: {outputs.hidden_states[-1].shape}")
 
         # 获取最后一层隐藏状态
         last_hidden_state = outputs.hidden_states[-1]
