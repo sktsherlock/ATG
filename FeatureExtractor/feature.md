@@ -105,6 +105,10 @@ CUDA_VISIBLE_DEVICES=0 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Grocery
 CUDA_VISIBLE_DEVICES=0 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Reddit/Reddit.csv --image_path /home/aiscuser/ATG/Data/Reddit/RedditImages/ --path /home/aiscuser/ATG/Data/Reddit/MMFeature/  --name Reddit  --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
 ```
 
+```python
+CUDA_VISIBLE_DEVICES=2 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Movies/Movies.csv --image_path /home/aiscuser/ATG/Data/Movies/MoviesImages/ --path /home/aiscuser/ATG/Data/Movies/ImageFeature/  --name Movies --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'  --feature_type 'visual'
+```
+
 
 ```python
 #Qwen2B
@@ -130,9 +134,17 @@ CUDA_VISIBLE_DEVICES=3 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Toys/To
 CUDA_VISIBLE_DEVICES=4 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Reddit/Reddit.csv --image_path /home/aiscuser/ATG/Data/Reddit/RedditImages/ --path /home/aiscuser/ATG/Data/Reddit/MMFeature/  --name Reddit  --model_name  'google/paligemma2-3b-pt-224'  --text_column 'caption'
 ```
 
+CUDA_VISIBLE_DEVICES=2 python MLLM.py --csv_path /home/aiscuser/ATG/Data/RedditS/RedditS.csv --image_path /home/aiscuser/ATG/Data/RedditS/RedditSImages/ --path /home/aiscuser/ATG/Data/RedditS/MMFeature/ --name RedditS  --model_name  'google/paligemma2-3b-pt-224'  --text_column 'caption'  --feature_type 'visual'
 
+CUDA_VISIBLE_DEVICES=3 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --image_path /home/aiscuser/ATG/Data/Toys/ToysImages/ --path /home/aiscuser/ATG/Data/Toys/MMFeature/  --name Toys --model_name  'google/paligemma2-3b-pt-224'  --feature_type 'tv'
+CUDA_VISIBLE_DEVICES=3 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --image_path /home/aiscuser/ATG/Data/Toys/ToysImages/ --path /home/aiscuser/ATG/Data/Toys/ImageFeature/  --name Toys --model_name  'google/paligemma2-3b-pt-224'  --feature_type 'visual'
 
+CUDA_VISIBLE_DEVICES=4 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Reddit/Reddit.csv --image_path /home/aiscuser/ATG/Data/Reddit/RedditImages/ --path /home/aiscuser/ATG/Data/Reddit/MMFeature/  --name Reddit  --model_name  'google/paligemma2-3b-pt-224'  --text_column 'caption'  --feature_type 'tv'
+CUDA_VISIBLE_DEVICES=4 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Reddit/Reddit.csv --image_path /home/aiscuser/ATG/Data/Reddit/RedditImages/ --path /home/aiscuser/ATG/Data/Reddit/ImageFeature/  --name Reddit  --model_name  'google/paligemma2-3b-pt-224'  --text_column 'caption'  --feature_type 'visual'
 
+# Movies
+CUDA_VISIBLE_DEVICES=5 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Movies/Movies.csv --image_path /home/aiscuser/ATG/Data/Movies/MoviesImages/ --path /home/aiscuser/ATG/Data/Movies/MMFeature/  --name Movies --model_name 'google/paligemma2-3b-pt-224'  --feature_type 'tv'
+CUDA_VISIBLE_DEVICES=5 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Movies/Movies.csv --image_path /home/aiscuser/ATG/Data/Movies/MoviesImages/ --path /home/aiscuser/ATG/Data/Movies/ImageFeature/  --name Movies --model_name 'google/paligemma2-3b-pt-224'  --feature_type 'visual'
 
 from huggingface_hub import upload_file
 upload_file(path_or_fileobj="RedditS_Qwen2-VL-2B-Instruct_tv.npy", path_in_repo="RedditS/MMFeature/RedditS_Qwen2-VL-2B-Instruct_tv.npy", repo_id="Sherirto/MAG")
@@ -150,3 +162,5 @@ upload_file(path_or_fileobj="Reddit_Llama-3.2-11B-Vision-Instruct_tv.npy", path_
 
 upload_file(path_or_fileobj="Movies_Qwen2-VL-7B-Instruct_tv.npy", path_in_repo="Movies/MMFeature/Movies_Qwen2-VL-7B-Instruct_tv.npy", repo_id="Sherirto/MAG")
 upload_file(path_or_fileobj="GroceryS_Qwen2-VL-7B-Instruct_tv.npy", path_in_repo="GroceryS/MMFeature/GroceryS_Qwen2-VL-7B-Instruct_tv.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Toys_Qwen2-VL-7B-Instruct_tv.npy", path_in_repo="Toys/MMFeature/Toys_Qwen2-VL-7B-Instruct_tv.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="RedditS_Qwen2-VL-7B-Instruct_tv.npy", path_in_repo="RedditS/MMFeature/RedditS_Qwen2-VL-7B-Instruct_tv.npy", repo_id="Sherirto/MAG")
