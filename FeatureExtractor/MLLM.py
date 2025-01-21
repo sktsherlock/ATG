@@ -21,7 +21,7 @@ class PaliGemmaFeatureExtractor:
 
     def extract_features(self, image, text):
         # Determine the number of images
-        num_images = 1 # if isinstance(image, (list, tuple)) else len(image)
+        num_images = 1  # if isinstance(image, (list, tuple)) else len(image)
 
         # Add <image> tokens at the beginning of the text
         image_tokens = "<image>" * num_images
@@ -49,7 +49,6 @@ class PaliGemmaFeatureExtractor:
 
         return TV_features.cpu().numpy()
 
-
     def extract_text_features(self, text):
         inputs = self.processor(
             text=text,
@@ -67,9 +66,8 @@ class PaliGemmaFeatureExtractor:
 
         return text_features.cpu().numpy()
 
-
     def extract_image_features(self, image):
-        num_images = 1 # if isinstance(image, (list, tuple)) else len(image)
+        num_images = 1  # if isinstance(image, (list, tuple)) else len(image)
 
         # Add <image> tokens at the beginning of the text
         image_tokens = "<image>" * num_images
@@ -128,8 +126,17 @@ class MultimodalLLaMAFeatureExtractor:
         return TV_features.cpu().numpy()
 
     def extract_image_features(self, image):
+
+        messages = [
+            {"role": "user", "content": [
+                {"type": "image", "source": image}
+            ]}
+        ]
+        input_text = self.processor.apply_chat_template(messages, add_generation_prompt=False)
         inputs = self.processor(
-            images=image,
+            image,
+            input_text,
+            add_special_tokens=False,
             return_tensors="pt"
         ).to(self.device)
 
