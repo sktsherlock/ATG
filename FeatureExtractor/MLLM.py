@@ -143,8 +143,8 @@ class MultimodalLLaMAFeatureExtractor:
         with torch.no_grad():
             outputs = self.model(**inputs, output_hidden_states=True)
 
-            # 打印最后一层隐藏状态的形状
-            print(f"Extracted image features shape: {outputs.hidden_states[-1].shape}")
+            # # 打印最后一层隐藏状态的形状
+            # print(f"Extracted image features shape: {outputs.hidden_states[-1].shape}")
 
         # 获取最后一层隐藏状态
         last_hidden_state = outputs.hidden_states[-1]
@@ -191,6 +191,36 @@ class QWenFeatureExtractor:
         TV_features = TV_features.float()
 
         return TV_features.cpu().numpy()
+
+    def extract_image_features(self, image):
+
+        messages = [
+            {"role": "user", "content": [
+                {"type": "image", "source": image}
+            ]}
+        ]
+        input_text = self.processor.apply_chat_template(messages, add_generation_prompt=False)
+        inputs = self.processor(
+            image,
+            input_text,
+            add_special_tokens=False,
+            return_tensors="pt"
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.model(**inputs, output_hidden_states=True)
+
+            # # 打印最后一层隐藏状态的形状
+            print(f"Extracted image features shape: {outputs.hidden_states[-1].shape}")
+
+        # 获取最后一层隐藏状态
+        last_hidden_state = outputs.hidden_states[-1]
+
+        # 计算图像特征
+        image_features = last_hidden_state.mean(dim=1)
+        image_features = image_features.float()
+
+        return image_features.cpu().numpy()
 
 
 def main():
