@@ -160,12 +160,11 @@ def main():
         #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
         elif model_name in llama_models:
             from transformers import MllamaForCausalLM
-            model = MllamaForCausalLM.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+            model = MllamaForCausalLM.from_pretrained(model_name)
             generative_model = True
         elif model_name in gemma_models:
             from transformers import PaliGemmaForConditionalGeneration
-            model = PaliGemmaForConditionalGeneration.from_pretrained(model_name, trust_remote_code=True,
-                                                                      token=access_token).language_model
+            model = PaliGemmaForConditionalGeneration.from_pretrained(model_name).language_model
             generative_model = True
         else:
             model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
