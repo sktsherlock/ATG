@@ -6,6 +6,10 @@ CUDA_VISIBLE_DEVICES=1,2 python TextAttributeExtract.py --csv_file Data/GroceryS
 CUDA_VISIBLE_DEVICES=1,2 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'meta-llama/Llama-3.2-3B-Instruct' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'meta-llama/Llama-3.1-8B-Instruct' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
 CUDA_VISIBLE_DEVICES=0 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'mistralai/Ministral-8B-Instruct-2410' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True
+
+CUDA_VISIBLE_DEVICES=0,2 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 20 --text_column 'text' --fp16 True   #  'meta-llama/Llama-3.2-11B-Vision-Instruct'  'google/paligemma2-3b-pt-224'  'Qwen/Qwen2-VL-7B-Instruct' 
+CUDA_VISIBLE_DEVICES=0,2 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'google/paligemma2-3b-pt-448' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True   #  'meta-llama/Llama-3.2-11B-Vision-Instruct'  'google/paligemma2-3b-pt-224'  'Qwen/Qwen2-VL-7B-Instruct'
+CUDA_VISIBLE_DEVICES=3 python TextAttributeExtract.py --csv_file Data/GroceryS/GroceryS.csv --model_name 'Qwen/Qwen2-VL-7B-Instruct' --name 'GroceryS' --path 'Data/GroceryS/TextFeature/' --max_length 256 --batch_size 50 --text_column 'text' --fp16 True 
 ```
 
 ```python
@@ -27,6 +31,10 @@ CUDA_VISIBLE_DEVICES=3,4 python TextAttributeExtract.py --csv_file Data/Movies/M
 CUDA_VISIBLE_DEVICES=3,4 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'meta-llama/Llama-3.2-3B-Instruct' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 30 --text_column 'text' --f16 True --fp16 True   # 12/16G 
 CUDA_VISIBLE_DEVICES=1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'meta-llama/Llama-3.1-8B-Instruct' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 5 --text_column 'text' --f16 True --fp16 True  
 CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'mistralai/Ministral-8B-Instruct-2410' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 40 --text_column 'text' --f16 True --fp16 True
+
+CUDA_VISIBLE_DEVICES=0,1 python TextAttributeExtract.py --csv_file Data/Movies/Movies.csv --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct' --name 'Movies' --path 'Data/Movies/TextFeature/' --max_length 512 --batch_size 40 --text_column 'text' --fp16 True
+
+
 ```
 
 ```python
@@ -98,7 +106,7 @@ upload_file(path_or_fileobj="Reddit_Ministral_8B_Instruct_2410_100_mean.npy", pa
 
 ## MLLM TV Feature
 ```python
-CUDA_VISIBLE_DEVICES=2 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Movies/Movies.csv --image_path /home/aiscuser/ATG/Data/Movies/MoviesImages/ --path /home/aiscuser/ATG/Data/Movies/MMFeature/  --name Movies --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
+CUDA_VISIBLE_DEVICES=2 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Movies/Movies.csv --image_path /home/aiscuser/ATG/Data/Movies/MoviesImages/ --path /home/aiscuser/ATG/Data/Movies/MMFeature/  --name Movies --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct' 
 CUDA_VISIBLE_DEVICES=3 python MLLM.py --csv_path /home/aiscuser/ATG/Data/Toys/Toys.csv --image_path /home/aiscuser/ATG/Data/Toys/ToysImages/ --path /home/aiscuser/ATG/Data/Toys/MMFeature/  --name Toys  --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
 CUDA_VISIBLE_DEVICES=1 python MLLM.py --csv_path /home/aiscuser/ATG/Data/RedditS/RedditS.csv --image_path /home/aiscuser/ATG/Data/RedditS/RedditSImages/ --path /home/aiscuser/ATG/Data/RedditS/MMFeature/  --name RedditS  --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'
 CUDA_VISIBLE_DEVICES=0 python MLLM.py --csv_path /home/aiscuser/ATG/Data/GroceryS/GroceryS.csv --image_path /home/aiscuser/ATG/Data/GroceryS/GrocerySImages/ --path /home/aiscuser/ATG/Data/GroceryS/MMFeature/  --name GroceryS  --model_name 'meta-llama/Llama-3.2-11B-Vision-Instruct'

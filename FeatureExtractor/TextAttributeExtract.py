@@ -146,25 +146,16 @@ def main():
     if args.pretrain_path is not None:
         model = AutoModel.from_pretrained(f'{args.pretrain_path}')
         print('Loading model from the path: {}'.format(args.pretrain_path))
+    elif model_name in llama_models:
+        from transformers import MllamaForCausalLM
+        model = MllamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16) if args.f16 is True else MllamaForCausalLM.from_pretrained(model_name)
+        generative_model = True
+    elif model_name in gemma_models:
+        from transformers import PaliGemmaForConditionalGeneration
+        model = PaliGemmaForConditionalGeneration.from_pretrained(model_name, torch_dtype=torch.bfloat16).language_model if args.f16 is True else PaliGemmaForConditionalGeneration.from_pretrained(model_name).language_model
+        generative_model = True
     else:
-        if args.f16 is True:
-            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, torch_dtype=torch.bfloat16)
-        # elif args.int8 is True:
-        #     quantization_config = BitsAndBytesConfig(load_in_8bit=True)
-        #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
-        # elif args.int4 is True:
-        #     quantization_config = BitsAndBytesConfig(load_in_4bit=True)
-        #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
-        elif model_name in llama_models:
-            from transformers import MllamaForCausalLM
-            model = MllamaForCausalLM.from_pretrained(model_name)
-            generative_model = True
-        elif model_name in gemma_models:
-            from transformers import PaliGemmaForConditionalGeneration
-            model = PaliGemmaForConditionalGeneration.from_pretrained(model_name).language_model
-            generative_model = True
-        else:
-            model = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        model = AutoModel.from_pretrained(model_name, trust_remote_code=True, torch_dtype=torch.bfloat16) if args.f16 is True else AutoModel.from_pretrained(model_name)
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mask_Mean_Features_Extractor = AttentionMeanEmbInfModel(model, generative_model, norm=args.norm)
