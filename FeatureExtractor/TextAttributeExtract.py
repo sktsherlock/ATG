@@ -167,7 +167,7 @@ def main():
             model = PaliGemmaForConditionalGeneration.from_pretrained(model_name).language_model
             generative_model = True
         else:
-            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+            model = AutoModel.from_pretrained(model_name, trust_remote_code=True)
 
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
     Mask_Mean_Features_Extractor = AttentionMeanEmbInfModel(model, generative_model, norm=args.norm)
