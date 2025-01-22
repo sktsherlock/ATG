@@ -201,6 +201,9 @@ def main():
         np.save(output_file + "_mean.npy", mean_emb.predictions)
         print('Existing saved to the {}'.format(output_file))
 
+        # 输出特征维度
+        print('Feature dimension:', mean_emb.predictions.shape[1])
+
     else:
         print('Existing saved MEAN')
 
