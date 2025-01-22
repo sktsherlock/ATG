@@ -10,8 +10,12 @@ from transformers import AutoTokenizer, AutoModel, TrainingArguments, PreTrained
 from transformers.modeling_outputs import TokenClassifierOutput
 from datasets import Dataset, load_dataset
 
-
-sentence_transformer = {'nomic-ai/nomic-embed-text-v1', 'sentence-transformers/all-MiniLM-L12-v2', 'BAAI/bge-reranker-large'}
+sentence_transformer = {'nomic-ai/nomic-embed-text-v1', 'sentence-transformers/all-MiniLM-L12-v2',
+                        'BAAI/bge-reranker-large'}
+# Multimodal LLMs that can not load from AutoModel
+llama_models = {'meta-llama/Llama-3.2-11B-Vision-Instruct', 'meta-llama/Llama-3.2-90B-Vision-Instruct',
+                'meta-llama/Llama-3.2-11B-Vision', 'meta-llama/Llama-3.2-90B-Vision'}
+gemma_models = {'google/paligemma2-3b-pt-224', 'google/paligemma2-3b-pt-448', 'google/paligemma2-3b-pt-896'}
 
 
 def reduce_dimension(features, n_components):
@@ -49,7 +53,6 @@ def main():
     parser.add_argument('--nomask', action='store_true', help='whether do not use mask to claculate the mean pooling')
     parser.add_argument('--norm', type=bool, default=False, help='nomic use True')
 
-
     # 解析命令行参数
     args = parser.parse_args()
     csv_file = args.csv_file
@@ -75,7 +78,8 @@ def main():
         os.makedirs(cache_path)
 
     if args.pretrain_path is not None:
-        output_file = Feature_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length) + '_' + 'Tuned'
+        output_file = Feature_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(
+            max_length) + '_' + 'Tuned'
     else:
         output_file = Feature_path + name + '_' + model_name.split('/')[-1].replace("-", "_") + '_' + str(max_length)
 
@@ -90,16 +94,16 @@ def main():
             outputs = self.encoder(input_ids, attention_mask, output_hidden_states=True)
             # Use CLS Emb as sentence emb.
             # Use  pooler_output ? Dont use pooler_output
-            #node_cls_emb = outputs.pooler_output
+            # node_cls_emb = outputs.pooler_output
             node_cls_emb = outputs.last_hidden_state[:, 0, :]  # Last layer
             return TokenClassifierOutput(logits=node_cls_emb)
 
-
     class AttentionMeanEmbInfModel(PreTrainedModel):
-        def __init__(self, model, norm=False):
+        def __init__(self, model, generative=False, norm=False):
             super().__init__(model.config)
             self.encoder = model
             self.norm = norm
+            self.flag = generative
 
         @torch.no_grad()
         def mean_pooling(self, token_embeddings, attention_mask):
@@ -113,15 +117,14 @@ def main():
         @torch.no_grad()
         def forward(self, input_ids, attention_mask):
             # Extract outputs from the model
-            outputs = self.encoder(input_ids, attention_mask) if self.encoder.config._name_or_path in sentence_transformer else self.encoder(input_ids, attention_mask, output_hidden_states=True)
-            node_mean_emb = self.mean_pooling(outputs.last_hidden_state, attention_mask)
+            outputs = self.encoder(input_ids,
+                                   attention_mask) if self.encoder.config._name_or_path in sentence_transformer else self.encoder(
+                input_ids, attention_mask, output_hidden_states=True)
+            node_mean_emb = self.mean_pooling(outputs.last_hidden_state,
+                                              attention_mask) if self.flag is False else self.mean_pooling(
+                outputs.hidden_states[-1], attention_mask)
             node_mean_emb = F.normalize(node_mean_emb, p=2, dim=1) if self.norm is True else node_mean_emb
             return TokenClassifierOutput(logits=node_mean_emb)
-
-
-
-
-
 
     # 读取CSV文件
     df = pd.read_csv(os.path.join(base_dir, csv_file))
@@ -129,9 +132,10 @@ def main():
 
     # 加载模型和分词器
     if tokenizer_name:
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True, token=access_token,  trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True, token=access_token,
+                                                  trust_remote_code=True)
     else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, token=access_token,  trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, token=access_token, trust_remote_code=True)
 
     # 编码文本数据并转为数据集
     if tokenizer.pad_token is None:
@@ -139,25 +143,35 @@ def main():
     encoded_inputs = tokenizer(text_data, padding=True, truncation=True, max_length=max_length, return_tensors='pt')
     dataset = Dataset.from_dict(encoded_inputs)
 
+    generative_model = False
+    # 加载模型
     if args.pretrain_path is not None:
         model = AutoModel.from_pretrained(f'{args.pretrain_path}')
         print('Loading model from the path: {}'.format(args.pretrain_path))
     else:
         if args.f16 is True:
-            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, torch_dtype=torch.bfloat16)
+            model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token,
+                                              torch_dtype=torch.bfloat16)
         # elif args.int8 is True:
         #     quantization_config = BitsAndBytesConfig(load_in_8bit=True)
         #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
         # elif args.int4 is True:
         #     quantization_config = BitsAndBytesConfig(load_in_4bit=True)
         #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token, quantization_config=quantization_config)
+        elif model_name in llama_models:
+            from transformers import MllamaForCausalLM
+            model = MllamaForCausalLM.from_pretrained(model_name, trust_remote_code=True, token=access_token)
+            generative_model = True
+        elif model_name in gemma_models:
+            from transformers import PaliGemmaForConditionalGeneration
+            model = PaliGemmaForConditionalGeneration.from_pretrained(model_name, trust_remote_code=True,
+                                                                      token=access_token).language_model
+            generative_model = True
         else:
             model = AutoModel.from_pretrained(model_name, trust_remote_code=True, token=access_token)
 
-
-
     CLS_Feateres_Extractor = CLSEmbInfModel(model)
-    Mask_Mean_Features_Extractor = AttentionMeanEmbInfModel(model, norm=args.norm)
+    Mask_Mean_Features_Extractor = AttentionMeanEmbInfModel(model, generative_model, norm=args.norm)
     CLS_Feateres_Extractor.eval()
     Mask_Mean_Features_Extractor.eval()
 
@@ -193,10 +207,6 @@ def main():
 
     else:
         print('Existing saved MEAN')
-
-
-
-
 
 
 if __name__ == "__main__":
