@@ -47,10 +47,26 @@ def display_statistics(statistics):
         print(f"平均分辨率: {statistics['avg_resolution'][0]:.2f}x{statistics['avg_resolution'][1]:.2f}")
 
 
+
+def calculate_small_image_ratio(resolutions, threshold):
+    small_image_count = sum(1 for res in resolutions if res[0] < threshold and res[1] < threshold)
+    total_images = len(resolutions)
+    ratio = small_image_count / total_images if total_images > 0 else 0
+    return ratio
+
+
 def main(image_folder):
     resolutions = get_image_resolutions(image_folder)
     statistics = calculate_statistics(resolutions)
     display_statistics(statistics)
+
+    small_image_ratio_224 = calculate_small_image_ratio(resolutions, 224)
+    small_image_ratio_448 = calculate_small_image_ratio(resolutions, 448)
+    small_image_ratio_896 = calculate_small_image_ratio(resolutions, 896)
+
+    print(f"分辨率小于224x224的图像占总体的比例: {small_image_ratio_224:.2%}")
+    print(f"分辨率小于448x448的图像占总体的比例: {small_image_ratio_448:.2%}")
+    print(f"分辨率小于896x896的图像占总体的比例: {small_image_ratio_896:.2%}")
 
 
 if __name__ == "__main__":
