@@ -61,7 +61,6 @@ def main():
     name = args.name
     max_length = args.max_length
     batch_size = args.batch_size
-    # access_token = "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"
 
     tokenizer_name = args.tokenizer_name
 
