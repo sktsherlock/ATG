@@ -49,10 +49,11 @@ def display_statistics(statistics):
 
 
 def calculate_small_image_ratio(resolutions, threshold):
-    small_image_count = sum(1 for res in resolutions if res[0] < threshold and res[1] < threshold)
+    small_image_count = sum(1 for res in resolutions if res[0] * res[1] < threshold * threshold)
     total_images = len(resolutions)
     ratio = small_image_count / total_images if total_images > 0 else 0
     return ratio
+
 
 
 def main(image_folder):
