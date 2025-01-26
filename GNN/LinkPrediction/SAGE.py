@@ -10,7 +10,7 @@ from ogb.nodeproppred import DglNodePropPredDataset
 from torch_sparse import SparseTensor
 from torch_geometric.nn import SAGEConv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from ..GraphData import Evaluator, split_edge, Logger
+from ..GraphData import Evaluator, split_edge, Logger, set_seed
 from GNN.Utils.LinkTask import linkprediction
 from ..Utils.model_config import add_common_args
 
@@ -135,6 +135,7 @@ def main():
     }
 
     for run in range(args.n_runs):
+        set_seed(args.seed + run)
         model.reset_parameters()
         predictor.reset_parameters()
 
