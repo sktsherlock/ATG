@@ -105,21 +105,15 @@ def linkprediction(args, adj_t, edge_split, model, predictor, feat, evaluator, l
 
             for key in loggers.keys():
                 loggers[key].add_result(n_running, results[key])
-            # for key, result in results.items():
-            #     loggers[key].add_result(run, result)
 
-            #
-            # loggers.add_result(n_running, result)
-
-            if epoch % args.log_every == 0:
-                for key in loggers.keys():
-                    train_result, valid_result, test_result = results[key]
-                    print(key)
-                    print(f'Run: {n_running + 1:02d}, '
-                          f'Epoch: {epoch:02d}, '
-                          f'Loss: {loss:.4f}, '
-                          f'Train: {train_result:.4f}, '
-                          f'Valid: {valid_result:.4f}, '
-                          f'Test: {test_result:.4f}')
+            for key in loggers.keys():
+                train_result, valid_result, test_result = results[key]
+                print(key)
+                print(f'Run: {n_running + 1:02d}, '
+                      f'Epoch: {epoch:02d}, '
+                      f'Loss: {loss:.4f}, '
+                      f'Train: {train_result:.4f}, '
+                      f'Valid: {valid_result:.4f}, '
+                      f'Test: {test_result:.4f}')
 
     return loggers
