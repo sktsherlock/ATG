@@ -10,13 +10,12 @@ from transformers import MllamaForConditionalGeneration, AutoProcessor
 # 参数配置
 class Config:
     model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
-    # 使用相对于当前脚本的路径
-    current_dir = os.path.dirname(os.path.abspath(__file__))  # 获取当前脚本目录（ATG/MLLM/）
-    data_root = os.path.normpath(os.path.join(current_dir, "../../Data/Movies"))  # 上两级到ATG目录
+    # 修改路径解析逻辑
+    current_dir = os.path.dirname(os.path.abspath(__file__))  # 当前脚本目录：/home/aiscuser/ATG/MLLM
+    data_root = os.path.normpath(os.path.join(current_dir, "../Data/Movies"))  # 关键修改点：只需上一级到ATG目录
     classes = ["action", "comedy", "drama"]
     max_new_tokens = 15
     image_ext = ".jpg"
-
 
 # 其他代码保持不变...
 
