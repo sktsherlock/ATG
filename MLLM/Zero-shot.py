@@ -87,7 +87,7 @@ def run_evaluation(dataframe, num_samples=5):
             break
 
         try:
-            node_id = row["node_id"]
+            node_id = row["id"]
             text = row["text"]
             label = row["label"].lower()  # 统一转为小写
 
