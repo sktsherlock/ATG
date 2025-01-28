@@ -1,5 +1,6 @@
 import os
 import ast
+import argparse
 import torch
 import pandas as pd
 from PIL import Image
@@ -7,101 +8,109 @@ from dgl import load_graphs
 from transformers import MllamaForConditionalGeneration, AutoProcessor
 
 
-# 参数配置
-class Config:
-    model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
-    # 修改路径解析逻辑
-    current_dir = os.path.dirname(os.path.abspath(__file__))  # 当前脚本目录：/home/aiscuser/ATG/MLLM
-    data_root = os.path.normpath(os.path.join(current_dir, "../Data/Movies"))  # 关键修改点：只需上一级到ATG目录
-    classes = ["action", "comedy", "drama"]
-    max_new_tokens = 15
-    image_ext = ".jpg"
+def parse_args():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(description='Multimodal Node Classification with MLLM')
+    parser.add_argument('--model_name', type=str, default='meta-llama/Llama-3.2-11B-Vision-Instruct',
+                        help='HuggingFace模型名称或路径')
+    parser.add_argument('--dataset_name', type=str, default='Movies',
+                        help='数据集名称（对应Data目录下的子目录名）')
+    parser.add_argument('--base_dir', type=str, default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        help='项目根目录路径')
+    parser.add_argument('--classes', nargs='+', default=["action", "comedy", "drama"],
+                        help='分类类别列表')
+    parser.add_argument('--max_new_tokens', type=int, default=15,
+                        help='生成的最大token数量')
+    parser.add_argument('--image_ext', type=str, default='.jpg',
+                        help='图像文件扩展名')
+    parser.add_argument('--num_samples', type=int, default=5,
+                        help='测试样本数量')
+    return parser.parse_args()
 
-# 其他代码保持不变...
 
-# 加载数据集函数修改路径验证
-def load_movie_dataset():
-    """加载电影数据集"""
-    # 验证路径是否存在
-    if not os.path.exists(Config.data_root):
-        raise FileNotFoundError(
-            f"Dataset path not found: {Config.data_root}\n"
-            f"Current working directory: {os.getcwd()}"
+class DatasetLoader:
+    def __init__(self, args):
+        """初始化数据集加载器"""
+        self.args = args
+        self.data_dir = os.path.join(args.base_dir, 'Data', args.dataset_name)
+        self._verify_paths()
+
+    def _verify_paths(self):
+        """验证必要路径是否存在"""
+        required_files = [
+            os.path.join(self.data_dir, f"{self.args.dataset_name}.csv"),
+            os.path.join(self.data_dir, f"{self.args.dataset_name}Graph.pt"),
+            os.path.join(self.data_dir, f"{self.args.dataset_name}Images")
+        ]
+
+        missing = [path for path in required_files if not os.path.exists(path)]
+        if missing:
+            raise FileNotFoundError(f"Missing required files/directories: {missing}")
+
+    def load_data(self):
+        """加载数据集"""
+        # 加载CSV数据
+        csv_path = os.path.join(self.data_dir, f"{self.args.dataset_name}.csv")
+        df = pd.read_csv(csv_path, converters={'neighbors': ast.literal_eval})
+
+        # 加载图数据
+        graph_path = os.path.join(self.data_dir, f"{self.args.dataset_name}Graph.pt")
+        graph = load_graphs(graph_path)[0][0]
+
+        return df, graph
+
+    def load_image(self, node_id: int) -> Image.Image:
+        """加载节点图像"""
+        img_path = os.path.join(
+            self.data_dir,
+            f"{self.args.dataset_name}Images",
+            f"{node_id}{self.args.image_ext}"
         )
-
-    csv_path = os.path.join(Config.data_root, "Movies.csv")
-    graph_path = os.path.join(Config.data_root, "MoviesGraph.pt")
-
-    # 验证文件存在性
-    for path in [csv_path, graph_path]:
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"Required file missing: {path}")
-
-    df = pd.read_csv(csv_path, converters={'neighbors': ast.literal_eval})
-    graph = load_graphs(graph_path)[0][0]
-
-    return df, graph
+        if not os.path.exists(img_path):
+            raise FileNotFoundError(f"Image not found: {img_path}")
+        return Image.open(img_path).convert("RGB")
 
 
-# 图像加载器修改
-class MovieImageLoader:
-    def __init__(self):
-        self.image_dir = os.path.join(Config.data_root, "MoviesImages")
-        # 验证图像目录存在性
-        if not os.path.exists(self.image_dir):
-            raise FileNotFoundError(f"Image directory missing: {self.image_dir}")
-
-
-# 辅助函数：构建分类提示
 def build_classification_prompt(text: str, classes: list) -> list:
-    """构建适合分类任务的prompt模板"""
+    """构建分类提示模板"""
     return [
         {"role": "user", "content": [
             {"type": "image"},
             {"type": "text", "text": f"""
-                As a movie expert, classify this item based on its visual and textual features.
+                Based on the multimodal information, classify this node into one of: {", ".join(classes)}.
                 Text description: {text}
-                Available categories: {", ".join(classes)}
-                Answer ONLY with the category name.
+                Answer ONLY with the class name.
             """}
         ]}
     ]
 
 
-# 加载模型
-model = MllamaForConditionalGeneration.from_pretrained(
-    Config.model_id,
-    torch_dtype=torch.bfloat16,
-    device_map="auto",
-)
-processor = AutoProcessor.from_pretrained(Config.model_id)
+def main(args):
+    # 初始化组件
+    dataset_loader = DatasetLoader(args)
+    df, graph = dataset_loader.load_data()
 
+    # 加载模型
+    model = MllamaForConditionalGeneration.from_pretrained(
+        args.model_name,
+        torch_dtype=torch.bfloat16,
+        device_map="auto",
+    )
+    processor = AutoProcessor.from_pretrained(args.model_name)
 
-# 评估函数
-def run_evaluation(dataframe, num_samples=5):
-    image_loader = MovieImageLoader()
+    # 运行评估
     correct = 0
-
-    for idx, row in dataframe.iterrows():
-        if idx >= num_samples:
-            break
-
+    for idx, row in df.head(args.num_samples).iterrows():
         try:
             node_id = row["id"]
             text = row["text"]
-            label = row["label"].lower()  # 统一转为小写
+            label = row["second_category"].lower()
 
-            # 加载图像
-            image = image_loader.load_image(node_id)
+            # 准备输入
+            image = dataset_loader.load_image(node_id)
+            messages = build_classification_prompt(text, args.classes)
+            input_text = processor.apply_chat_template(messages, add_generation_prompt=True)
 
-            # 构建prompt
-            messages = build_classification_prompt(text, Config.classes)
-            input_text = processor.apply_chat_template(
-                messages,
-                add_generation_prompt=True
-            )
-
-            # 处理输入
             inputs = processor(
                 image,
                 input_text,
@@ -109,31 +118,23 @@ def run_evaluation(dataframe, num_samples=5):
                 return_tensors="pt"
             ).to(model.device)
 
-            # 生成结果
-            output = model.generate(**inputs, max_new_tokens=Config.max_new_tokens)
+            # 生成预测
+            output = model.generate(**inputs, max_new_tokens=args.max_new_tokens)
             prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
 
-            # 解析结果（取第一个匹配的类别）
-            predicted_class = next((c for c in Config.classes if c in prediction), None)
-
-            # 计算准确率
+            # 解析结果
+            predicted_class = next((c for c in args.classes if c in prediction), None)
             if predicted_class == label:
                 correct += 1
 
-            print(f"Node {node_id}:")
-            print(f"Predicted: {predicted_class} | Ground Truth: {label}")
-            print("-" * 50)
+            print(f"Node {node_id}: {predicted_class} | GT: {label}")
 
         except Exception as e:
             print(f"Error processing node {node_id}: {str(e)}")
-            continue
 
-    print(f"\nAccuracy: {correct / num_samples:.2f} ({correct}/{num_samples})")
+    print(f"\nFinal Accuracy: {correct / args.num_samples:.2f} ({correct}/{args.num_samples})")
 
 
 if __name__ == "__main__":
-    # 加载数据
-    df, graph = load_movie_dataset()
-
-    # 运行评估（使用前5个样本）
-    run_evaluation(df, num_samples=5)
+    args = parse_args()
+    main(args)
