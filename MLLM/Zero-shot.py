@@ -10,10 +10,47 @@ from transformers import MllamaForConditionalGeneration, AutoProcessor
 # 参数配置
 class Config:
     model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
-    data_root = "Data/Movies"  # 数据集根目录
-    classes = ["action", "comedy", "drama"]  # 替换为真实类别
+    # 使用相对于当前脚本的路径
+    current_dir = os.path.dirname(os.path.abspath(__file__))  # 获取当前脚本目录（ATG/MLLM/）
+    data_root = os.path.normpath(os.path.join(current_dir, "../../Data/Movies"))  # 上两级到ATG目录
+    classes = ["action", "comedy", "drama"]
     max_new_tokens = 15
-    image_ext = ".jpg"  # 图像文件扩展名
+    image_ext = ".jpg"
+
+
+# 其他代码保持不变...
+
+# 加载数据集函数修改路径验证
+def load_movie_dataset():
+    """加载电影数据集"""
+    # 验证路径是否存在
+    if not os.path.exists(Config.data_root):
+        raise FileNotFoundError(
+            f"Dataset path not found: {Config.data_root}\n"
+            f"Current working directory: {os.getcwd()}"
+        )
+
+    csv_path = os.path.join(Config.data_root, "Movies.csv")
+    graph_path = os.path.join(Config.data_root, "MoviesGraph.pt")
+
+    # 验证文件存在性
+    for path in [csv_path, graph_path]:
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Required file missing: {path}")
+
+    df = pd.read_csv(csv_path, converters={'neighbors': ast.literal_eval})
+    graph = load_graphs(graph_path)[0][0]
+
+    return df, graph
+
+
+# 图像加载器修改
+class MovieImageLoader:
+    def __init__(self):
+        self.image_dir = os.path.join(Config.data_root, "MoviesImages")
+        # 验证图像目录存在性
+        if not os.path.exists(self.image_dir):
+            raise FileNotFoundError(f"Image directory missing: {self.image_dir}")
 
 
 # 辅助函数：构建分类提示
@@ -39,39 +76,6 @@ model = MllamaForConditionalGeneration.from_pretrained(
     device_map="auto",
 )
 processor = AutoProcessor.from_pretrained(Config.model_id)
-
-
-# 加载数据集
-def load_movie_dataset():
-    """加载电影数据集"""
-    # 读取节点信息
-    csv_path = os.path.join(Config.data_root, "Movies.csv")
-    df = pd.read_csv(csv_path, converters={
-        'neighbors': ast.literal_eval  # 将字符串形式的列表转换为实际列表
-    })
-
-    # 读取图数据（备用）
-    graph_path = os.path.join(Config.data_root, "MoviesGraph.pt")
-    graph = load_graphs(graph_path)[0][0]  # 加载DGL图
-
-    return df, graph
-
-
-# 图像加载器
-class MovieImageLoader:
-    def __init__(self):
-        self.image_dir = os.path.join(Config.data_root, "MoviesImages")
-
-    def load_image(self, node_id: int) -> Image.Image:
-        """根据节点ID加载图像"""
-        img_path = os.path.join(
-            self.image_dir,
-            f"{node_id}{Config.image_ext}"
-        )
-        try:
-            return Image.open(img_path).convert("RGB")
-        except FileNotFoundError:
-            raise ValueError(f"Image not found for node {node_id} at {img_path}")
 
 
 # 评估函数
