@@ -188,7 +188,7 @@ def main(args):
             ).to(model.device)
 
             # 生成预测结果
-            output = model.generate(**inputs, max_new_tokens=args.max_new_tokens)
+            output = model.generate(**inputs, max_new_tokens=args.max_new_tokens, temperature=1.0, top_k=50, top_p=0.95)
             prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
 
             # 简单解析预测结果，匹配类别列表中的关键词
