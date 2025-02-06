@@ -8,6 +8,7 @@ from PIL import Image
 import numpy as np
 import dgl
 import random
+import wandb
 from dgl import load_graphs
 import networkx as nx
 from tqdm import tqdm
@@ -212,6 +213,8 @@ def main(args):
     if text_column not in df.columns:
         raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
 
+    table = wandb.Table(columns=["node_id", "text", "text_label", "prediction", "predicted_class"])
+
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
             node_id = row["id"]
@@ -271,6 +274,9 @@ def main(args):
             y_true.append(text_label)
             y_pred.append(predicted_class if predicted_class else "unknown")  # 用 "unknown" 代替未匹配的类别
 
+            # ✅ 记录到 wandb.Table
+            table.add_data(node_id, text_label, prediction, predicted_class if predicted_class else "unknown")
+
             # print(f"Node {node_id}:")
             # print("Prompt:")
             # print(prompt_text)
@@ -293,6 +299,17 @@ def main(args):
     print(f"Macro-F1: {macro_f1:.4f}")
     print(f"Mismatch Probability: {mismatch_probability:.4f}")
 
+    # ✅ 将 Table 记录到 wandb
+    wandb.log({"predictions_table": table})
+
+    wandb.log({
+        "accuracy": accuracy,
+        "macro_f1": macro_f1,
+        "mismatch_probability": mismatch_probability
+    })
+
+    # 结束 wandb 运行
+    wandb.finish()
     # 记录结束时间并计算耗时
     end_time = time.time()
     total_time = end_time - start_time
@@ -301,4 +318,5 @@ def main(args):
 
 if __name__ == "__main__":
     args = parse_args()
+    wandb.init(config=args, reinit=True)
     main(args)
