@@ -2,6 +2,7 @@ import os
 import ast
 import argparse
 import torch
+import time
 import pandas as pd
 from PIL import Image
 import dgl
@@ -122,6 +123,7 @@ def build_classification_prompt(center_text: str, classes: list) -> str:
 
 
 def main(args):
+    start_time = time.time()  # 记录起始时间
     # 初始化数据加载器
     dataset_loader = DatasetLoader(args)
     df, dgl_graph = dataset_loader.load_data()
@@ -204,6 +206,11 @@ def main(args):
             print(f"Error processing node {node_id}: {str(e)}")
 
     print(f"\nFinal Accuracy: {correct / args.num_samples:.2f} ({correct}/{args.num_samples})")
+
+    # 记录结束时间并计算耗时
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f"Total time spent: {total_time:.2f} seconds")
 
 
 if __name__ == "__main__":
