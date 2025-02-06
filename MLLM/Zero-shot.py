@@ -152,7 +152,7 @@ def build_classification_prompt(center_text: str, classes: list) -> str:
         f"Available categories: {', '.join(classes)}.\n"
         f"Description: {center_text}\n"
         "Based on the multimodal information above, please choose the most appropriate category.\n"
-        "Do not simply choose the first category; analyze the description carefully and consider all available options.\n"
+        "Analyze the description carefully and consider all available options.\n"
         "Answer ONLY with the exact category name."
     )
     return prompt.strip()
@@ -215,6 +215,7 @@ def main(args):
 
     table = wandb.Table(columns=["node_id", "input", "ground_truth", "prediction_output", "predicted_class"])
 
+    set_seed(42)  # 设置随机种子以确保结果可重现
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
             node_id = row["id"]
