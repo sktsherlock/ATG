@@ -275,3 +275,9 @@ upload_file(path_or_fileobj="RedditS_Llama-3.2-11B-Vision-Instruct_visual.npy", 
 ```
 
 ```python
+upload_file(path_or_fileobj="Reddit_LLAMA8B_CLIP.npy", path_in_repo="Reddit/MMFeature/Reddit_LLAMA8B_CLIP.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="RedditS_LLAMA8B_CLIP.npy", path_in_repo="RedditS/MMFeature/RedditS_LLAMA8B_CLIP.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Movies_LLAMA8B_CLIP.npy", path_in_repo="Movies/MMFeature/Movies_LLAMA8B_CLIP.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Toys_LLAMA8B_CLIP.npy", path_in_repo="Toys/MMFeature/Toys_LLAMA8B_CLIP.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="GroceryS_LLAMA8B_CLIP.npy", path_in_repo="GroceryS/MMFeature/GroceryS_LLAMA8B_CLIP.npy", repo_id="Sherirto/MAG")
+```

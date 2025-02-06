@@ -219,16 +219,12 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python TextAttributeExtract.py --csv_file '/dataint
 
 
 ```
-
-# Image Attribute -> Feature 
-## Movies
-```python 
-# ResNet-50 
-python ImageExtract.py --data_dir 'Data/Movies/MoviesImages/' --model_name 'resnet50d' --name 'Movies' --path 'Data/Movies/ImageFeature/' --batch_size 200 --pretrained True --size 224
-# ResNet-101 
-python ImageExtract.py --data_dir 'Data/Movies/MoviesImages/' --model_name 'resnet101d' --name 'Movies' --path 'Data/Movies/ImageFeature/' --batch_size 200 --pretrained True --size 224
-# ResNet-152 
-python ImageExtract.py --data_dir 'Data/Movies/MoviesImages/' --model_name 'resnet152d' --name 'Movies' --path 'Data/Movies/ImageFeature/' --batch_size 200 --pretrained True --size 224 
-# DenseNet-121
+# Multimodal Easy Feature
+```python
+python FeatureExtractor/utils/ConCact.py --text-file Data/Movies/TextFeature/Movies_Llama_3.1_8B_Instruct_512_mean.npy  --image-file  Data/Movies/ImageFeature/Movies_openai_clip-vit-large-patch14.npy --output-file  Movies_LLAMA8B_CLIP.npy
+python FeatureExtractor/utils/ConCact.py --text-file Data/GroceryS/TextFeature/GroceryS_Llama_3.1_8B_Instruct_256_mean.npy  --image-file  Data/GroceryS/ImageFeature/GroceryS_openai_clip-vit-large-patch14.npy --output-file  GroceryS_LLAMA8B_CLIP.npy
+python FeatureExtractor/utils/ConCact.py --text-file Data/Toys/TextFeature/Toys_Llama_3.1_8B_Instruct_256_mean.npy  --image-file  Data/Toys/ImageFeature/Toys_openai_clip-vit-large-patch14.npy --output-file  Toys_LLAMA8B_CLIP.npy
+python FeatureExtractor/utils/ConCact.py --text-file Data/RedditS/TextFeature/RedditS_Llama_3.1_8B_Instruct_100_mean.npy  --image-file  Data/RedditS/ImageFeature/RedditS_openai_clip-vit-large-patch14.npy --output-file  RedditS_LLAMA8B_CLIP.npy
+python FeatureExtractor/utils/ConCact.py --text-file Data/Reddit/TextFeature/Reddit_Llama_3.1_8B_Instruct_100_mean.npy  --image-file  Data/Reddit/ImageFeature/Reddit_openai_clip-vit-large-patch14.npy --output-file  Reddit_LLAMA8B_CLIP.npy
 
 ```

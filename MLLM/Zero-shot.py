@@ -4,13 +4,15 @@ import argparse
 import torch
 import pandas as pd
 from PIL import Image
+import dgl
 from dgl import load_graphs
+import networkx as nx
 from transformers import MllamaForConditionalGeneration, AutoProcessor
 
 
 def parse_args():
     """解析命令行参数"""
-    parser = argparse.ArgumentParser(description='Multimodal Node Classification with MLLM')
+    parser = argparse.ArgumentParser(description='Multimodal Node Classification with MLLM and RAG-enhanced inference')
     parser.add_argument('--model_name', type=str, default='meta-llama/Llama-3.2-11B-Vision-Instruct',
                         help='HuggingFace模型名称或路径')
     parser.add_argument('--dataset_name', type=str, default='Movies',
@@ -18,13 +20,19 @@ def parse_args():
     parser.add_argument('--base_dir', type=str, default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         help='项目根目录路径')
     parser.add_argument('--classes', nargs='+', default=["action", "comedy", "drama"],
-                        help='分类类别列表')
+                        help='分类类别列表（文本标签）')
+    parser.add_argument('--label_column', type=str, default='label',
+                        help='CSV文件中表示数字化标签的列名')
+    parser.add_argument('--text_label_column', type=str, default='second_category',
+                        help='CSV文件中表示文本类别标签的列名')
     parser.add_argument('--max_new_tokens', type=int, default=15,
                         help='生成的最大token数量')
     parser.add_argument('--image_ext', type=str, default='.jpg',
                         help='图像文件扩展名')
     parser.add_argument('--num_samples', type=int, default=5,
                         help='测试样本数量')
+    parser.add_argument('--k_hop', type=int, default=0,
+                        help='RAG增强推理时使用的邻居阶数（0表示不使用邻居）')
     return parser.parse_args()
 
 
@@ -53,7 +61,13 @@ class DatasetLoader:
         csv_path = os.path.join(self.data_dir, f"{self.args.dataset_name}.csv")
         df = pd.read_csv(csv_path, converters={'neighbors': ast.literal_eval})
 
-        # 加载图数据
+        # 检查标签列是否存在
+        if self.args.label_column not in df.columns:
+            raise ValueError(f"Label column '{self.args.label_column}' not found in CSV file.")
+        if self.args.text_label_column not in df.columns:
+            raise ValueError(f"Text label column '{self.args.text_label_column}' not found in CSV file.")
+
+        # 加载图数据（DGL格式）
         graph_path = os.path.join(self.data_dir, f"{self.args.dataset_name}Graph.pt")
         graph = load_graphs(graph_path)[0][0]
 
@@ -71,26 +85,53 @@ class DatasetLoader:
         return Image.open(img_path).convert("RGB")
 
 
-def build_classification_prompt(text: str, classes: list) -> list:
-    """构建分类提示模板"""
-    return [
-        {"role": "user", "content": [
-            {"type": "image"},
-            {"type": "text", "text": f"""
-                Based on the multimodal information, classify this node into one of: {", ".join(classes)}.
-                Text description: {text}
-                Answer ONLY with the class name.
-            """}
-        ]}
-    ]
+def get_k_hop_neighbors(nx_graph, node_id, k):
+    """
+    获取指定中心节点的 k-hop 邻居（不包含中心节点）
+    使用 NetworkX 的 single_source_shortest_path_length 方法。
+    """
+    neighbors = set()
+    for target, distance in nx.single_source_shortest_path_length(nx_graph, node_id).items():
+        if 0 < distance <= k:
+            neighbors.add(target)
+    return list(neighbors)
+
+
+def build_classification_prompt(text: str, classes: list) -> str:
+    """构建基本分类提示模板，不包含邻居信息"""
+    prompt = f"""
+        Based on the multimodal information, classify this node into one of: {", ".join(classes)}.
+        Text description: {text}
+        Answer ONLY with the class name.
+    """
+    return prompt.strip()
+
+
+def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts: list, classes: list) -> str:
+    """
+    Build a RAG-enhanced classification prompt by integrating the center node's text with its neighbors' information.
+    """
+    prompt = f"Center node description: {center_text}\n"
+    if neighbor_texts:
+        prompt += "Below are the descriptions of related neighbor nodes:\n"
+        for idx, n_text in enumerate(neighbor_texts):
+            prompt += f"Neighbor {idx+1} description: {n_text}\n"
+    prompt += f"Based on the above information, classify this node into one of the following categories: {', '.join(classes)}.\n" \
+              "Please answer with the category name ONLY."
+    return prompt.strip()
+
 
 
 def main(args):
-    # 初始化组件
+    # 初始化数据加载器
     dataset_loader = DatasetLoader(args)
-    df, graph = dataset_loader.load_data()
+    df, dgl_graph = dataset_loader.load_data()
 
-    # 加载模型
+    # 构建一个从节点ID到节点数据的字典，便于后续查找邻居信息
+    # 假设 CSV 中 "id" 列作为唯一标识符，且 "text" 为节点描述
+    node_data_dict = {row["id"]: row for _, row in df.iterrows()}
+
+    # 加载模型和处理器
     model = MllamaForConditionalGeneration.from_pretrained(
         args.model_name,
         torch_dtype=torch.bfloat16,
@@ -98,19 +139,44 @@ def main(args):
     )
     processor = AutoProcessor.from_pretrained(args.model_name)
 
-    # 运行评估
+    # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
+    if args.k_hop > 0:
+        nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 如果图中存储节点ID，可按需指定
+    else:
+        nx_graph = None
+
     correct = 0
-    for idx, row in df.head(args.num_samples).iterrows():
+    sample_df = df.head(args.num_samples)
+    for idx, row in sample_df.iterrows():
         try:
             node_id = row["id"]
             text = row["text"]
-            label = row["second_category"].lower()
+            numeric_label = row[args.label_column]  # 数字化标签
+            text_label = row[args.text_label_column].lower()  # 文本类别标签
 
-            # 准备输入
+            # 加载图像
             image = dataset_loader.load_image(node_id)
-            messages = build_classification_prompt(text, args.classes)
+
+            # 构建提示
+            if args.k_hop > 0 and nx_graph is not None:
+                # 获取 k-hop 邻居节点 ID
+                neighbor_ids = get_k_hop_neighbors(nx_graph, node_id, args.k_hop)
+                # 从字典中提取邻居的文本描述（若存在）
+                neighbor_texts = []
+                for nid in neighbor_ids:
+                    # 有可能CSV中没有对应的nid，需做判断
+                    if nid in node_data_dict:
+                        neighbor_texts.append(str(node_data_dict[nid].get("text", "")))
+                prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, args.classes)
+            else:
+                # 使用基本提示，不进行邻居增强
+                prompt_text = build_classification_prompt(text, args.classes)
+
+            # 使用处理器生成输入文本（支持多模态Chat模板）
+            messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
             input_text = processor.apply_chat_template(messages, add_generation_prompt=True)
 
+            # 处理图像和文本输入
             inputs = processor(
                 image,
                 input_text,
@@ -118,16 +184,20 @@ def main(args):
                 return_tensors="pt"
             ).to(model.device)
 
-            # 生成预测
+            # 生成预测结果
             output = model.generate(**inputs, max_new_tokens=args.max_new_tokens)
             prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
 
-            # 解析结果
+            # 简单解析预测结果，匹配类别列表中的关键词
             predicted_class = next((c for c in args.classes if c in prediction), None)
-            if predicted_class == label:
+            if predicted_class == text_label:
                 correct += 1
 
-            print(f"Node {node_id}: {predicted_class} | GT: {label}")
+            print(f"Node {node_id}:")
+            print("Prompt:")
+            print(prompt_text)
+            print(f"Predicted: {predicted_class} | GT: {text_label} (Numeric: {numeric_label})")
+            print("-" * 50)
 
         except Exception as e:
             print(f"Error processing node {node_id}: {str(e)}")
