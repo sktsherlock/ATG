@@ -19,7 +19,6 @@ def parse_args():
                         help='数据集名称（对应Data目录下的子目录名）')
     parser.add_argument('--base_dir', type=str, default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         help='项目根目录路径')
-    # 移除 --classes 参数，直接从CSV提取类别
     parser.add_argument('--label_column', type=str, default='label',
                         help='CSV文件中表示数字化标签的列名')
     parser.add_argument('--text_label_column', type=str, default='second_category',
@@ -110,11 +109,16 @@ def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts:
 
 
 def build_classification_prompt(center_text: str, classes: list) -> str:
-    """构建基本分类提示模板，不包含邻居信息"""
-    prompt = f"Based on the multimodal information, classify this node into one of the following categories: {', '.join(classes)}.\n" \
-             f"Text description: {center_text}\n" \
-             "Answer ONLY with the category name."
+    """Build a basic classification prompt without neighbor information."""
+    prompt = (
+        f"Available categories: {', '.join(classes)}.\n"
+        f"Description: {center_text}\n"
+        "Based on the multimodal information above, please choose the most appropriate category.\n"
+        "Do not simply choose the first category; analyze the description carefully and consider all available options.\n"
+        "Answer ONLY with the exact category name."
+    )
     return prompt.strip()
+
 
 
 def main(args):
