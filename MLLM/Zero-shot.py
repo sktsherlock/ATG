@@ -9,6 +9,7 @@ import numpy as np
 import dgl
 from dgl import load_graphs
 import networkx as nx
+from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score
 from transformers import MllamaForConditionalGeneration, AutoProcessor
 
@@ -189,7 +190,7 @@ def main(args):
     sample_df = df.iloc[selected_ids]  # 使用 selected_ids 来选择相应的数据集
     # 从所选的子集数据中，再选择前 num_samples 个样本
     sample_df = sample_df.head(args.num_samples)  # 选择前 num_samples 个样本
-    for idx, row in sample_df.iterrows():
+    for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
             node_id = row["id"]
             text = row["text"]
