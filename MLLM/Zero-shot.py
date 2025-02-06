@@ -213,7 +213,7 @@ def main(args):
     if text_column not in df.columns:
         raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
 
-    table = wandb.Table(columns=["node_id", "text_label", "prediction", "predicted_class"])
+    table = wandb.Table(columns=["node_id", "input", "ground_truth", "prediction_output", "predicted_class"])
 
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
@@ -275,7 +275,7 @@ def main(args):
             y_pred.append(predicted_class if predicted_class else "unknown")  # 用 "unknown" 代替未匹配的类别
 
             # ✅ 记录到 wandb.Table
-            table.add_data(node_id, text_label, prediction, predicted_class if predicted_class else "unknown")
+            table.add_data(node_id, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
 
             # print(f"Node {node_id}:")
             # print("Prompt:")
