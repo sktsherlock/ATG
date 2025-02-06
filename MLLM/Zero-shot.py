@@ -7,11 +7,22 @@ import pandas as pd
 from PIL import Image
 import numpy as np
 import dgl
+import random
 from dgl import load_graphs
 import networkx as nx
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score
 from transformers import MllamaForConditionalGeneration, AutoProcessor
+
+
+def set_seed(seed: int):
+    os.environ['PYTHONHASHSEED'] = str(seed)  # 确保 Python 的哈希行为可复现
+    random.seed(seed)  # Python 内置的随机种子
+    np.random.seed(seed)  # NumPy 的随机种子
+    torch.manual_seed(seed)  # PyTorch 的 CPU 随机种子
+    torch.cuda.manual_seed(seed)  # PyTorch 的 GPU 随机种子（仅影响当前 GPU）
+    torch.cuda.manual_seed_all(seed)  # 影响所有可用 GPU
+
 
 
 def split_dataset(nodes_num, train_ratio, val_ratio):
@@ -241,7 +252,7 @@ def main(args):
             # print("Input Image:", image)
             # print("Input Text:", input_text)
             # 生成预测结果
-            output = model.generate(**inputs, max_new_tokens=args.max_new_tokens, temperature=1.0, top_k=50, top_p=0.95)
+            output = model.generate(**inputs, max_new_tokens=args.max_new_tokens) # temperature=1.0, top_k=50, top_p=0.95
             output_tokens = output[0][len(inputs["input_ids"][0]):]
             prediction = processor.decode(output_tokens, skip_special_tokens=True).strip().lower()
             # prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
