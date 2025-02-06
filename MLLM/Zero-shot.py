@@ -187,6 +187,10 @@ def main(args):
                 return_tensors="pt"
             ).to(model.device)
 
+            # 打印输入的图像和文本信息以进行调试
+            print("Input Image:", image)
+            print("Input Text:", input_text)
+
             # 生成预测结果
             output = model.generate(**inputs, max_new_tokens=args.max_new_tokens, temperature=1.0, top_k=50, top_p=0.95)
             prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
