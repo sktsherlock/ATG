@@ -178,29 +178,29 @@ def main(args):
             # # 使用处理器生成输入文本（支持多模态Chat模板）
             # messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
             # input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
-            num_images = 1 if not isinstance(image, (list, tuple)) else len(image)
+            num_images = 1  # if not isinstance(image, (list, tuple)) else len(image)
 
             # 在文本前添加 `<image>` tokens
             image_tokens = "<image> " * num_images
-            updated_text = image_tokens.strip() + " " + text  # 避免多余空格
+            input_text = image_tokens.strip() + " " + text  # 避免多余空格
 
 
             # 处理图像和文本输入
             inputs = processor(
                 image,
-                updated_text,
+                input_text,
                 add_special_tokens=False,
                 return_tensors="pt"
             ).to(model.device)
 
             # 打印输入的图像和文本信息以进行调试
-            # print("Input Image:", image)
-            # print("Input Text:", input_text)
+            print("Input Image:", image)
+            print("Input Text:", input_text)
             # 生成预测结果
             output = model.generate(**inputs, max_new_tokens=args.max_new_tokens, temperature=1.0, top_k=50, top_p=0.95)
-            output_tokens = output[0][len(inputs["input_ids"][0]):]
-            prediction = processor.decode(output_tokens, skip_special_tokens=True).strip().lower()
-            # prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
+            # output_tokens = output[0][len(inputs["input_ids"][0]):]
+            # prediction = processor.decode(output_tokens, skip_special_tokens=True).strip().lower()
+            prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
 
             # 简单解析预测结果，匹配类别列表中的关键词
             print("Prediction:", prediction)
