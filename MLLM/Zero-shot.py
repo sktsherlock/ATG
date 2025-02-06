@@ -177,7 +177,7 @@ def main(args):
 
             # 使用处理器生成输入文本（支持多模态Chat模板）
             messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
-            input_text = processor.apply_chat_template(messages, add_generation_prompt=True)
+            input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
 
             # 处理图像和文本输入
             inputs = processor(
