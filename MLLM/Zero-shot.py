@@ -19,8 +19,7 @@ def parse_args():
                         help='数据集名称（对应Data目录下的子目录名）')
     parser.add_argument('--base_dir', type=str, default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         help='项目根目录路径')
-    parser.add_argument('--classes', nargs='+', default=["action", "comedy", "drama"],
-                        help='分类类别列表（文本标签）')
+    # 移除 --classes 参数，直接从CSV提取类别
     parser.add_argument('--label_column', type=str, default='label',
                         help='CSV文件中表示数字化标签的列名')
     parser.add_argument('--text_label_column', type=str, default='second_category',
@@ -50,7 +49,6 @@ class DatasetLoader:
             os.path.join(self.data_dir, f"{self.args.dataset_name}Graph.pt"),
             os.path.join(self.data_dir, f"{self.args.dataset_name}Images")
         ]
-
         missing = [path for path in required_files if not os.path.exists(path)]
         if missing:
             raise FileNotFoundError(f"Missing required files/directories: {missing}")
@@ -97,16 +95,6 @@ def get_k_hop_neighbors(nx_graph, node_id, k):
     return list(neighbors)
 
 
-def build_classification_prompt(text: str, classes: list) -> str:
-    """构建基本分类提示模板，不包含邻居信息"""
-    prompt = f"""
-        Based on the multimodal information, classify this node into one of: {", ".join(classes)}.
-        Text description: {text}
-        Answer ONLY with the class name.
-    """
-    return prompt.strip()
-
-
 def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts: list, classes: list) -> str:
     """
     Build a RAG-enhanced classification prompt by integrating the center node's text with its neighbors' information.
@@ -121,11 +109,21 @@ def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts:
     return prompt.strip()
 
 
+def build_classification_prompt(center_text: str, classes: list) -> str:
+    """构建基本分类提示模板，不包含邻居信息"""
+    prompt = f"Based on the multimodal information, classify this node into one of the following categories: {', '.join(classes)}.\n" \
+             f"Text description: {center_text}\n" \
+             "Answer ONLY with the category name."
+    return prompt.strip()
+
 
 def main(args):
     # 初始化数据加载器
     dataset_loader = DatasetLoader(args)
     df, dgl_graph = dataset_loader.load_data()
+
+    # 从CSV中提取所有唯一类别，并排序（可根据需要调整顺序）
+    classes = sorted(df[args.text_label_column].str.lower().unique())
 
     # 构建一个从节点ID到节点数据的字典，便于后续查找邻居信息
     # 假设 CSV 中 "id" 列作为唯一标识符，且 "text" 为节点描述
@@ -141,7 +139,7 @@ def main(args):
 
     # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
     if args.k_hop > 0:
-        nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 如果图中存储节点ID，可按需指定
+        nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 根据实际情况设置节点属性
     else:
         nx_graph = None
 
@@ -164,13 +162,12 @@ def main(args):
                 # 从字典中提取邻居的文本描述（若存在）
                 neighbor_texts = []
                 for nid in neighbor_ids:
-                    # 有可能CSV中没有对应的nid，需做判断
                     if nid in node_data_dict:
                         neighbor_texts.append(str(node_data_dict[nid].get("text", "")))
-                prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, args.classes)
+                prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, classes)
             else:
                 # 使用基本提示，不进行邻居增强
-                prompt_text = build_classification_prompt(text, args.classes)
+                prompt_text = build_classification_prompt(text, classes)
 
             # 使用处理器生成输入文本（支持多模态Chat模板）
             messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
@@ -189,7 +186,7 @@ def main(args):
             prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
 
             # 简单解析预测结果，匹配类别列表中的关键词
-            predicted_class = next((c for c in args.classes if c in prediction), None)
+            predicted_class = next((c for c in classes if c in prediction), None)
             if predicted_class == text_label:
                 correct += 1
 
