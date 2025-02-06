@@ -176,13 +176,8 @@ def main(args):
                 prompt_text = build_classification_prompt(text, classes)
 
             # # 使用处理器生成输入文本（支持多模态Chat模板）
-            # messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
-            # input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
-            num_images = 1  # if not isinstance(image, (list, tuple)) else len(image)
-
-            # 在文本前添加 `<image>` tokens
-            image_tokens = "<|image|>" * num_images
-            input_text = image_tokens.strip() + " " + text  # 避免多余空格
+            messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
+            input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
 
 
             # 处理图像和文本输入
