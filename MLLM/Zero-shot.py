@@ -8,6 +8,7 @@ from PIL import Image
 import dgl
 from dgl import load_graphs
 import networkx as nx
+from sklearn.metrics import accuracy_score, f1_score
 from transformers import MllamaForConditionalGeneration, AutoProcessor
 
 
@@ -149,7 +150,12 @@ def main(args):
     else:
         nx_graph = None
 
-    correct = 0
+    # 初始化计数器
+    y_true = []
+    y_pred = []
+    total_samples = 0
+    mismatch_count = 0  # 统计预测类别完全不匹配的情况
+
     sample_df = df.head(args.num_samples)
     for idx, row in sample_df.iterrows():
         try:
@@ -193,16 +199,23 @@ def main(args):
             print("Input Text:", input_text)
             # 生成预测结果
             output = model.generate(**inputs, max_new_tokens=args.max_new_tokens, temperature=1.0, top_k=50, top_p=0.95)
-            # output_tokens = output[0][len(inputs["input_ids"][0]):]
-            # prediction = processor.decode(output_tokens, skip_special_tokens=True).strip().lower()
-            prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
+            output_tokens = output[0][len(inputs["input_ids"][0]):]
+            prediction = processor.decode(output_tokens, skip_special_tokens=True).strip().lower()
+            # prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
 
             # 简单解析预测结果，匹配类别列表中的关键词
             print("Prediction:", prediction)
             predicted_class = next((c for c in classes if c in prediction), None)
             print("Predicted Class:", predicted_class)
-            if predicted_class == text_label:
-                correct += 1
+
+
+            # 计算完全不匹配的情况
+            if predicted_class is None:  # 预测结果与类别列表完全不匹配
+                mismatch_count += 1
+
+            # 收集真实值和预测值
+            y_true.append(text_label)
+            y_pred.append(predicted_class if predicted_class else "unknown")  # 用 "unknown" 代替未匹配的类别
 
             print(f"Node {node_id}:")
             print("Prompt:")
@@ -213,7 +226,18 @@ def main(args):
         except Exception as e:
             print(f"Error processing node {node_id}: {str(e)}")
 
-    print(f"\nFinal Accuracy: {correct / args.num_samples:.2f} ({correct}/{args.num_samples})")
+    # 计算准确率
+    accuracy = accuracy_score(y_true, y_pred)
+
+    # 计算 Macro-F1
+    macro_f1 = f1_score(y_true, y_pred, average='macro', zero_division=0)
+
+    # 计算不匹配概率
+    mismatch_probability = mismatch_count / total_samples
+
+    print(f"Accuracy: {accuracy:.4f}")
+    print(f"Macro-F1: {macro_f1:.4f}")
+    print(f"Mismatch Probability: {mismatch_probability:.4f}")
 
     # 记录结束时间并计算耗时
     end_time = time.time()
