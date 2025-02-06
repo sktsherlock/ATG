@@ -42,6 +42,7 @@ def parse_args():
                         help='CSV文件中表示数字化标签的列名')
     parser.add_argument('--text_label_column', type=str, default='second_category',
                         help='CSV文件中表示文本类别标签的列名')
+    parser.add_argument('--text_column', type=str, default='text', help='CSV文件中包含节点文本描述的列名')
     parser.add_argument('--max_new_tokens', type=int, default=15,
                         help='生成的最大token数量')
     parser.add_argument('--image_ext', type=str, default='.jpg',
@@ -188,8 +189,17 @@ def main(args):
 
     selected_ids = test_ids  # 这里可以选择 train_ids, val_ids, 或 test_ids
     sample_df = df.iloc[selected_ids]  # 使用 selected_ids 来选择相应的数据集
+    # 如果 num_samples 为 0，使用全部 selected_ids
+    num_samples = args.num_samples if args.num_samples > 0 else len(sample_df)
     # 从所选的子集数据中，再选择前 num_samples 个样本
-    sample_df = sample_df.head(args.num_samples)  # 选择前 num_samples 个样本
+    sample_df = sample_df.head(num_samples)  # 选择前 num_samples 个样本
+    # 输出用于调试
+    print(f"Selected {num_samples} samples out of {len(sample_df)} available samples.")
+    # 获取文本列名，默认值可以设为 "text"
+    text_column = getattr(args, "text_column", "text")
+    if text_column not in df.columns:
+        raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
+
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
             node_id = row["id"]
