@@ -213,7 +213,7 @@ def main(args):
     if text_column not in df.columns:
         raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
 
-    table = wandb.Table(columns=["node_id", "text", "text_label", "prediction", "predicted_class"])
+    table = wandb.Table(columns=["node_id", "text_label", "prediction", "predicted_class"])
 
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
