@@ -5,6 +5,7 @@ import torch
 import time
 import pandas as pd
 from PIL import Image
+from GNN.GraphData import split_graph
 import dgl
 from dgl import load_graphs
 import networkx as nx
@@ -33,6 +34,12 @@ def parse_args():
                         help='测试样本数量')
     parser.add_argument('--k_hop', type=int, default=0,
                         help='RAG增强推理时使用的邻居阶数（0表示不使用邻居）')
+    parser.add_argument(
+        "--train_ratio", type=float, default=0.6, help="training ratio"
+    )
+    parser.add_argument(
+        "--val_ratio", type=float, default=0.2, help="training ratio"
+    )
     return parser.parse_args()
 
 
@@ -155,6 +162,15 @@ def main(args):
     y_pred = []
     total_samples = 0
     mismatch_count = 0  # 统计预测类别完全不匹配的情况
+
+    # 进行数据集划分
+    train_ids, val_ids, test_ids = split_graph(
+        nodes_num=len(df),
+        train_ratio=args.train_ratio,
+        val_ratio=args.val_ratio,
+        labels=df[args.label_column].values,
+        fewshots=args.fewshots if hasattr(args, "fewshots") else None
+    )
 
     sample_df = df.head(args.num_samples)
     for idx, row in sample_df.iterrows():
