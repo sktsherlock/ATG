@@ -70,7 +70,7 @@ class PaliGemmaFeatureExtractor:
         num_images = 1  # if isinstance(image, (list, tuple)) else len(image)
 
         # Add <image> tokens at the beginning of the text
-        image_tokens = "<|image|>" * num_images
+        image_tokens = "<image>" * num_images
         inputs = self.processor(
             text=image_tokens,
             images=image,
