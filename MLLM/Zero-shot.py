@@ -190,10 +190,11 @@ def main(args):
             # 打印输入的图像和文本信息以进行调试
             # print("Input Image:", image)
             # print("Input Text:", input_text)
-
             # 生成预测结果
             output = model.generate(**inputs, max_new_tokens=args.max_new_tokens, temperature=1.0, top_k=50, top_p=0.95)
-            prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
+            output_tokens = output[0][len(inputs["input_ids"][0]):]
+            prediction = processor.decode(output_tokens, skip_special_tokens=True).strip().lower()
+            # prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
 
             # 简单解析预测结果，匹配类别列表中的关键词
             print("Prediction:", prediction)
