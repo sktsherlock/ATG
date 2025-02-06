@@ -224,7 +224,7 @@ def main(args):
             predicted_class = next((c for c in classes if c in prediction), None)
             print("Predicted Class:", predicted_class)
 
-
+            total_samples +=1
             # 计算完全不匹配的情况
             if predicted_class is None:  # 预测结果与类别列表完全不匹配
                 mismatch_count += 1
