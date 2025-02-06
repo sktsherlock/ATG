@@ -5,12 +5,27 @@ import torch
 import time
 import pandas as pd
 from PIL import Image
-# from GNN.GraphData import split_graph
+import numpy as np
 import dgl
 from dgl import load_graphs
 import networkx as nx
 from sklearn.metrics import accuracy_score, f1_score
 from transformers import MllamaForConditionalGeneration, AutoProcessor
+
+
+def split_dataset(nodes_num, train_ratio, val_ratio):
+    np.random.seed(42)
+    indices = np.random.permutation(nodes_num)
+
+    train_size = int(nodes_num * train_ratio)
+    val_size = int(nodes_num * val_ratio)
+
+    train_ids = indices[:train_size]
+    val_ids = indices[train_size:train_size + val_size]
+    test_ids = indices[train_size + val_size:]
+
+    return train_ids, val_ids, test_ids
+
 
 
 def parse_args():
@@ -164,15 +179,16 @@ def main(args):
     mismatch_count = 0  # 统计预测类别完全不匹配的情况
 
     # 进行数据集划分
-    # train_ids, val_ids, test_ids = split_graph(
-    #     nodes_num=len(df),
-    #     train_ratio=args.train_ratio,
-    #     val_ratio=args.val_ratio,
-    #     labels=df[args.label_column].values,
-    #     fewshots=args.fewshots if hasattr(args, "fewshots") else None
-    # )
+    train_ids, val_ids, test_ids = split_dataset(
+        nodes_num=len(df),
+        train_ratio=args.train_ratio,
+        val_ratio=args.val_ratio,
+    )
 
-    sample_df = df.head(args.num_samples)
+    selected_ids = test_ids  # 这里可以选择 train_ids, val_ids, 或 test_ids
+    sample_df = df.iloc[selected_ids]  # 使用 selected_ids 来选择相应的数据集
+    # 从所选的子集数据中，再选择前 num_samples 个样本
+    sample_df = sample_df.head(args.num_samples)  # 选择前 num_samples 个样本
     for idx, row in sample_df.iterrows():
         try:
             node_id = row["id"]
