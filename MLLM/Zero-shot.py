@@ -5,7 +5,7 @@ import torch
 import time
 import pandas as pd
 from PIL import Image
-from GNN.GraphData import split_graph
+# from GNN.GraphData import split_graph
 import dgl
 from dgl import load_graphs
 import networkx as nx
@@ -164,13 +164,13 @@ def main(args):
     mismatch_count = 0  # 统计预测类别完全不匹配的情况
 
     # 进行数据集划分
-    train_ids, val_ids, test_ids = split_graph(
-        nodes_num=len(df),
-        train_ratio=args.train_ratio,
-        val_ratio=args.val_ratio,
-        labels=df[args.label_column].values,
-        fewshots=args.fewshots if hasattr(args, "fewshots") else None
-    )
+    # train_ids, val_ids, test_ids = split_graph(
+    #     nodes_num=len(df),
+    #     train_ratio=args.train_ratio,
+    #     val_ratio=args.val_ratio,
+    #     labels=df[args.label_column].values,
+    #     fewshots=args.fewshots if hasattr(args, "fewshots") else None
+    # )
 
     sample_df = df.head(args.num_samples)
     for idx, row in sample_df.iterrows():
