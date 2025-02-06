@@ -191,10 +191,11 @@ def main(args):
     sample_df = df.iloc[selected_ids]  # 使用 selected_ids 来选择相应的数据集
     # 如果 num_samples 为 0，使用全部 selected_ids
     num_samples = args.num_samples if args.num_samples > 0 else len(sample_df)
-    # 从所选的子集数据中，再选择前 num_samples 个样本
-    sample_df = sample_df.head(num_samples)  # 选择前 num_samples 个样本
     # 输出用于调试
     print(f"Selected {num_samples} samples out of {len(sample_df)} available samples.")
+    # 从所选的子集数据中，再选择前 num_samples 个样本
+    sample_df = sample_df.head(num_samples)  # 选择前 num_samples 个样本
+
     # 获取文本列名，默认值可以设为 "text"
     text_column = getattr(args, "text_column", "text")
     if text_column not in df.columns:
@@ -204,7 +205,6 @@ def main(args):
         try:
             node_id = row["id"]
             text = row[text_column]
-            numeric_label = row[args.label_column]  # 数字化标签
             text_label = row[args.text_label_column].lower()  # 文本类别标签
 
             # 加载图像
