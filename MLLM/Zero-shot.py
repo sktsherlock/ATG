@@ -181,7 +181,7 @@ def main(args):
             num_images = 1  # if not isinstance(image, (list, tuple)) else len(image)
 
             # 在文本前添加 `<image>` tokens
-            image_tokens = "<image> " * num_images
+            image_tokens = "<image>" * num_images
             input_text = image_tokens.strip() + " " + text  # 避免多余空格
 
 
