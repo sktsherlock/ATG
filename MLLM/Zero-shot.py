@@ -188,15 +188,17 @@ def main(args):
             ).to(model.device)
 
             # 打印输入的图像和文本信息以进行调试
-            print("Input Image:", image)
-            print("Input Text:", input_text)
+            # print("Input Image:", image)
+            # print("Input Text:", input_text)
 
             # 生成预测结果
             output = model.generate(**inputs, max_new_tokens=args.max_new_tokens, temperature=1.0, top_k=50, top_p=0.95)
             prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()
 
             # 简单解析预测结果，匹配类别列表中的关键词
+            print("Prediction:", prediction)
             predicted_class = next((c for c in classes if c in prediction), None)
+            print("Predicted Class:", predicted_class)
             if predicted_class == text_label:
                 correct += 1
 
