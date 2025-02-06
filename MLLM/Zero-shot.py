@@ -203,7 +203,7 @@ def main(args):
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
             node_id = row["id"]
-            text = row["text"]
+            text = row[text_column]
             numeric_label = row[args.label_column]  # 数字化标签
             text_label = row[args.text_label_column].lower()  # 文本类别标签
 
