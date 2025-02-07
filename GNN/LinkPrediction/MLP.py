@@ -13,13 +13,13 @@ from torch.utils.data import DataLoader
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 
-from ..GraphData import Evaluator, split_edge, Logger
-from ..Utils.model_config import add_common_args
+from GNN.GraphData import Evaluator, split_edge, Logger, set_seed
+from GNN.Utils.model_config import add_common_args
 
 
 def args_init():
     argparser = argparse.ArgumentParser(
-        "Link-Prediction for SAGE",
+        "Link-Prediction for MLP",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     add_common_args(argparser)
@@ -197,17 +197,14 @@ def main():
 
                 for key in loggers.keys():
                     loggers[key].add_result(run, result[key])
-
-                if epoch % args.log_every == 0:
-                    for key in loggers.keys():
-                        train_result, valid_result, test_result = result[key]
-                        print(key)
-                        print(f'Run: {run + 1:02d}, '
-                              f'Epoch: {epoch:02d}, '
-                              f'Loss: {loss:.4f}, '
-                              f'Train: {train_result:.4f}, '
-                              f'Valid: {valid_result:.4f}, '
-                              f'Test: {test_result:.4f}')
+                    train_result, valid_result, test_result = result[key]
+                    print(key)
+                    print(f'Run: {run + 1:02d}, '
+                          f'Epoch: {epoch:02d}, '
+                          f'Loss: {loss:.4f}, '
+                          f'Train: {train_result:.4f}, '
+                          f'Valid: {valid_result:.4f}, '
+                          f'Test: {test_result:.4f}')
 
         for key in loggers.keys():
             print(key)
