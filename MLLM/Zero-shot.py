@@ -182,7 +182,6 @@ def main(args):
 
     # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
     if args.k_hop > 0:
-        print(dgl_graph.ndata.keys())  # 输出 DGL 图中所有节点属性
         dgl_graph.ndata["_ID"] = torch.arange(dgl_graph.num_nodes())
         nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 根据实际情况设置节点属性
     else:
@@ -215,7 +214,7 @@ def main(args):
     if text_column not in df.columns:
         raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
 
-    table = wandb.Table(columns=["node_id", "input", "ground_truth", "prediction_output", "predicted_class"])
+    table = wandb.Table(columns=["node_id", "Image", "input", "ground_truth", "prediction_output", "predicted_class"])
 
     set_seed(42)  # 设置随机种子以确保结果可重现
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
@@ -278,7 +277,10 @@ def main(args):
             y_pred.append(predicted_class if predicted_class else "unknown")  # 用 "unknown" 代替未匹配的类别
 
             # ✅ 记录到 wandb.Table
-            table.add_data(node_id, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
+            image_wandb = wandb.Image(image, caption=f"Node {node_id}")  # 转换为 WandB 格式
+            table.add_data(node_id, image_wandb, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
+
+
 
             # print(f"Node {node_id}:")
             # print("Prompt:")
