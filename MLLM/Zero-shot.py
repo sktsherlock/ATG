@@ -63,6 +63,8 @@ def parse_args():
                         help='邻居信息的使用模式（文本、图像或两者）')
     parser.add_argument('--num_samples', type=int, default=5,
                         help='测试样本数量')
+    parser.add_argument('--num_neighbours', type=int, default=10,
+                        help='期望的邻居数')
     parser.add_argument('--k_hop', type=int, default=0,
                         help='RAG增强推理时使用的邻居阶数（0表示不使用邻居）')
     parser.add_argument(
@@ -327,7 +329,7 @@ def main(args):
             # 构建提示
             if args.k_hop > 0 and nx_graph is not None:
                 # 采样邻居
-                sampled_neighbor_ids = sample_k_hop_neighbors(nx_graph, node_id, args.k_hop, args.num_samples)
+                sampled_neighbor_ids = sample_k_hop_neighbors(nx_graph, node_id, args.k_hop, args.num_neighbours)
 
                 # 初始化存储邻居数据的变量
                 neighbor_texts = []
