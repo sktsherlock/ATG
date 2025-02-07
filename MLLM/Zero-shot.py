@@ -158,6 +158,49 @@ def build_classification_prompt(center_text: str, classes: list) -> str:
     return prompt.strip()
 
 
+def k_hop_neighbor_stats(nx_graph, k):
+    """
+    计算图中所有节点的 k 阶邻居数目的统计信息。
+
+    参数：
+    - nx_graph: networkx.Graph，输入的无向图
+    - k: int，表示计算 k 阶邻居
+
+    返回：
+    - stats: dict，包含最小值、最大值、平均值、中位数、标准差
+    """
+    if nx_graph is None:
+        raise ValueError("输入的图数据不能为空")
+
+    all_k_hop_counts = []
+
+    for node in nx_graph.nodes():
+        k_hop_neighbors = set(nx.single_source_shortest_path_length(nx_graph, node, cutoff=k).keys())
+        k_hop_neighbors.discard(node)  # 移除自身
+        all_k_hop_counts.append(len(k_hop_neighbors))
+
+    stats = {
+        "min": np.min(all_k_hop_counts),
+        "max": np.max(all_k_hop_counts),
+        "mean": np.mean(all_k_hop_counts),
+        "median": np.median(all_k_hop_counts),
+        "std": np.std(all_k_hop_counts)
+    }
+
+    return stats
+
+
+def print_k_hop_stats(nx_graph, ks=[1, 2, 3]):
+    """打印 1, 2, 3 阶邻居的统计信息"""
+    for k in ks:
+        stats = k_hop_neighbor_stats(nx_graph, k)
+        print(f"\n{k} 阶邻居统计信息：")
+        print(f"  最小邻居数: {stats['min']}")
+        print(f"  最大邻居数: {stats['max']}")
+        print(f"  平均邻居数: {stats['mean']:.2f}")
+        print(f"  中位数: {stats['median']}")
+        print(f"  标准差: {stats['std']:.2f}")
+
 
 def main(args):
     start_time = time.time()  # 记录起始时间
@@ -172,6 +215,16 @@ def main(args):
     # 假设 CSV 中 "id" 列作为唯一标识符，且 "text" 为节点描述
     node_data_dict = {row["id"]: row for _, row in df.iterrows()}
 
+
+    # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
+    if args.k_hop > 0:
+        dgl_graph.ndata["_ID"] = torch.arange(dgl_graph.num_nodes())
+        nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 根据实际情况设置节点属性
+    else:
+        nx_graph = None
+
+    print_k_hop_stats(nx_graph)
+
     # 加载模型和处理器
     model = MllamaForConditionalGeneration.from_pretrained(
         args.model_name,
@@ -180,12 +233,6 @@ def main(args):
     )
     processor = AutoProcessor.from_pretrained(args.model_name)
 
-    # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
-    if args.k_hop > 0:
-        dgl_graph.ndata["_ID"] = torch.arange(dgl_graph.num_nodes())
-        nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 根据实际情况设置节点属性
-    else:
-        nx_graph = None
 
     # 初始化计数器
     y_true = []
