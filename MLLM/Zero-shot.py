@@ -59,6 +59,8 @@ def parse_args():
                         help='生成的最大token数量')
     parser.add_argument('--image_ext', type=str, default='.jpg',
                         help='图像文件扩展名')
+    parser.add_argument('--neighbor_mode', type=str, default='both', choices=['text', 'image', 'both'],
+                        help='邻居信息的使用模式（文本、图像或两者）')
     parser.add_argument('--num_samples', type=int, default=5,
                         help='测试样本数量')
     parser.add_argument('--k_hop', type=int, default=0,
@@ -221,6 +223,32 @@ def find_isolated_nodes(dgl_graph):
 
     return isolated_nodes.tolist(), num_isolated_nodes
 
+
+def sample_k_hop_neighbors(nx_graph, node_id, k, max_samples):
+    """
+    采样 k-hop 邻居节点，优先从低阶邻居中获取，若数量不足，则从更高阶邻居补充
+    :param nx_graph: networkx 图
+    :param node_id: 当前节点 ID
+    :param k: 最高 k-hop
+    :param max_samples: 期望的邻居数
+    :return: 采样的邻居节点 ID 列表
+    """
+    sampled_neighbors = set()
+    for hop in range(1, k + 1):
+        if len(sampled_neighbors) >= max_samples:
+            break  # 如果已经采样够 max_samples 个邻居，则停止
+
+        # 获取 hop-hop 邻居
+        neighbors = get_k_hop_neighbors(nx_graph, node_id, hop)
+        neighbors = list(set(neighbors) - sampled_neighbors)  # 去重，避免重复采样
+
+        # 随机采样剩余所需邻居数
+        num_needed = max_samples - len(sampled_neighbors)
+        sampled_neighbors.update(random.sample(neighbors, min(num_needed, len(neighbors))))
+
+    return list(sampled_neighbors)
+
+
 def main(args):
     start_time = time.time()  # 记录起始时间
     # 初始化数据加载器
@@ -234,21 +262,19 @@ def main(args):
     # 假设 CSV 中 "id" 列作为唯一标识符，且 "text" 为节点描述
     node_data_dict = {row["id"]: row for _, row in df.iterrows()}
 
-
+    isolated_nodes, num_isolated = find_isolated_nodes(dgl_graph)
+    print(f"孤立点数量: {num_isolated}, 孤立点 ID: {isolated_nodes}")
     # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
     if args.k_hop > 0:
-        # 添加反向边，转换为无向图
-        srcs, dsts = dgl_graph.all_edges()
-        dgl_graph.add_edges(dsts, srcs)
+        # # 添加反向边，转换为无向图
+        # srcs, dsts = dgl_graph.all_edges()
+        # dgl_graph.add_edges(dsts, srcs)
         dgl_graph.ndata["_ID"] = torch.arange(dgl_graph.num_nodes())
 
-        isolated_nodes, num_isolated = find_isolated_nodes(dgl_graph)
-        print(f"孤立点数量: {num_isolated}, 孤立点 ID: {isolated_nodes}")
         nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 根据实际情况设置节点属性
     else:
         nx_graph = None
-
-    print_k_hop_stats(nx_graph)
+    # print_k_hop_stats(nx_graph)
 
     # 加载模型和处理器
     model = MllamaForConditionalGeneration.from_pretrained(
@@ -300,30 +326,69 @@ def main(args):
 
             # 构建提示
             if args.k_hop > 0 and nx_graph is not None:
-                # 获取 k-hop 邻居节点 ID
-                neighbor_ids = get_k_hop_neighbors(nx_graph, node_id, args.k_hop)
-                # 从字典中提取邻居的文本描述（若存在）
+                # 采样邻居
+                sampled_neighbor_ids = sample_k_hop_neighbors(nx_graph, node_id, args.k_hop, args.num_samples)
+
+                # 初始化存储邻居数据的变量
                 neighbor_texts = []
-                for nid in neighbor_ids:
+                neighbor_images = []
+
+                for nid in sampled_neighbor_ids:
                     if nid in node_data_dict:
-                        neighbor_texts.append(str(node_data_dict[nid].get("text", "")))
+                        node_info = node_data_dict[nid]
+
+                        # 处理邻居文本
+                        if args.neighbor_mode in ["text", "both"]:
+                            text = str(node_info.get("text", ""))
+                            neighbor_texts.append(text)
+
+                        # 处理邻居图像
+                        if args.neighbor_mode in ["image", "both"]:
+                            if "image" in node_info:
+                                neighbor_images.append(node_info["image"])  # 假设图像是 PIL.Image 或 tensor 格式
+
+                # 构造最终的提示文本
                 prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, classes)
             else:
                 # 使用基本提示，不进行邻居增强
                 prompt_text = build_classification_prompt(text, classes)
 
-            # # 使用处理器生成输入文本（支持多模态Chat模板）
-            messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
+            # **构造输入的 messages**
+            messages = [{"role": "user", "content": []}]
+
+            # 1. **加入图像（如果有）**
+            if neighbor_images or args.neighbor_mode == "image":
+                images = [image] + neighbor_images  # 将中心节点图像和邻居图像合并
+                for img in images:
+                    messages[0]["content"].append({"type": "image", "image": img})
+
+                    # 2. **加入文本**
+            messages[0]["content"].append({"type": "text", "text": prompt_text})
+
+            # **使用处理器生成输入文本**
             input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
 
-
-            # 处理图像和文本输入
+            # **处理图像和文本输入**
             inputs = processor(
-                image,
+                images if args.neighbor_mode in ["image", "both"] else image,  # 只传图像或单张图
                 input_text,
                 add_special_tokens=False,
                 return_tensors="pt"
             ).to(model.device)
+
+
+            # # # 使用处理器生成输入文本（支持多模态Chat模板）
+            # messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
+            # input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
+            #
+            #
+            # # 处理图像和文本输入
+            # inputs = processor(
+            #     image,
+            #     input_text,
+            #     add_special_tokens=False,
+            #     return_tensors="pt"
+            # ).to(model.device)
 
             # 打印输入的图像和文本信息以进行调试
             # print("Input Image:", image)
