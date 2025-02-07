@@ -202,6 +202,25 @@ def print_k_hop_stats(nx_graph, ks=[1, 2, 3]):
         print(f"  标准差: {stats['std']:.2f}")
 
 
+def find_isolated_nodes(dgl_graph):
+    """判断 DGL 图是否存在孤立点，并返回孤立点的节点 ID 和数量"""
+    in_degrees = dgl_graph.in_degrees()
+    out_degrees = dgl_graph.out_degrees()
+
+    # 识别孤立点：入度和出度都为 0
+    isolated_mask = (in_degrees == 0) & (out_degrees == 0)
+    isolated_nodes = torch.nonzero(isolated_mask, as_tuple=True)[0]  # 获取孤立点 ID
+
+    num_isolated_nodes = isolated_nodes.numel()  # 孤立点的总数
+
+    if num_isolated_nodes > 0:
+        print(f"存在 {num_isolated_nodes} 个孤立点")
+        print(f"孤立点节点 ID: {isolated_nodes.tolist()}")
+    else:
+        print("图中没有孤立点")
+
+    return isolated_nodes.tolist(), num_isolated_nodes
+
 def main(args):
     start_time = time.time()  # 记录起始时间
     # 初始化数据加载器
@@ -222,6 +241,9 @@ def main(args):
         srcs, dsts = dgl_graph.all_edges()
         dgl_graph.add_edges(dsts, srcs)
         dgl_graph.ndata["_ID"] = torch.arange(dgl_graph.num_nodes())
+
+        isolated_nodes, num_isolated = find_isolated_nodes(dgl_graph)
+        print(f"孤立点数量: {num_isolated}, 孤立点 ID: {isolated_nodes}")
         nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 根据实际情况设置节点属性
     else:
         nx_graph = None
