@@ -182,6 +182,8 @@ def main(args):
 
     # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
     if args.k_hop > 0:
+        print(dgl_graph.ndata.keys())  # 输出 DGL 图中所有节点属性
+        dgl_graph.ndata["_ID"] = torch.arange(dgl_graph.num_nodes())
         nx_graph = dgl.to_networkx(dgl_graph, node_attrs=['_ID'])  # 根据实际情况设置节点属性
     else:
         nx_graph = None
