@@ -387,7 +387,7 @@ def main(args):
 
             # **处理图像和文本输入**
             inputs = processor(
-                images if args.neighbor_mode in ["image", "both"] else image,  # 只传图像或单张图
+                images if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0 else image,  # 只传图像或单张图
                 input_text,
                 add_special_tokens=False,
                 return_tensors="pt"
