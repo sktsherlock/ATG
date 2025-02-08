@@ -317,6 +317,24 @@ def main(args):
     table = wandb.Table(columns=["node_id", "Image", "input", "ground_truth", "prediction_output", "predicted_class"])
 
     set_seed(42)  # 设置随机种子以确保结果可重现
+
+    if args.num_neighbours > 0:
+        neighbor_dict = {}  # 用来存储每个节点的邻居 ID 列表
+        max_hop = 3
+        for node_id in tqdm(sample_df["id"], desc="Fetching neighbors"):
+            # 采样邻居，逐级获取邻居，直到满足需要的邻居数量
+            sampled_neighbors = []
+            k = args.num_neighbours  # 需要的邻居数量
+            current_hop = 1  # 从 1 阶邻居开始
+            while len(sampled_neighbors) < k and current_hop <= max_hop:  # 默认限制最大阶数为 max_hop
+                # 获取当前阶数的邻居
+                neighbors_at_current_hop = list(nx_graph.neighbors(node_id))
+                sampled_neighbors.extend(neighbors_at_current_hop) # 可以增加随机性
+                current_hop += 1  # 增加阶数
+
+            # 存储节点的邻居ID
+            neighbor_dict[node_id] = sampled_neighbors[:k]
+
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
             node_id = row["id"]
@@ -329,10 +347,13 @@ def main(args):
             # 初始化存储邻居数据的变量
             neighbor_texts = []
             neighbor_images = []
-            # 构建提示
-            if args.k_hop > 0 and nx_graph is not None:
-                # 采样邻居
-                sampled_neighbor_ids = sample_k_hop_neighbors(nx_graph, node_id, args.k_hop, args.num_neighbours)
+
+            # **构造输入的 messages**
+            messages = [{"role": "user", "content": [{"type": "image", "image": image}]}]
+
+            if args.num_neighbours > 0:
+                # 获取节点的邻居 ID
+                sampled_neighbor_ids = neighbor_dict.get(node_id, [])
 
                 for nid in sampled_neighbor_ids:
                     if nid in node_data_dict:
@@ -350,6 +371,9 @@ def main(args):
                                 neighbor_images.append(image)
                             except Exception as e:
                                 print(f"加载邻居 {nid} 的图像失败: {e}")
+                            for img in neighbor_images:
+                                messages[0]["content"].append({"type": "image", "image": img})
+                            images = [image] + neighbor_images
 
                 # 构造最终的提示文本
                 prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, classes)
@@ -357,15 +381,7 @@ def main(args):
                 # 使用基本提示，不进行邻居增强
                 prompt_text = build_classification_prompt(text, classes)
 
-            # **构造输入的 messages**
-            messages = [{"role": "user", "content": [{"type": "image", "image": image}]}]
-            # 1. **加入邻居图像（如果有）**
-            if neighbor_images or args.neighbor_mode == "image":
-                images = [image] + neighbor_images
-                for img in neighbor_images:
-                    messages[0]["content"].append({"type": "image", "image": img})
 
-                    # 2. **加入文本**
             messages[0]["content"].append({"type": "text", "text": prompt_text})
 
             # **使用处理器生成输入文本**
@@ -379,19 +395,6 @@ def main(args):
                 return_tensors="pt"
             ).to(model.device)
 
-
-            # # # 使用处理器生成输入文本（支持多模态Chat模板）
-            # messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
-            # input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
-            #
-            #
-            # # 处理图像和文本输入
-            # inputs = processor(
-            #     image,
-            #     input_text,
-            #     add_special_tokens=False,
-            #     return_tensors="pt"
-            # ).to(model.device)
 
             # 打印输入的图像和文本信息以进行调试
             # print("Input Image:", image)
