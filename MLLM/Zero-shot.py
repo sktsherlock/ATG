@@ -63,7 +63,7 @@ def parse_args():
                         help='邻居信息的使用模式（文本、图像或两者）')
     parser.add_argument('--num_samples', type=int, default=5,
                         help='测试样本数量')
-    parser.add_argument('--num_neighbours', type=int, default=10,
+    parser.add_argument('--num_neighbours', type=int, default=0,
                         help='期望的邻居数')
     parser.add_argument('--k_hop', type=int, default=0,
                         help='RAG增强推理时使用的邻居阶数（0表示不使用邻居）')
