@@ -359,12 +359,10 @@ def main(args):
                 prompt_text = build_classification_prompt(text, classes)
 
             # **构造输入的 messages**
-            messages = [{"role": "user", "content": []}]
-
-            # 1. **加入图像（如果有）**
+            messages = [{"role": "user", "content": [{"type": "image", "image": image}]}]
+            # 1. **加入邻居图像（如果有）**
             if neighbor_images or args.neighbor_mode == "image":
-                images = [image] + neighbor_images  # 将中心节点图像和邻居图像合并
-                for img in images:
+                for img in neighbor_images:
                     messages[0]["content"].append({"type": "image", "image": img})
 
                     # 2. **加入文本**
