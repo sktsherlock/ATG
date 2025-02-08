@@ -93,7 +93,7 @@ def process_directory(directory, strategy="mean", save=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="处理 npy 特征文件中的 NaN 和 Inf")
-    parser.add_argument("path", type=str, help="要处理的文件或目录路径")
+    parser.add_argument("--path", type=str, help="要处理的文件或目录路径")
     parser.add_argument("--strategy", type=str, choices=["mean", "median", "zero"], default="mean",
                         help="填充策略（默认: mean）")
     parser.add_argument("--save", action="store_true", help="是否保存处理后的数据（默认不保存）")
