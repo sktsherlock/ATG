@@ -226,29 +226,29 @@ def find_isolated_nodes(dgl_graph):
     return isolated_nodes.tolist(), num_isolated_nodes
 
 
-def sample_k_hop_neighbors(nx_graph, node_id, k, max_samples):
-    """
-    采样 k-hop 邻居节点，优先从低阶邻居中获取，若数量不足，则从更高阶邻居补充
-    :param nx_graph: networkx 图
-    :param node_id: 当前节点 ID
-    :param k: 最高 k-hop
-    :param max_samples: 期望的邻居数
-    :return: 采样的邻居节点 ID 列表
-    """
-    sampled_neighbors = set()
-    for hop in range(1, k + 1):
-        if len(sampled_neighbors) >= max_samples:
-            break  # 如果已经采样够 max_samples 个邻居，则停止
-
-        # 获取 hop-hop 邻居
-        neighbors = get_k_hop_neighbors(nx_graph, node_id, hop)
-        neighbors = list(set(neighbors) - sampled_neighbors)  # 去重，避免重复采样
-
-        # 随机采样剩余所需邻居数
-        num_needed = max_samples - len(sampled_neighbors)
-        sampled_neighbors.update(random.sample(neighbors, min(num_needed, len(neighbors))))
-
-    return list(sampled_neighbors)
+# def sample_k_hop_neighbors(nx_graph, node_id, k, max_samples):
+#     """
+#     采样 k-hop 邻居节点，优先从低阶邻居中获取，若数量不足，则从更高阶邻居补充
+#     :param nx_graph: networkx 图
+#     :param node_id: 当前节点 ID
+#     :param k: 最高 k-hop
+#     :param max_samples: 期望的邻居数
+#     :return: 采样的邻居节点 ID 列表
+#     """
+#     sampled_neighbors = set()
+#     for hop in range(1, k + 1):
+#         if len(sampled_neighbors) >= max_samples:
+#             break  # 如果已经采样够 max_samples 个邻居，则停止
+#
+#         # 获取 hop-hop 邻居
+#         neighbors = get_k_hop_neighbors(nx_graph, node_id, hop)
+#         neighbors = list(set(neighbors) - sampled_neighbors)  # 去重，避免重复采样
+#
+#         # 随机采样剩余所需邻居数
+#         num_needed = max_samples - len(sampled_neighbors)
+#         sampled_neighbors.update(random.sample(neighbors, min(num_needed, len(neighbors))))
+#
+#     return list(sampled_neighbors)
 
 
 def main(args):
@@ -267,7 +267,7 @@ def main(args):
     isolated_nodes, num_isolated = find_isolated_nodes(dgl_graph)
     print(f"孤立点数量: {num_isolated}, 孤立点 ID: {isolated_nodes}")
     # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
-    if args.k_hop > 0:
+    if args.num_neighbours > 0:
         # # 添加反向边，转换为无向图
         # srcs, dsts = dgl_graph.all_edges()
         # dgl_graph.add_edges(dsts, srcs)
