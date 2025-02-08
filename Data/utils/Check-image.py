@@ -1,6 +1,7 @@
 import os
 from PIL import Image
 
+
 def check_image_files(folder_path):
     for root, dirs, files in os.walk(folder_path):
         for file in files:

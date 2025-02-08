@@ -344,10 +344,13 @@ def main(args):
                             text = str(node_info.get("text", ""))
                             neighbor_texts.append(text)
 
-                        # 处理邻居图像
+                        # 处理邻居图像（正确加载）
                         if args.neighbor_mode in ["image", "both"]:
-                            if "image" in node_info:
-                                neighbor_images.append(node_info["image"])  # 假设图像是 PIL.Image 或 tensor 格式
+                            try:
+                                image = dataset_loader.load_image(nid)  # 通过 dataset_loader 正确加载邻居图像
+                                neighbor_images.append(image)
+                            except Exception as e:
+                                print(f"加载邻居 {nid} 的图像失败: {e}")
 
                 # 构造最终的提示文本
                 prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, classes)
