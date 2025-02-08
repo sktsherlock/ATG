@@ -326,14 +326,13 @@ def main(args):
             # 加载图像
             image = dataset_loader.load_image(node_id)
 
+            # 初始化存储邻居数据的变量
+            neighbor_texts = []
+            neighbor_images = []
             # 构建提示
             if args.k_hop > 0 and nx_graph is not None:
                 # 采样邻居
                 sampled_neighbor_ids = sample_k_hop_neighbors(nx_graph, node_id, args.k_hop, args.num_neighbours)
-
-                # 初始化存储邻居数据的变量
-                neighbor_texts = []
-                neighbor_images = []
 
                 for nid in sampled_neighbor_ids:
                     if nid in node_data_dict:
@@ -362,6 +361,7 @@ def main(args):
             messages = [{"role": "user", "content": [{"type": "image", "image": image}]}]
             # 1. **加入邻居图像（如果有）**
             if neighbor_images or args.neighbor_mode == "image":
+                images = [image] + neighbor_images
                 for img in neighbor_images:
                     messages[0]["content"].append({"type": "image", "image": img})
 
