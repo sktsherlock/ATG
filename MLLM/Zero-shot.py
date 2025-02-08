@@ -65,8 +65,6 @@ def parse_args():
                         help='测试样本数量')
     parser.add_argument('--num_neighbours', type=int, default=0,
                         help='期望的邻居数')
-    parser.add_argument('--k_hop', type=int, default=0,
-                        help='RAG增强推理时使用的邻居阶数（0表示不使用邻居）')
     parser.add_argument(
         "--train_ratio", type=float, default=0.6, help="training ratio"
     )
