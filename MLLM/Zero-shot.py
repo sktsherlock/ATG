@@ -281,6 +281,9 @@ def main(args):
 
     isolated_nodes, num_isolated = find_isolated_nodes(dgl_graph)
     print(f"孤立点数量: {num_isolated}, 孤立点 ID: {isolated_nodes}")
+    print(f"Total edges before adding self-loop {dgl_graph.number_of_edges()}")
+    graph = dgl_graph.remove_self_loop().add_self_loop()
+    print(f"Total edges after adding self-loop {graph.number_of_edges()}")
     # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
     if args.num_neighbours > 0:
         # # 添加反向边，转换为无向图
@@ -426,7 +429,7 @@ def main(args):
             predicted_class = next((c for c in classes if c in prediction), None)
             # print("Predicted Class:", predicted_class)
 
-            total_samples +=1
+            total_samples += 1
             # 计算完全不匹配的情况
             if predicted_class is None:  # 预测结果与类别列表完全不匹配
                 mismatch_count += 1
@@ -441,7 +444,7 @@ def main(args):
             neighbor_images_wandb = []
             if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0:
                 for i, neighbor_img in enumerate(neighbor_images):
-                    neighbor_images_wandb.append(wandb.Image(neighbor_img, caption=f"Neighbor {sampled_neighbor_ids[i]}"))
+                    neighbor_images_wandb.append(wandb.Image(neighbor_img, caption=f"Neighbor {i+1}"))
             else:
                 neighbor_images_wandb = None  # 仅文本模式时，不加入邻居图像
 
