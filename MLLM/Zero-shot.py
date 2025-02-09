@@ -3,6 +3,7 @@ import ast
 import argparse
 import torch
 import time
+import warnings
 import pandas as pd
 from PIL import Image
 import numpy as np
@@ -373,20 +374,24 @@ def main(args):
 
                 for nid in sampled_neighbor_ids:
                     if nid in node_data_dict:
-                        node_info = node_data_dict[nid]
+                        if nid == node_id:
+                            warnings.warn(
+                                f"采样到的邻居 ID ({nid}) 与当前节点 ID ({node_id}) 相同，可能存在自环或重复采样情况！")
+                        else:
+                            node_info = node_data_dict[nid]
 
-                        # 处理邻居文本
-                        if args.neighbor_mode in ["text", "both"]:
-                            text = str(node_info.get("text", ""))
-                            neighbor_texts.append(text)
+                            # 处理邻居文本
+                            if args.neighbor_mode in ["text", "both"]:
+                                text = str(node_info.get("text", ""))
+                                neighbor_texts.append(text)
 
-                        # 处理邻居图像（正确加载）
-                        if args.neighbor_mode in ["image", "both"]:
-                            try:
-                                image = dataset_loader.load_image(nid)  # 通过 dataset_loader 正确加载邻居图像
-                                neighbor_images.append(image)
-                            except Exception as e:
-                                print(f"加载邻居 {nid} 的图像失败: {e}")
+                            # 处理邻居图像（正确加载）
+                            if args.neighbor_mode in ["image", "both"]:
+                                try:
+                                    image = dataset_loader.load_image(nid)  # 通过 dataset_loader 正确加载邻居图像
+                                    neighbor_images.append(image)
+                                except Exception as e:
+                                    print(f"加载邻居 {nid} 的图像失败: {e}")
                 if args.neighbor_mode in ["image", "both"]:
                     for img in neighbor_images:
                         messages[0]["content"].append({"type": "image", "image": img})
