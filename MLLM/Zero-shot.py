@@ -386,9 +386,10 @@ def main(args):
                                 neighbor_images.append(image)
                             except Exception as e:
                                 print(f"加载邻居 {nid} 的图像失败: {e}")
-                            for img in neighbor_images:
-                                messages[0]["content"].append({"type": "image", "image": img})
-                images = [image] + neighbor_images
+                if args.neighbor_mode in ["image", "both"]:
+                    for img in neighbor_images:
+                        messages[0]["content"].append({"type": "image", "image": img})
+                    images = [image] + neighbor_images
 
                 # 构造最终的提示文本
                 prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, neighbor_images, classes)
