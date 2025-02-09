@@ -351,6 +351,7 @@ def main(args):
 
             # 只保留前 k 个邻居
             neighbor_dict[node_id] = list(sampled_neighbors)[:k]
+        print(neighbor_dict)
 
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
