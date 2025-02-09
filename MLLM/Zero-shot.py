@@ -351,7 +351,6 @@ def main(args):
 
             # 只保留前 k 个邻居
             neighbor_dict[node_id] = list(sampled_neighbors)[:k]
-        print(neighbor_dict)
 
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
@@ -372,6 +371,7 @@ def main(args):
             if args.num_neighbours > 0:
                 # 获取节点的邻居 ID
                 sampled_neighbor_ids = neighbor_dict.get(node_id, [])
+                print(f"Node {node_id} neighbors: {sampled_neighbor_ids}")
 
                 for nid in sampled_neighbor_ids:
                     if nid in node_data_dict:
