@@ -328,8 +328,8 @@ def main(args):
     text_column = getattr(args, "text_column", "text")
     if text_column not in df.columns:
         raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
-
-    table = wandb.Table(columns=["node_id", "Image", "input", "ground_truth", "prediction_output", "predicted_class"])
+    table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
+                                 "predicted_class"])
 
     set_seed(42)  # 设置随机种子以确保结果可重现
 
@@ -437,7 +437,15 @@ def main(args):
 
             # ✅ 记录到 wandb.Table
             image_wandb = wandb.Image(image, caption=f"Node {node_id}")  # 转换为 WandB 格式
-            table.add_data(node_id, image_wandb, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
+
+            neighbor_images_wandb = []
+            if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0:
+                for i, neighbor_img in enumerate(neighbor_images):
+                    neighbor_images_wandb.append(wandb.Image(neighbor_img, caption=f"Neighbor {sampled_neighbor_ids[i]}"))
+            else:
+                neighbor_images_wandb = None  # 仅文本模式时，不加入邻居图像
+
+            table.add_data(node_id, image_wandb, neighbor_images_wandb, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
 
 
 
