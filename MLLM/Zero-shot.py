@@ -355,18 +355,18 @@ def main(args):
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
             node_id = row["id"]
-            text = row[text_column]
+            center_text = row[text_column]
             text_label = row[args.text_label_column].lower()  # 文本类别标签
 
             # 加载图像
-            image = dataset_loader.load_image(node_id)
+            center_image = dataset_loader.load_image(node_id)
 
             # 初始化存储邻居数据的变量
             neighbor_texts = []
             neighbor_images = []
 
             # **构造输入的 messages**
-            messages = [{"role": "user", "content": [{"type": "image", "image": image}]}]
+            messages = [{"role": "user", "content": [{"type": "image", "image": center_image}]}]
 
             if args.num_neighbours > 0:
                 # 获取节点的邻居 ID
@@ -396,15 +396,13 @@ def main(args):
                 if args.neighbor_mode in ["image", "both"]:
                     for img in neighbor_images:
                         messages[0]["content"].append({"type": "image", "image": img})
-                    images = [image] + neighbor_images
+                    images = [center_image] + neighbor_images
 
                 # 构造最终的提示文本
-                # 检查neighbor_texts
-                print(f"Neighbor texts: {neighbor_texts}")
-                prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, neighbor_images, classes)
+                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes)
             else:
                 # 使用基本提示，不进行邻居增强
-                prompt_text = build_classification_prompt(text, classes)
+                prompt_text = build_classification_prompt(center_text, classes)
 
 
             messages[0]["content"].append({"type": "text", "text": prompt_text})
@@ -414,7 +412,7 @@ def main(args):
 
             # **处理图像和文本输入**
             inputs = processor(
-                images if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0 else image,  # 只传图像或单张图
+                images if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0 else center_image,  # 只传图像或单张图
                 input_text,
                 add_special_tokens=False,
                 return_tensors="pt"
@@ -445,7 +443,7 @@ def main(args):
             y_pred.append(predicted_class if predicted_class else "unknown")  # 用 "unknown" 代替未匹配的类别
 
             # ✅ 记录到 wandb.Table
-            image_wandb = wandb.Image(image, caption=f"Node {node_id}")  # 转换为 WandB 格式
+            image_wandb = wandb.Image(center_image, caption=f"Node {node_id}")  # 转换为 WandB 格式
 
             neighbor_images_wandb = []
             if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0:
