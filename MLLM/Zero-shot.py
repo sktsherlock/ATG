@@ -383,7 +383,7 @@ def main(args):
 
                             # 处理邻居文本
                             if args.neighbor_mode in ["text", "both"]:
-                                text = str(node_info.get("text", ""))
+                                text = str(node_info.get(text_column, ""))
                                 neighbor_texts.append(text)
 
                             # 处理邻居图像（正确加载）
