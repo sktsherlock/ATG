@@ -399,6 +399,8 @@ def main(args):
                     images = [image] + neighbor_images
 
                 # 构造最终的提示文本
+                # 检查neighbor_texts
+                print(f"Neighbor texts: {neighbor_texts}")
                 prompt_text = build_classification_prompt_with_neighbors(text, neighbor_texts, neighbor_images, classes)
             else:
                 # 使用基本提示，不进行邻居增强
