@@ -139,27 +139,29 @@ def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts:
     """
     Build a RAG-enhanced classification prompt by integrating the center node's text with its neighbors' information.
     """
-    # 开始构建提示，加入分类任务的描述
-    prompt = f"Available categories: {', '.join(classes)}.\n"
-
-    # 加入中心节点的文本描述
-    prompt += f"Center node description: {center_text}\n"
-
-    # 如果有邻居文本信息，依次添加邻居节点的描述
-    if neighbor_texts:
-        prompt += "\nBelow are the descriptions of related neighbor nodes:\n"
-        for idx, n_text in enumerate(neighbor_texts):
-            prompt += f"Neighbor {idx+1} description: {n_text}\n"
-
-    # 最后，加入根据信息类型分类的任务提示
-    if neighbor_texts and neighbor_images:
-        prompt += "\nBased on the center node and neighbor nodes' multimodal information (both text and image), please choose the most appropriate category."
-    elif neighbor_texts:
-        prompt += "\nBased on the center node and neighbor nodes' text information, please choose the most appropriate category."
-    elif neighbor_images:
-        prompt += "\nBased on the center node and neighbor nodes' image information, please choose the most appropriate category."
+    if neighbor_images:
+        prompt = "These are the images related to the center node and its neighbor nodes.\n"
     else:
-        prompt += "\nBased on the center node's information, please choose the most appropriate category."
+        prompt = "This is the image of the center node.\n"
+    # 2️⃣ **中心节点文本**
+    prompt += f"\nDescription of the center node: {center_text}\n"
+
+    if neighbor_texts:
+        prompt += "\nBelow are descriptions of the neighbor nodes:\n"
+        for idx, n_text in enumerate(neighbor_texts):
+            prompt += f"Neighbor {idx+1}: {n_text}\n"
+
+    prompt += f"\nAvailable categories: {', '.join(classes)}.\n"
+
+    if neighbor_texts and neighbor_images:
+        prompt += "\nConsidering the multimodal information (both text and image) from the center node and its neighbors, determine the most appropriate category."
+    elif neighbor_texts:
+        prompt += "\nConsidering the center node's multimodal information and the text information from its neighbors, determine the most appropriate category."
+    elif neighbor_images:
+        prompt += "\nConsidering the center node's multimodal information and the image information from its neighbors, determine the most appropriate category."
+    else:
+        prompt += "\nConsidering the center node's multimodal information, determine the most appropriate category."
+
     # 添加要求仅返回准确的类别名称
     prompt += "\nAnswer ONLY with the exact category name."
 
@@ -172,7 +174,7 @@ def build_classification_prompt(center_text: str, classes: list) -> str:
     prompt = (
         f"Available categories: {', '.join(classes)}.\n"
         f"Description: {center_text}\n"
-        "Based on the multimodal information above, please choose the most appropriate category.\n"
+        "Considering the multimodal information above, determine the most appropriate category.\n"
         "Answer ONLY with the exact category name."
     )
     return prompt.strip()
@@ -371,7 +373,6 @@ def main(args):
             if args.num_neighbours > 0:
                 # 获取节点的邻居 ID
                 sampled_neighbor_ids = neighbor_dict.get(node_id, [])
-                print(f"Node {node_id} neighbors: {sampled_neighbor_ids}")
 
                 for nid in sampled_neighbor_ids:
                     if nid in node_data_dict:
@@ -402,7 +403,7 @@ def main(args):
                 prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes)
             else:
                 # 使用基本提示，不进行邻居增强
-                prompt_text = build_classification_prompt(center_text, classes)
+                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes)
 
 
             messages[0]["content"].append({"type": "text", "text": prompt_text})
