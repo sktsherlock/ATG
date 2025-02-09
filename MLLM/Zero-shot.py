@@ -281,9 +281,6 @@ def main(args):
 
     isolated_nodes, num_isolated = find_isolated_nodes(dgl_graph)
     print(f"孤立点数量: {num_isolated}, 孤立点 ID: {isolated_nodes}")
-    print(f"Total edges before adding self-loop {dgl_graph.number_of_edges()}")
-    graph = dgl_graph.remove_self_loop().add_self_loop()
-    print(f"Total edges after adding self-loop {graph.number_of_edges()}")
     # 如果使用 RAG 增强推理，转换 DGL 图为 NetworkX 图
     if args.num_neighbours > 0:
         # # 添加反向边，转换为无向图
@@ -338,20 +335,21 @@ def main(args):
 
     if args.num_neighbours > 0:
         neighbor_dict = {}  # 用来存储每个节点的邻居 ID 列表
-        max_hop = 3
+        max_hop = 3  # 最大跳数
         for node_id in tqdm(sample_df["id"], desc="Fetching neighbors"):
-            # 采样邻居，逐级获取邻居，直到满足需要的邻居数量
-            sampled_neighbors = []
+            sampled_neighbors = set()  # 用 set 存储，去重
             k = args.num_neighbours  # 需要的邻居数量
-            current_hop = 1  # 从 1 阶邻居开始
-            while len(sampled_neighbors) < k and current_hop <= max_hop:  # 默认限制最大阶数为 max_hop
-                # 获取当前阶数的邻居
-                neighbors_at_current_hop = list(nx_graph.neighbors(node_id))
-                sampled_neighbors.extend(neighbors_at_current_hop) # 可以增加随机性
-                current_hop += 1  # 增加阶数
+            current_hop = 1  # 从 1-hop 开始
 
-            # 存储节点的邻居ID
-            neighbor_dict[node_id] = sampled_neighbors[:k]
+            while len(sampled_neighbors) < k and current_hop <= max_hop:
+                # 获取当前 hop 的邻居
+                neighbors_at_current_hop = set(nx_graph.neighbors(node_id))  # 使用 set 防止重复
+                neighbors_at_current_hop.discard(node_id)  # 🔥 关键：去除自身 ID
+                sampled_neighbors.update(neighbors_at_current_hop)  # 添加新邻居
+                current_hop += 1  # 继续寻找更远的邻居
+
+            # 只保留前 k 个邻居
+            neighbor_dict[node_id] = list(sampled_neighbors)[:k]
 
     for idx, row in tqdm(sample_df.iterrows(), total=sample_df.shape[0], desc="Processing samples"):
         try:
