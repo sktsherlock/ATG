@@ -62,6 +62,9 @@ def parse_args():
                         help='图像文件扩展名')
     parser.add_argument('--neighbor_mode', type=str, default='both', choices=['text', 'image', 'both'],
                         help='邻居信息的使用模式（文本、图像或两者）')
+    # 添加参数 upload_image, 控制在wandb的 table 中是否上传图像
+    parser.add_argument('--upload_image', type=bool, default=False,
+                        help='是否将图像上传到WandB')
     parser.add_argument('--num_samples', type=int, default=5,
                         help='测试样本数量')
     parser.add_argument('--num_neighbours', type=int, default=0,
@@ -331,8 +334,11 @@ def main(args):
     text_column = getattr(args, "text_column", "text")
     if text_column not in df.columns:
         raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
-    table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
-                                 "predicted_class"])
+    if args.upload_image:
+        table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
+                                     "predicted_class"])
+    else:
+        table = wandb.Table(columns=["node_id", "input", "ground_truth", "prediction_output", "predicted_class"])
 
     set_seed(42)  # 设置随机种子以确保结果可重现
 
@@ -444,18 +450,19 @@ def main(args):
             y_pred.append(predicted_class if predicted_class else "unknown")  # 用 "unknown" 代替未匹配的类别
 
             # ✅ 记录到 wandb.Table
-            image_wandb = wandb.Image(center_image, caption=f"Node {node_id}")  # 转换为 WandB 格式
+            if args.upload_image:
+                image_wandb = wandb.Image(center_image, caption=f"Node {node_id}")  # 转换为 WandB 格式
 
-            neighbor_images_wandb = []
-            if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0:
-                for i, neighbor_img in enumerate(neighbor_images):
-                    neighbor_images_wandb.append(wandb.Image(neighbor_img, caption=f"Neighbor {i+1}"))
+                neighbor_images_wandb = []
+                if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0:
+                    for i, neighbor_img in enumerate(neighbor_images):
+                        neighbor_images_wandb.append(wandb.Image(neighbor_img, caption=f"Neighbor {i+1}"))
+                else:
+                    neighbor_images_wandb = None  # 仅文本模式时，不加入邻居图像
+
+                table.add_data(node_id, image_wandb, neighbor_images_wandb, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
             else:
-                neighbor_images_wandb = None  # 仅文本模式时，不加入邻居图像
-
-            table.add_data(node_id, image_wandb, neighbor_images_wandb, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
-
-
+                table.add_data(node_id, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
 
             # print(f"Node {node_id}:")
             # print("Prompt:")
