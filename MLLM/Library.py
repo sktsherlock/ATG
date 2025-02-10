@@ -53,8 +53,11 @@ def load_model_and_processor(model_name: str):
         torch_dtype=torch.bfloat16,
         device_map="auto",
     )
-
-    processor = processor_cls.from_pretrained(model_name)
+    # 如果是Qwen系列，在加入max_pixels = 1280 * 28 * 28
+    if "Qwen" in model_name:
+        processor = processor_cls.from_pretrained(model_name, max_pixels=1280 * 28 * 28)
+    else:
+        processor = processor_cls.from_pretrained(model_name)
 
     return model, processor
 
@@ -62,6 +65,6 @@ def load_model_and_processor(model_name: str):
 if __name__ == "__main__":
     # 示例使用
     model_name = "Qwen/Qwen2.5-VL-7B-Instruct"  # 直接使用 Hugging Face 上的模型 ID
-    model, processor = load_model_and_processor(model_name)
+    Model, Processor = load_model_and_processor(model_name)
 
     print(f"成功加载模型: {model_name}")

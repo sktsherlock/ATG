@@ -167,17 +167,6 @@ def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts:
 
 
 
-def build_classification_prompt(center_text: str, classes: list) -> str:
-    """Build a basic classification prompt without neighbor information."""
-    prompt = (
-        f"Available categories: {', '.join(classes)}.\n"
-        f"Description: {center_text}\n"
-        "Considering the multimodal information above, determine the most appropriate category.\n"
-        "Answer ONLY with the exact category name."
-    )
-    return prompt.strip()
-
-
 def k_hop_neighbor_stats(nx_graph, k):
     """
     计算图中所有节点的 k 阶邻居数目的统计信息。
@@ -419,6 +408,7 @@ def main(args):
             messages[0]["content"].append({"type": "text", "text": prompt_text})
 
             # **使用处理器生成输入文本**
+            # 对于LLaMA，LLaVA，
             input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
 
             # **处理图像和文本输入**
