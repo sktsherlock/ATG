@@ -51,11 +51,6 @@ def parse_args():
                         help='数据集名称（对应Data目录下的子目录名）')
     parser.add_argument('--base_dir', type=str, default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         help='项目根目录路径')
-    parser.add_argument('--label_column', type=str, default='label',
-                        help='CSV文件中表示数字化标签的列名')
-    parser.add_argument('--text_label_column', type=str, default='second_category',
-                        help='CSV文件中表示文本类别标签的列名')
-    parser.add_argument('--text_column', type=str, default='text', help='CSV文件中包含节点文本描述的列名')
     parser.add_argument('--max_new_tokens', type=int, default=15,
                         help='生成的最大token数量')
     parser.add_argument('--image_ext', type=str, default='.jpg',
@@ -102,11 +97,6 @@ class DatasetLoader:
         csv_path = os.path.join(self.data_dir, f"{self.args.dataset_name}.csv")
         df = pd.read_csv(csv_path, converters={'neighbors': ast.literal_eval})
 
-        # 检查标签列是否存在
-        if self.args.label_column not in df.columns:
-            raise ValueError(f"Label column '{self.args.label_column}' not found in CSV file.")
-        if self.args.text_label_column not in df.columns:
-            raise ValueError(f"Text label column '{self.args.text_label_column}' not found in CSV file.")
 
         # 加载图数据（DGL格式）
         graph_path = os.path.join(self.data_dir, f"{self.args.dataset_name}Graph.pt")
@@ -281,6 +271,24 @@ def main(args):
     # 从CSV中提取所有唯一类别，并排序（可根据需要调整顺序）
     classes = sorted(df[args.text_label_column].str.lower().unique())
 
+    # 预定义规则
+    TEXT_COLUMN_RULES = ["text", "caption"]
+    LABEL_COLUMN_RULES = ["second_category", "subreddit"]
+
+    # 根据规则选择 text_column
+    text_column = next((col for col in TEXT_COLUMN_RULES if col in df.columns), None)
+    text_label_column = next((col for col in LABEL_COLUMN_RULES if col in df.columns), None)
+
+    # 检查是否找到合适的列
+    if text_column is None:
+        raise ValueError(f"数据集中未找到合适的文本列，请检查数据集列名: {df.columns}")
+
+    if text_label_column is None:
+        raise ValueError(f"数据集中未找到合适的标签列，请检查数据集列名: {df.columns}")
+
+    print(f"使用的文本列: {text_column}")
+    print(f"使用的标签列: {text_label_column}")
+
     # 构建一个从节点ID到节点数据的字典，便于后续查找邻居信息
     # 假设 CSV 中 "id" 列作为唯一标识符，且 "text" 为节点描述
     node_data_dict = {row["id"]: row for _, row in df.iterrows()}
@@ -330,10 +338,13 @@ def main(args):
     # 从所选的子集数据中，再选择前 num_samples 个样本
     sample_df = sample_df.head(num_samples)  # 选择前 num_samples 个样本
 
-    # 获取文本列名，默认值可以设为 "text"
-    text_column = getattr(args, "text_column", "text")
-    if text_column not in df.columns:
-        raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
+
+
+
+    # # 获取文本列名，默认值可以设为 "text"
+    # text_column = getattr(args, "text_column", "text")
+    # if text_column not in df.columns:
+    #     raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
     if args.upload_image:
         table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
                                      "predicted_class"])
@@ -364,7 +375,7 @@ def main(args):
         try:
             node_id = row["id"]
             center_text = row[text_column]
-            text_label = row[args.text_label_column].lower()  # 文本类别标签
+            text_label = row[text_label_column].lower()  # 文本类别标签
 
             # 加载图像
             center_image = dataset_loader.load_image(node_id)
@@ -464,11 +475,6 @@ def main(args):
             else:
                 table.add_data(node_id, input_text, text_label, prediction, predicted_class if predicted_class else "unknown")
 
-            # print(f"Node {node_id}:")
-            # print("Prompt:")
-            # print(prompt_text)
-            # print(f"Predicted: {predicted_class} | GT: {text_label} (Numeric: {numeric_label})")
-            # print("-" * 50)
 
         except Exception as e:
             print(f"Error processing node {node_id}: {str(e)}")
