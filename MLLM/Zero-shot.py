@@ -61,6 +61,8 @@ def parse_args():
     # 添加参数 upload_image, 控制在wandb的 table 中是否上传图像
     parser.add_argument('--upload_image', type=bool, default=False,
                         help='是否将图像上传到WandB')
+    parser.add_argument('--add_CoT', type=bool, default=False,
+                        help='是否添加CoT')
     parser.add_argument('--num_samples', type=int, default=5,
                         help='测试样本数量')
     parser.add_argument('--num_neighbours', type=int, default=0,
@@ -129,7 +131,7 @@ def get_k_hop_neighbors(nx_graph, node_id, k):
     return list(neighbors)
 
 
-def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts: list, neighbor_images: list, classes: list) -> str:
+def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts: list, neighbor_images: list, classes: list, add_cot: bool) -> str:
     """
     Build a RAG-enhanced classification prompt by integrating the center node's text with its neighbors' information.
     """
@@ -156,6 +158,8 @@ def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts:
     else:
         prompt += "\nConsidering the center node's multimodal information, determine the most appropriate category."
 
+    if add_cot:
+        prompt += "\n\nLet's think step by step."
     # 添加要求仅返回准确的类别名称
     prompt += "\nAnswer ONLY with the exact category name."
 
@@ -332,7 +336,7 @@ def main(args):
     print(f"Selected {num_samples} samples out of {len(sample_df)} available samples.")
     # 从所选的子集数据中，再选择前 num_samples 个样本
     sample_df = sample_df.head(num_samples)  # 选择前 num_samples 个样本
-
+    add_CoT = args.add_CoT  # 是否添加简单的思维链提示
 
     if args.upload_image:
         table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
@@ -406,10 +410,10 @@ def main(args):
                     images = [center_image] + neighbor_images
 
                 # 构造最终的提示文本
-                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes)
+                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes, add_CoT)
             else:
                 # 使用基本提示，不进行邻居增强
-                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes)
+                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes, add_CoT)
 
 
             messages[0]["content"].append({"type": "text", "text": prompt_text})
