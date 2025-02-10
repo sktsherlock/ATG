@@ -268,9 +268,6 @@ def main(args):
     dataset_loader = DatasetLoader(args)
     df, dgl_graph = dataset_loader.load_data()
 
-    # 从CSV中提取所有唯一类别，并排序（可根据需要调整顺序）
-    classes = sorted(df[args.text_label_column].str.lower().unique())
-
     # 预定义规则
     TEXT_COLUMN_RULES = ["text", "caption"]
     LABEL_COLUMN_RULES = ["second_category", "subreddit"]
@@ -289,6 +286,8 @@ def main(args):
     print(f"使用的文本列: {text_column}")
     print(f"使用的标签列: {text_label_column}")
 
+    # 从CSV中提取所有唯一类别，并排序（可根据需要调整顺序）
+    classes = sorted(df[text_label_column].str.lower().unique())
     # 构建一个从节点ID到节点数据的字典，便于后续查找邻居信息
     # 假设 CSV 中 "id" 列作为唯一标识符，且 "text" 为节点描述
     node_data_dict = {row["id"]: row for _, row in df.iterrows()}
@@ -339,12 +338,6 @@ def main(args):
     sample_df = sample_df.head(num_samples)  # 选择前 num_samples 个样本
 
 
-
-
-    # # 获取文本列名，默认值可以设为 "text"
-    # text_column = getattr(args, "text_column", "text")
-    # if text_column not in df.columns:
-    #     raise ValueError(f"指定的文本列 '{text_column}' 不存在，请检查数据集列名.")
     if args.upload_image:
         table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
                                      "predicted_class"])
