@@ -407,8 +407,7 @@ def main(args):
 
             messages[0]["content"].append({"type": "text", "text": prompt_text})
 
-            # **使用处理器生成输入文本**
-            # 对于LLaMA，LLaVA，
+            # **使用处理器生成输入文本, 对于LLaMA，LLaVA，Qwen OK**
             input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
 
             # **处理图像和文本输入**
