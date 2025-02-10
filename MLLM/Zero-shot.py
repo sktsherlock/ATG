@@ -12,6 +12,7 @@ import random
 import wandb
 from dgl import load_graphs
 import networkx as nx
+from Library import load_model_and_processor
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score
 from transformers import MllamaForConditionalGeneration, AutoProcessor
@@ -306,13 +307,8 @@ def main(args):
         nx_graph = None
     # print_k_hop_stats(nx_graph)
 
-    # 加载模型和处理器
-    model = MllamaForConditionalGeneration.from_pretrained(
-        args.model_name,
-        torch_dtype=torch.bfloat16,
-        device_map="auto",
-    )
-    processor = AutoProcessor.from_pretrained(args.model_name)
+    model_name = args.model_name  # 这里可以传入你的模型名称
+    model, processor = load_model_and_processor(model_name)
 
 
     # 初始化计数器
