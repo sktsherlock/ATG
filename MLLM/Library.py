@@ -59,8 +59,9 @@ def load_model_and_processor(model_name: str):
     return model, processor
 
 
-# 示例使用
-model_name = "Qwen/Qwen2.5-VL-7B-Instruct"  # 直接使用 Hugging Face 上的模型 ID
-model, processor = load_model_and_processor(model_name)
+if __name__ == "__main__":
+    # 示例使用
+    model_name = "Qwen/Qwen2.5-VL-7B-Instruct"  # 直接使用 Hugging Face 上的模型 ID
+    model, processor = load_model_and_processor(model_name)
 
-print(f"成功加载模型: {model_name}")
+    print(f"成功加载模型: {model_name}")
