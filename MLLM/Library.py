@@ -71,7 +71,7 @@ def prepare_inputs_for_model(messages, input_text, images, center_image, process
         inputs = processor(
             text=[input_text],
             images=image_inputs,
-            add_special_tokens=False,
+            add_special_tokens=True,
             return_tensors="pt",
         ).to(model.device)
     else:
