@@ -24,6 +24,10 @@ def load_model_and_processor(model_name: str):
             "model_cls": Qwen2_5_VLForConditionalGeneration,
             "processor_cls": AutoProcessor,
         },
+        "Qwen/Qwen2.5-VL-3B-Instruct": {
+            "model_cls": Qwen2_5_VLForConditionalGeneration,
+            "processor_cls": AutoProcessor,
+        },
         "Qwen/Qwen2-VL-7B-Instruct": {
             "model_cls": Qwen2VLForConditionalGeneration,
             "processor_cls": AutoProcessor,
@@ -63,7 +67,7 @@ def load_model_and_processor(model_name: str):
 
 
 def prepare_inputs_for_model(messages, input_text, images, center_image, processor, model, args, name):
-    if name in ["Qwen/Qwen2-VL-7B-Instruct", "Qwen/Qwen2.5-VL-7B-Instruct"]:
+    if name in ["Qwen/Qwen2-VL-7B-Instruct", "Qwen/Qwen2.5-VL-7B-Instruct", "Qwen/Qwen2.5-VL-3B-Instruct"]:
         # 处理图像或视频输入（Qwen 需要使用 `process_vision_info()`）
         image_inputs, video_inputs = process_vision_info(messages)
 
