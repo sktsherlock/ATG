@@ -158,7 +158,6 @@ def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts:
     else:
         prompt += "\nConsidering the center node's multimodal information, determine the most appropriate category."
 
-    print(f"type(add_cot): {type(add_cot)}, value: {add_cot}")
     if add_cot:
         prompt += "\n\nLet's think step by step."
     # 添加要求仅返回准确的类别名称
@@ -326,7 +325,7 @@ def main(args):
     print(f"Selected {num_samples} samples out of {len(sample_df)} available samples.")
     # 从所选的子集数据中，再选择前 num_samples 个样本
     sample_df = sample_df.head(num_samples)  # 选择前 num_samples 个样本
-    add_CoT = args.add_CoT  # 是否添加简单的思维链提示
+    add_CoT = True if str(args.add_CoT).lower() == "true" else False   # 是否添加简单的思维链提示
 
     if args.upload_image:
         table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
