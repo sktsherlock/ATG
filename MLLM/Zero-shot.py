@@ -231,31 +231,6 @@ def find_isolated_nodes(dgl_graph):
     return isolated_nodes.tolist(), num_isolated_nodes
 
 
-# def sample_k_hop_neighbors(nx_graph, node_id, k, max_samples):
-#     """
-#     采样 k-hop 邻居节点，优先从低阶邻居中获取，若数量不足，则从更高阶邻居补充
-#     :param nx_graph: networkx 图
-#     :param node_id: 当前节点 ID
-#     :param k: 最高 k-hop
-#     :param max_samples: 期望的邻居数
-#     :return: 采样的邻居节点 ID 列表
-#     """
-#     sampled_neighbors = set()
-#     for hop in range(1, k + 1):
-#         if len(sampled_neighbors) >= max_samples:
-#             break  # 如果已经采样够 max_samples 个邻居，则停止
-#
-#         # 获取 hop-hop 邻居
-#         neighbors = get_k_hop_neighbors(nx_graph, node_id, hop)
-#         neighbors = list(set(neighbors) - sampled_neighbors)  # 去重，避免重复采样
-#
-#         # 随机采样剩余所需邻居数
-#         num_needed = max_samples - len(sampled_neighbors)
-#         sampled_neighbors.update(random.sample(neighbors, min(num_needed, len(neighbors))))
-#
-#     return list(sampled_neighbors)
-
-
 def main(args):
     start_time = time.time()  # 记录起始时间
     # 初始化数据加载器
@@ -410,6 +385,9 @@ def main(args):
 
             # **使用处理器生成输入文本, 对于LLaMA，LLaVA，Qwen OK**
             input_text = processor.apply_chat_template(messages, add_generation_prompt=False)
+
+            # 我想写一个函数，接收上面的messages，input_text, imges等信息，然后输出经过对应processor返回的inputs，用于后续传入model
+
 
             # **处理图像和文本输入**
             inputs = processor(
