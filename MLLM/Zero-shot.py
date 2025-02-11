@@ -158,6 +158,7 @@ def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts:
     else:
         prompt += "\nConsidering the center node's multimodal information, determine the most appropriate category."
 
+    print(f"type(add_cot): {type(add_cot)}, value: {add_cot}")
     if add_cot:
         prompt += "\n\nLet's think step by step."
     # 添加要求仅返回准确的类别名称
