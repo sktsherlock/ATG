@@ -12,7 +12,7 @@ import random
 import wandb
 from dgl import load_graphs
 import networkx as nx
-from Library import load_model_and_processor
+from Library import load_model_and_processor, prepare_inputs_for_model
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score
 warnings.filterwarnings("ignore", message="Setting `pad_token_id` to `eos_token_id`")
@@ -390,19 +390,24 @@ def main(args):
 
 
             # **处理图像和文本输入**
-            inputs = processor(
-                images if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0 else center_image,  # 只传图像或单张图
-                input_text,
-                add_special_tokens=False,
-                return_tensors="pt"
-            ).to(model.device)
+            if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0:
+                inputs = prepare_inputs_for_model(messages, input_text, images, center_image, processor, model, args, model_name)
+            else:
+                inputs = prepare_inputs_for_model(messages, input_text, None, center_image, processor, model, args, model_name)
+
+            # inputs = processor(
+            #     images if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0 else center_image,  # 只传图像或单张图
+            #     input_text,
+            #     add_special_tokens=False,
+            #     return_tensors="pt"
+            # ).to(model.device)
 
 
             # 打印输入的图像和文本信息以进行调试
             # print("Input Image:", image)
             # print("Input Text:", input_text)
             # 生成预测结果
-            output = model.generate(**inputs, max_new_tokens=args.max_new_tokens) # temperature=1.0, top_k=50, top_p=0.95
+            output = model.generate(**inputs, max_new_tokens=args.max_new_tokens)
             output_tokens = output[0][len(inputs["input_ids"][0]):]
             prediction = processor.decode(output_tokens, skip_special_tokens=True, clean_up_tokenization_spaces=False).strip().lower()
             # prediction = processor.decode(output[0], skip_special_tokens=True).strip().lower()

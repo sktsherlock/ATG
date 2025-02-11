@@ -62,25 +62,8 @@ def load_model_and_processor(model_name: str):
     return model, processor
 
 
-def prepare_inputs_for_model(messages, input_text, images, center_image, processor, model, args, model_name):
-    """
-    处理输入数据，使其适配不同模型。
-
-    参数:
-        messages: dict - Qwen 需要的对话消息格式
-        input_text: str - 处理后的文本输入
-        images: Tensor / List - 传入的图片或图片列表
-        center_image: Tensor - 中心节点图像
-        processor: Processor - 模型处理器
-        model: Pretrained Model - 需要传入的模型
-        args: Namespace - 运行参数
-        model_name: str - 当前使用的模型名称
-
-    返回:
-        inputs: 处理后的模型输入数据
-    """
-
-    if model_name in ["Qwen/Qwen2-VL-7B-Instruct", "Qwen/Qwen2.5-VL-7B-Instruct"]:
+def prepare_inputs_for_model(messages, input_text, images, center_image, processor, model, args, name):
+    if name in ["Qwen/Qwen2-VL-7B-Instruct", "Qwen/Qwen2.5-VL-7B-Instruct"]:
         # 处理图像或视频输入（Qwen 需要使用 `process_vision_info()`）
         image_inputs, video_inputs = process_vision_info(messages)
 
