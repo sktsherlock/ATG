@@ -61,7 +61,7 @@ def parse_args():
     # 添加参数 upload_image, 控制在wandb的 table 中是否上传图像
     parser.add_argument('--upload_image', type=bool, default=False,
                         help='是否将图像上传到WandB')
-    parser.add_argument('--add_CoT', type=bool, default=False,
+    parser.add_argument('--add_CoT', type=str, default='False',
                         help='是否添加CoT')
     parser.add_argument('--num_samples', type=int, default=5,
                         help='测试样本数量')
@@ -326,6 +326,7 @@ def main(args):
     # 从所选的子集数据中，再选择前 num_samples 个样本
     sample_df = sample_df.head(num_samples)  # 选择前 num_samples 个样本
     add_CoT = True if str(args.add_CoT).lower() == "true" else False   # 是否添加简单的思维链提示
+    print(f"Adding Chain of Thought: {add_CoT}")
 
     if args.upload_image:
         table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
