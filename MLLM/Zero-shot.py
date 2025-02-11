@@ -15,7 +15,7 @@ import networkx as nx
 from Library import load_model_and_processor
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score
-from transformers import MllamaForConditionalGeneration, AutoProcessor
+warnings.filterwarnings("ignore", message="Setting `pad_token_id` to `eos_token_id`")
 
 
 def set_seed(seed: int):
