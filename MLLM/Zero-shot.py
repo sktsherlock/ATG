@@ -61,6 +61,8 @@ def parse_args():
     # 添加参数 upload_image, 控制在wandb的 table 中是否上传图像
     parser.add_argument('--upload_image', type=bool, default=False,
                         help='是否将图像上传到WandB')
+    parser.add_argument('--use_center_text', type=str, default='True', help='是否使用中心节点文本')
+    parser.add_argument('--use_center_image', type=str, default='True', help='是否使用中心节点图像')
     parser.add_argument('--add_CoT', type=str, default='False',
                         help='是否添加CoT')
     parser.add_argument('--num_samples', type=int, default=5,
@@ -131,16 +133,19 @@ def get_k_hop_neighbors(nx_graph, node_id, k):
     return list(neighbors)
 
 
-def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts: list, neighbor_images: list, classes: list, add_cot: bool) -> str:
+def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts: list, neighbor_images: list, classes: list, add_cot: bool, use_center_text: bool, use_center_image: bool) -> str:
     """
     Build a RAG-enhanced classification prompt by integrating the center node's text with its neighbors' information.
     """
     if neighbor_images:
         prompt = "These are the images related to the center node and its neighbor nodes.\n"
-    else:
+    elif use_center_image:
         prompt = "This is the image of the center node.\n"
+    else:
+        prompt = ""
     # 2️⃣ **中心节点文本**
-    prompt += f"\nDescription of the center node: {center_text}\n"
+    if use_center_text:
+        prompt += f"\nDescription of the center node: {center_text}\n"
 
     if neighbor_texts:
         prompt += "\nBelow are descriptions of the neighbor nodes:\n"
@@ -155,8 +160,14 @@ def build_classification_prompt_with_neighbors(center_text: str, neighbor_texts:
         prompt += "\nConsidering the center node's multimodal information and the text information from its neighbors, determine the most appropriate category."
     elif neighbor_images:
         prompt += "\nConsidering the center node's multimodal information and the image information from its neighbors, determine the most appropriate category."
-    else:
+    elif use_center_text and use_center_image:
         prompt += "\nConsidering the center node's multimodal information, determine the most appropriate category."
+    elif use_center_text:
+        prompt += "\nConsidering the center node's text information, determine the most appropriate category."
+    elif use_center_image:
+        prompt += "\nConsidering the center node's image information, determine the most appropriate category."
+    else:
+        pass
 
     if add_cot:
         prompt += "\n\nLet's think step by step."
@@ -304,6 +315,8 @@ def main(args):
     print(f"Adding Chain of Thought: {add_CoT}")
 
     upload_image = True if str(args.upload_image).lower() == "true" else False   # 是否上传图片到WandB
+    use_center_text = True if str(args.use_center_text).lower() == "true" else False   # 是否使用中心节点文本
+    use_center_image = True if str(args.use_center_image).lower() == "true" else False   # 是否使用中心节点图像
 
     if upload_image:
         table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
@@ -377,10 +390,10 @@ def main(args):
                     images = [center_image] + neighbor_images
 
                 # 构造最终的提示文本
-                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes, add_CoT)
+                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes, add_CoT, True, True)
             else:
                 # 使用基本提示，不进行邻居增强
-                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes, add_CoT)
+                prompt_text = build_classification_prompt_with_neighbors(center_text, neighbor_texts, neighbor_images, classes, add_CoT, use_center_text, use_center_image)
 
 
             messages[0]["content"].append({"type": "text", "text": prompt_text})
