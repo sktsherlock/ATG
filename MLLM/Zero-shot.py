@@ -303,7 +303,9 @@ def main(args):
     add_CoT = True if str(args.add_CoT).lower() == "true" else False   # 是否添加简单的思维链提示
     print(f"Adding Chain of Thought: {add_CoT}")
 
-    if args.upload_image:
+    upload_image = True if str(args.upload_image).lower() == "true" else False   # 是否上传图片到WandB
+
+    if upload_image:
         table = wandb.Table(columns=["node_id", "Image", "Neighbor_Images", "input", "ground_truth", "prediction_output",
                                      "predicted_class"])
     else:
@@ -395,17 +397,6 @@ def main(args):
             else:
                 inputs = prepare_inputs_for_model(messages, input_text, None, center_image, processor, model, args, model_name)
 
-            # inputs = processor(
-            #     images if args.neighbor_mode in ["image", "both"] and args.num_neighbours > 0 else center_image,  # 只传图像或单张图
-            #     input_text,
-            #     add_special_tokens=False,
-            #     return_tensors="pt"
-            # ).to(model.device)
-
-
-            # 打印输入的图像和文本信息以进行调试
-            # print("Input Image:", image)
-            # print("Input Text:", input_text)
             # 生成预测结果
             output = model.generate(**inputs, max_new_tokens=args.max_new_tokens)
             output_tokens = output[0][len(inputs["input_ids"][0]):]
