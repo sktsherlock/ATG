@@ -1,7 +1,11 @@
 from tqdm import  tqdm
-from GNN.GraphData import load_data
 from collections import Counter
 import argparse
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from GNN.GraphData import load_data
+
 
 argparser = argparse.ArgumentParser(
     "Homo Config",
