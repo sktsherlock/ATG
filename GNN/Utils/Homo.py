@@ -3,7 +3,43 @@ from collections import Counter
 import argparse
 import torch as th
 import dgl
+import numpy as np
 from ogb.nodeproppred import DglNodePropPredDataset
+
+
+def split_graph(nodes_num, train_ratio, val_ratio, labels, fewshots=None):
+    np.random.seed(42)
+    indices = np.random.permutation(nodes_num)
+    if fewshots is not None:
+        train_ids = []
+
+        unique_labels = np.unique(labels)  # 获取唯一的类别标签
+        for label in unique_labels:
+            label_indices = np.where(labels == label)[0]  # 获取属于当前类别的样本索引
+            np.random.shuffle(label_indices)  # 对当前类别的样本索引进行随机排序
+
+            fewshot_indices = label_indices[:fewshots]  # 选择指定数量的few-shot样本
+            train_ids.extend(fewshot_indices)
+
+        remaining_indices = np.setdiff1d(indices, train_ids)  # 获取剩余的样本索引
+        np.random.shuffle(remaining_indices)  # 对剩余样本索引进行随机排序
+
+        val_size = int(len(remaining_indices) * val_ratio)  # 计算验证集大小
+
+        val_ids = remaining_indices[:val_size]  # 划分验证集
+        test_ids = remaining_indices[val_size:]  # 划分测试集
+
+    else:
+
+        train_size = int(nodes_num * train_ratio)
+        val_size = int(nodes_num * val_ratio)
+
+        train_ids = indices[:train_size]
+        val_ids = indices[train_size:train_size + val_size]
+        test_ids = indices[train_size + val_size:]
+
+    return train_ids, val_ids, test_ids
+
 
 
 def load_data(graph_path, train_ratio=0.6, val_ratio=0.2, name=None, fewshots=None,):
