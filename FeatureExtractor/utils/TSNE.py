@@ -129,13 +129,13 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     scatter1 = plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap=custom_cmap)
 
     # 设置横纵坐标刻度大小
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
 
     # plt.title(f'T-SNE for {label1} on {dataname}')
     plt.legend(fontsize='large')
     cbar = plt.colorbar(scatter1)
-    cbar.set_label('Classes', fontsize=16)  # 放大 colorbar 标签
+    cbar.set_label('Classes', fontsize=14)  # 放大 colorbar 标签
     # plt.colorbar(scatter1, label='Classes')
 
 
@@ -145,13 +145,13 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
 
     scatter2 = plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap=custom_cmap)
 
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
     # plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap='viridis')
     # plt.title(f'T-SNE Visualization for {label2}')
     plt.legend(fontsize='large')
     cbar = plt.colorbar(scatter2)
-    cbar.set_label('Classes', fontsize=16)  # 放大 colorbar 标签
+    cbar.set_label('Classes', fontsize=14)  # 放大 colorbar 标签
     save_path_feat2 = os.path.join(path, f'{label2}_tsne_BR.svg')
     plt.savefig(save_path_feat2, format='svg', dpi=600, bbox_inches='tight')
     plt.close()
