@@ -88,10 +88,10 @@ argparser.add_argument(
     help="The datasets to be implemented."
 )
 argparser.add_argument(
-    "--label1", type=str, default='LLM', help="The datasets to be implemented."
+    "--label1", type=str, default='Reddit_LLAMA8B_CLIP', help="The datasets to be implemented."
 )
 argparser.add_argument(
-    "--label2", type=str, default='TLM', help="The datasets to be implemented."
+    "--label2", type=str, default='Reddit_Llama-3.2-11B', help="The datasets to be implemented."
 )
 args = argparser.parse_args()
 
