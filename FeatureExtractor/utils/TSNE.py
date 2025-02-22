@@ -108,7 +108,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     # feat1_sample = feat1[:sample_size]
     # print(feat1_sample)
     # 创建自定义颜色渐变
-    colors = ['#f7a399', '#86bbd8']
+    colors = ['#0081a7', '#00afb9', '#fdfcdc', '#fed9b7', '#f07167']
     custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
 
 
@@ -126,8 +126,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
 
     # 绘制 t-SNE 可视化结果并保存
     # plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
-    scatter1 = plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap=custom_cmap,
-                alpha=0.95)
+    scatter1 = plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap=custom_cmap)
 
     # plt.title(f'T-SNE for {label1} on {dataname}')
     plt.legend(fontsize='large')
@@ -137,7 +136,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     plt.savefig(save_path_feat1)
     plt.close()
 
-    scatter2 = plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap=custom_cmap, alpha=0.95)
+    scatter2 = plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap=custom_cmap)
     # plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap='viridis')
     # plt.title(f'T-SNE Visualization for {label2}')
     plt.legend(fontsize='large')
