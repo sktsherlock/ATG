@@ -89,10 +89,10 @@ argparser.add_argument(
     help="The datasets to be implemented."
 )
 argparser.add_argument(
-    "--label1", type=str, default='Reddit_LLAMA8B_CLIP', help="The datasets to be implemented."
+    "--label1", type=str, default='LLaMA+CLIP', help="The datasets to be implemented."
 )
 argparser.add_argument(
-    "--label2", type=str, default='Reddit_Llama-3.2-11B', help="The datasets to be implemented."
+    "--label2", type=str, default='LLaMA3.2-11B-Vision', help="The datasets to be implemented."
 )
 args = argparser.parse_args()
 
@@ -128,19 +128,30 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     # plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
     scatter1 = plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap=custom_cmap)
 
+    # 设置横纵坐标刻度大小
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+
     # plt.title(f'T-SNE for {label1} on {dataname}')
     plt.legend(fontsize='large')
-    plt.colorbar(scatter1, label='Classes')
+    cbar = plt.colorbar(scatter1)
+    cbar.set_label('Classes', fontsize=16)  # 放大 colorbar 标签
+    # plt.colorbar(scatter1, label='Classes')
+
 
     save_path_feat1 = os.path.join(path, f'{label1}_tsne_BR.svg')
     plt.savefig(save_path_feat1, format='svg', dpi=600, bbox_inches='tight')
     plt.close()
 
     scatter2 = plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap=custom_cmap)
+
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     # plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap='viridis')
     # plt.title(f'T-SNE Visualization for {label2}')
     plt.legend(fontsize='large')
-    plt.colorbar(scatter2, label='Classes')
+    cbar = plt.colorbar(scatter2)
+    cbar.set_label('Classes', fontsize=16)  # 放大 colorbar 标签
     save_path_feat2 = os.path.join(path, f'{label2}_tsne_BR.svg')
     plt.savefig(save_path_feat2, format='svg', dpi=600, bbox_inches='tight')
     plt.close()
@@ -202,5 +213,7 @@ Feature2 = th.from_numpy(np.load(args.feat2).astype(np.float32))
 visualize(Feature1, Feature2, args.save_path, labels, label1=args.label1, label2=args.label2, dataname=args.dataname)
 print('Finished TSNE')
 
-
+from huggingface_hub import upload_file
+upload_file(path_or_fileobj=f'{args.label1}_tsne_BR.svg', path_in_repo=f'Reddit/TSNE/{args.label1}_tsne.svg', repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj=f'{args.label2}_tsne_BR.svg', path_in_repo=f'Reddit/TSNE/{args.label2}_tsne.svg', repo_id="Sherirto/MAG")
 # python TSNE.py --sample 5000 --feat1 /home/aiscuser/ATG/Data/Reddit/MMFeature/Reddit_Qwen2-VL-7B-Instruct_tv.npy --feat2 /home/aiscuser/ATG/Data/Reddit/ImageFeature/Reddit_openai_clip-vit-large-patch14.npy  --label1 Reddit_Qwen --label2 Reddit_CLIP
