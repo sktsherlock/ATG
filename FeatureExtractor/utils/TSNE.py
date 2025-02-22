@@ -136,6 +136,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     plt.legend(fontsize='large')
     cbar = plt.colorbar(scatter1)
     cbar.set_label('Classes', fontsize=14)  # 放大 colorbar 标签
+    cbar.ax.tick_params(labelsize=14)  # colorbar 刻度字体加大
     # plt.colorbar(scatter1, label='Classes')
 
 
@@ -152,6 +153,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     plt.legend(fontsize='large')
     cbar = plt.colorbar(scatter2)
     cbar.set_label('Classes', fontsize=14)  # 放大 colorbar 标签
+    cbar.ax.tick_params(labelsize=14)  # colorbar 刻度字体加大
     save_path_feat2 = os.path.join(path, f'{label2}_tsne_BR.svg')
     plt.savefig(save_path_feat2, format='svg', dpi=600, bbox_inches='tight')
     plt.close()
