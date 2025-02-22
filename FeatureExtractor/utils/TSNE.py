@@ -70,7 +70,7 @@ argparser.add_argument(
     help="The datasets to be implemented."
 )
 argparser.add_argument(
-    "--sample", type=int, default=1000,
+    "--sample", type=int, default=300,
     help="The sample size of test idx."
 )
 argparser.add_argument(
@@ -79,12 +79,12 @@ argparser.add_argument(
 )
 argparser.add_argument(
     "--feat1", type=str,
-    default='Data/Toys_Llama_2_7b_hf_256_mean.npy',
+    default='/home/aiscuser/ATG/Data/Reddit/MMFeature/Reddit_LLAMA8B_CLIP.npy',
     help="The datasets to be implemented."
 )
 argparser.add_argument(
     "--feat2", type=str,
-    default='Data/Toys_openai_clip-vit-large-patch14.npy',
+    default='/home/aiscuser/ATG/Data/Reddit/MMFeature/Reddit_Llama-3.2-11B-Vision-Instruct_tv.npy',
     help="The datasets to be implemented."
 )
 argparser.add_argument(
