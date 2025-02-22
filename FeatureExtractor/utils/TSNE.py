@@ -108,7 +108,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     # feat1_sample = feat1[:sample_size]
     # print(feat1_sample)
     # 创建自定义颜色渐变
-    colors = ['#c9184a', '#4fb6c0']
+    colors = ['#f7a399', '#86bbd8']
     custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
 
 
