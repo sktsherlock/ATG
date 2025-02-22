@@ -1,5 +1,6 @@
 from huggingface_hub import upload_file
 
-upload_file(path_or_fileobj="Movies_convnextv2_huge.npy", path_in_repo="Movies/ImageFeature/Movies_convnextv2_huge.npy", repo_id="Sherirto/MAG")
-upload_file(path_or_fileobj="Movies_swinv2_large.npy", path_in_repo="Movies/ImageFeature/Movies_swinv2_large.npy", repo_id="Sherirto/MAG")
-upload_file(path_or_fileobj="Movies_vit_large.npy", path_in_repo="Movies/ImageFeature/Movies_vit_large.npy", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_Llama-3.2-11B_tsne.pdf", path_in_repo="Reddit/TSNE/Reddit_Llama-3.2-11B_tsne.pdf", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_LLAMA8B_CLIP_tsne.pdf", path_in_repo="Reddit/TSNE/Reddit_LLAMA8B_CLIP_tsne.pdf", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_Qwen_tsne.pdf", path_in_repo="Reddit/TSNE/Reddit_Qwen_tsne.pdf", repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj="Reddit_CLIP_tsne.pdf", path_in_repo="Reddit/TSNE/Reddit_CLIP_tsne.pdf", repo_id="Sherirto/MAG")

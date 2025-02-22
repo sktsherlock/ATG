@@ -5,6 +5,7 @@ from sklearn.metrics import calinski_harabasz_score, davies_bouldin_score
 from sklearn.decomposition import PCA
 import dgl
 import torch as th
+from matplotlib.colors import LinearSegmentedColormap
 import os
 import argparse
 import random
@@ -106,6 +107,11 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     # 对 PLM_feat 进行采样和获取标签
     # feat1_sample = feat1[:sample_size]
     # print(feat1_sample)
+    # 创建自定义颜色渐变
+    colors = ['#c9184a', '#086788']
+    custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
+
+
     feat1_test = feat1[test_idx]
     print(feat1_test.shape)
     # 对 LLM_feat 进行采样和获取标签
@@ -119,16 +125,23 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     tsne_feat2 = TSNE(n_components=2).fit_transform(feat2_test)
 
     # 绘制 t-SNE 可视化结果并保存
-    plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
+    # plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap='viridis')
+    scatter1 = plt.scatter(tsne_feat1[:, 0], tsne_feat1[:, 1], c=label_list, marker='*', label=label1, cmap=custom_cmap, s=100,
+                alpha=0.7)
+
     # plt.title(f'T-SNE for {label1} on {dataname}')
     plt.legend(fontsize='large')
+    plt.colorbar(scatter1, label='Classes')
+
     save_path_feat1 = os.path.join(path, f'{label1}_tsne.pdf')
     plt.savefig(save_path_feat1)
     plt.close()
 
-    plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap='viridis')
+    scatter2 = plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=labels, marker='*', label=label2, cmap=custom_cmap, s=50, alpha=0.7)
+    # plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap='viridis')
     # plt.title(f'T-SNE Visualization for {label2}')
     plt.legend(fontsize='large')
+    plt.colorbar(scatter2, label='Classes')
     save_path_feat2 = os.path.join(path, f'{label2}_tsne.pdf')
     plt.savefig(save_path_feat2)
     plt.close()
@@ -189,3 +202,6 @@ Feature2 = th.from_numpy(np.load(args.feat2).astype(np.float32))
 
 visualize(Feature1, Feature2, args.save_path, labels, label1=args.label1, label2=args.label2, dataname=args.dataname)
 print('Finished TSNE')
+
+
+# python TSNE.py --sample 5000 --feat1 /home/aiscuser/ATG/Data/Reddit/MMFeature/Reddit_Qwen2-VL-7B-Instruct_tv.npy --feat2 /home/aiscuser/ATG/Data/Reddit/ImageFeature/Reddit_openai_clip-vit-large-patch14.npy  --label1 Reddit_Qwen --label2 Reddit_CLIP
