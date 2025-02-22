@@ -107,7 +107,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2=
     # feat1_sample = feat1[:sample_size]
     # print(feat1_sample)
     feat1_test = feat1[test_idx]
-    # print(feat1_test)
+    print(feat1_test.shape)
     # 对 LLM_feat 进行采样和获取标签
     feat2_test = feat2[test_idx]
     label_list = label[test_idx]
@@ -147,7 +147,7 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='PLM', label2=
     plt.savefig(save_path)
     plt.show()
 
-
+    print(label_list.shape)
     # 计算类内距离和类间距离
     class_center1 = [tsne_feat1[label_list == i].mean(axis=0) for i in np.unique(label_list)]
     class_center2 = [tsne_feat2[label_list == i].mean(axis=0) for i in np.unique(label_list)]
