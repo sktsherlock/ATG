@@ -63,7 +63,7 @@ argparser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 argparser.add_argument(
-    "--graph_path", type=str, default='Data/ToysGraph.pt', help="The datasets to be implemented."
+    "--graph_path", type=str, default='/home/aiscuser/ATG/Data/Reddit/RedditGraph.pt', help="The datasets to be implemented."
 )
 argparser.add_argument(
     "--save_path", type=str, default='./',
