@@ -132,8 +132,8 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     plt.legend(fontsize='large')
     plt.colorbar(scatter1, label='Classes')
 
-    save_path_feat1 = os.path.join(path, f'{label1}_tsne_BR.pdf')
-    plt.savefig(save_path_feat1)
+    save_path_feat1 = os.path.join(path, f'{label1}_tsne_BR.svg')
+    plt.savefig(save_path_feat1, format='svg', dpi=600, bbox_inches='tight')
     plt.close()
 
     scatter2 = plt.scatter(tsne_feat2[:, 0], tsne_feat2[:, 1], c=label_list, marker='*', label=label2, cmap=custom_cmap)
@@ -141,8 +141,8 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     # plt.title(f'T-SNE Visualization for {label2}')
     plt.legend(fontsize='large')
     plt.colorbar(scatter2, label='Classes')
-    save_path_feat2 = os.path.join(path, f'{label2}_tsne_BR.pdf')
-    plt.savefig(save_path_feat2)
+    save_path_feat2 = os.path.join(path, f'{label2}_tsne_BR.svg')
+    plt.savefig(save_path_feat2, format='svg', dpi=600, bbox_inches='tight')
     plt.close()
 
     # 绘制 t-SNE 可视化结果
