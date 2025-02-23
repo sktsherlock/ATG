@@ -8,6 +8,7 @@ import torch as th
 from matplotlib.colors import LinearSegmentedColormap
 import os
 import argparse
+from huggingface_hub import upload_file
 import random
 from collections import defaultdict
 
@@ -75,7 +76,7 @@ argparser.add_argument(
     help="The sample size of test idx."
 )
 argparser.add_argument(
-    "--dataname", type=str, default='History',
+    "--dataname", type=str, default='Reddit',
     help="The datasets name."
 )
 argparser.add_argument(
@@ -173,17 +174,6 @@ def visualize(feat1, feat2, path, label, sample_size=1000, label1='Reddit_LLAMA8
     plt.show()
 
     print(label_list.shape)
-    # # 计算类内距离和类间距离
-    # class_center1 = [tsne_feat1[label_list == i].mean(axis=0) for i in np.unique(label_list)]
-    # class_center2 = [tsne_feat2[label_list == i].mean(axis=0) for i in np.unique(label_list)]
-    # intra_dist1 = np.mean([np.linalg.norm(tsne_feat1[label_list == i] - class_center1[j], axis=1).mean() for i, j in enumerate(np.unique(label_list))])
-    # intra_dist2 = np.mean([np.linalg.norm(tsne_feat2[label_list == i] - class_center2[j], axis=1).mean() for i, j in enumerate(np.unique(label_list))])
-    # inter_dist1 = np.mean([np.linalg.norm(class_center1[i] - class_center1[j]) for i in range(len(class_center1)) for j in range(i+1, len(class_center1))])
-    # inter_dist2 = np.mean([np.linalg.norm(class_center2[i] - class_center2[j]) for i in range(len(class_center2)) for j in range(i+1, len(class_center2))])
-    # print(f"Intra-class distance for {label1}: {intra_dist1:.2f}")
-    # print(f"Intra-class distance for {label2}: {intra_dist2:.2f}")
-    # print(f"Inter-class distance for {label1}: {inter_dist1:.2f}")
-    # print(f"Inter-class distance for {label2}: {inter_dist2:.2f}")
 
     # 计算轮廓系数
     from sklearn.metrics import silhouette_score
@@ -215,7 +205,10 @@ Feature2 = th.from_numpy(np.load(args.feat2).astype(np.float32))
 visualize(Feature1, Feature2, args.save_path, labels, label1=args.label1, label2=args.label2, dataname=args.dataname)
 print('Finished TSNE')
 
-from huggingface_hub import upload_file
-upload_file(path_or_fileobj=f'{args.label1}_tsne_BR.svg', path_in_repo=f'Reddit/TSNE/{args.label1}_tsne.svg', repo_id="Sherirto/MAG")
-upload_file(path_or_fileobj=f'{args.label2}_tsne_BR.svg', path_in_repo=f'Reddit/TSNE/{args.label2}_tsne.svg', repo_id="Sherirto/MAG")
-# python TSNE.py --sample 5000 --feat1 /home/aiscuser/ATG/Data/Reddit/MMFeature/Reddit_Qwen2-VL-7B-Instruct_tv.npy --feat2 /home/aiscuser/ATG/Data/Reddit/ImageFeature/Reddit_openai_clip-vit-large-patch14.npy  --label1 Reddit_Qwen --label2 Reddit_CLIP
+
+upload_file(path_or_fileobj=f'{args.label1}_tsne_BR.svg', path_in_repo=f'{args.dataname}/TSNE/{args.label1}_tsne.svg', repo_id="Sherirto/MAG")
+upload_file(path_or_fileobj=f'{args.label2}_tsne_BR.svg', path_in_repo=f'{args.dataname}/TSNE/{args.label2}_tsne.svg', repo_id="Sherirto/MAG")
+
+
+
+# python TSNE.py --sample 5000 --feat1 /home/aiscuser/ATG/Data/Reddit/MMFeature/Reddit_Qwen2-VL-7B-Instruct_tv.npy --feat2 /home/aiscuser/ATG/Data/Reddit/ImageFeature/Reddit_openai_clip-vit-large-patch14.npy  --label1 Qwen2-VL-7B --label2 CLIP
